@@ -11,15 +11,18 @@ import Image from 'next/image'
 export default async function MemberDetailPage({ 
   params 
 }: { 
-  params: { id: string } 
+  params: Promise<{ id: string }> 
 }) {
+  // Ajouter await devant params
+  const { id } = await params
   const session = await auth()
 
   if (!session?.user?.email) {
     redirect('/connexion')
   }
 
-  const user = await client.fetch(userByIdQuery, { userId: params.id })
+  // Utiliser la variable id déstructurée
+  const user = await client.fetch(userByIdQuery, { userId: id })
 
   if (!user) {
     notFound()
