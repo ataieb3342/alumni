@@ -17,7 +17,12 @@ interface User {
   company?: string
   linkedIn?: string
   bio?: string
-  profileImage?: any
+  profileImage?: {
+    asset: {
+      _id: string
+      url: string
+    }
+  }
 }
 
 interface DirectoryListProps {

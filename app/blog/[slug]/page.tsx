@@ -2,6 +2,7 @@ import { client } from '@/sanity/lib/client'
 import { postQuery } from '@/sanity/lib/queries'
 import { urlFor } from '@/sanity/lib/image'
 import { PortableText } from '@portabletext/react'
+import { PortableTextBlock } from '@portabletext/types'
 import Header from '@/app/components/Header'
 import Footer from '@/app/components/Footer'
 import Link from 'next/link'
@@ -21,13 +22,13 @@ interface Post {
     }
     alt?: string
   }
-  body: any
+  body: PortableTextBlock[]
 }
 
 // Composants personnalisés pour le PortableText
 const components = {
   types: {
-    image: ({ value }: any) => {
+    image: ({ value }: { value: { alt?: string; caption?: string; asset: unknown } }) => {
       return (
         <div className="my-8">
           <Image
@@ -47,13 +48,13 @@ const components = {
     },
   },
   block: {
-    h2: ({ children }: any) => (
+    h2: ({ children }: { children?: React.ReactNode }) => (
       <h2 className="text-3xl font-bold mt-8 mb-4 text-gray-900">{children}</h2>
     ),
-    h3: ({ children }: any) => (
+    h3: ({ children }: { children?: React.ReactNode }) => (
       <h3 className="text-2xl font-bold mt-6 mb-3 text-gray-900">{children}</h3>
     ),
-    blockquote: ({ children }: any) => (
+    blockquote: ({ children }: { children?: React.ReactNode }) => (
       <blockquote className="border-l-4 border-blue-900 pl-4 italic my-6 text-gray-700">
         {children}
       </blockquote>

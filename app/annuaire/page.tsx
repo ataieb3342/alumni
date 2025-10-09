@@ -13,11 +13,17 @@ export default async function AnnuairePage() {
     redirect('/connexion')
   }
 
-  const users = await client.fetch(directoryUsersQuery)
+  interface DirectoryUser {
+    _id: string
+    userType: string
+    [key: string]: unknown
+  }
+
+  const users = await client.fetch<DirectoryUser[]>(directoryUsersQuery)
 
   // Séparer les alumni et le personnel
-  const alumni = users.filter((u: any) => u.userType === 'alumni')
-  const staff = users.filter((u: any) => u.userType === 'staff')
+  const alumni = users.filter((u) => u.userType === 'alumni')
+  const staff = users.filter((u) => u.userType === 'staff')
 
   return (
     <>

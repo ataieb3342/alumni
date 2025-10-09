@@ -4,7 +4,21 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface ProfileFormProps {
-  userData: any
+  userData: {
+    _id: string
+    firstName: string
+    lastName: string
+    email: string
+    userType: string
+    phone?: string
+    promotionYear?: number
+    currentStudies?: string
+    currentJob?: string
+    company?: string
+    linkedIn?: string
+    bio?: string
+    isVisibleInDirectory?: boolean
+  }
 }
 
 export default function ProfileForm({ userData }: ProfileFormProps) {
