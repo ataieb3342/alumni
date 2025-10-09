@@ -1,3 +1,4 @@
+// app/components/UserMenu.tsx
 'use client'
 
 import { signOut } from 'next-auth/react'
@@ -5,7 +6,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 
 interface UserMenuProps {
-  user: {
+  user?: {
     name?: string | null
     email?: string | null
     userType?: string
@@ -14,6 +15,11 @@ interface UserMenuProps {
 
 export default function UserMenu({ user }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
+
+  // Si user est undefined ou null, ne rien afficher
+  if (!user) {
+    return null
+  }
 
   const userTypeLabels: Record<string, string> = {
     current_student: 'Élève',
