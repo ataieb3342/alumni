@@ -9,7 +9,7 @@ interface UserMenuProps {
     name?: string | null
     email?: string | null
     userType?: string
-  }
+  } | null;
 }
 
 export default function UserMenu({ user }: UserMenuProps) {
