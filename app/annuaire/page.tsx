@@ -6,6 +6,26 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import DirectoryList from '../components/DirectoryList'
 
+interface User {
+  _id: string
+  firstName: string
+  lastName: string
+  email: string
+  userType: string
+  phone?: string
+  promotionYear?: number
+  currentJob?: string
+  company?: string
+  linkedIn?: string
+  bio?: string
+  profileImage?: {
+    asset: {
+      _id: string
+      url: string
+    }
+  }
+}
+
 export default async function AnnuairePage() {
   const session = await auth()
 
@@ -13,13 +33,7 @@ export default async function AnnuairePage() {
     redirect('/connexion')
   }
 
-  interface DirectoryUser {
-    _id: string
-    userType: string
-    [key: string]: unknown
-  }
-
-  const users = await client.fetch<DirectoryUser[]>(directoryUsersQuery)
+  const users = await client.fetch<User[]>(directoryUsersQuery)
 
   // Séparer les alumni et le personnel
   const alumni = users.filter((u) => u.userType === 'alumni')
