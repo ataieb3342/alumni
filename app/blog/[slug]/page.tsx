@@ -65,13 +65,10 @@ const components = {
 export default async function ArticlePage({ 
   params 
 }: { 
-  params: { slug: string } 
+  params: Promise<{ slug: string }> 
 }) {
-  const post = await client.fetch<Post>(postQuery, { slug: params.slug })
-
-  if (!post) {
-    notFound()
-  }
+  const { slug } = await params
+  const post = await client.fetch<Post>(postQuery, { slug })
 
   return (
     <>
