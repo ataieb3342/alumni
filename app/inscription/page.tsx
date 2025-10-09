@@ -50,7 +50,8 @@ export default function RegisterPage() {
       }
 
       router.push('/connexion?registered=true')
-    } catch (error) {
+    } catch (err) {
+      console.error(err)
       setError('Une erreur est survenue lors de l\'inscription')
     } finally {
       setLoading(false)
@@ -122,9 +123,7 @@ export default function RegisterPage() {
                 </label>
                 <select
                   value={formData.userType}
-                  onChange={(e) => setFormData({...formData, userType: e.target.value as any})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900"
-                >
+                  onChange={(e) => setFormData({...formData, userType: e.target.value as 'current_student' | 'alumni' | 'staff'})}                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900">
                   <option value="current_student">Élève actuel</option>
                   <option value="alumni">Ancien élève</option>
                   <option value="staff">Personnel</option>
