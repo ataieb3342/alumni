@@ -1,3 +1,4 @@
+// lib/auth.ts
 import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { client } from "@/sanity/lib/client"
@@ -16,32 +17,44 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null
         }
 
-        // Récupérer l'utilisateur depuis Sanity
-        const user = await client.fetch(
-          `*[_type == "user" && email == $email][0]`,
-          { email: credentials.email }
-        )
+        try {
+          // Récupérer l'utilisateur depuis Sanity
+          const user = await client.fetch(
+            `*[_type == "user" && email == $email][0]{
+              _id,
+              email,
+              firstName,
+              lastName,
+              password,
+              userType
+            }`,
+            { email: credentials.email }
+          )
 
-        if (!user || !user.password) {
+          if (!user || !user.password) {
+            return null
+          }
+
+          // Vérifier le mot de passe
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password as string,
+            user.password
+          )
+
+          if (!isPasswordValid) {
+            return null
+          }
+
+          // Retourner les infos utilisateur
+          return {
+            id: user._id,
+            email: user.email,
+            name: `${user.firstName} ${user.lastName}`,
+            userType: user.userType,
+          }
+        } catch (error) {
+          console.error("Auth error:", error)
           return null
-        }
-
-        // Vérifier le mot de passe
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password as string,
-          user.password
-        )
-
-        if (!isPasswordValid) {
-          return null
-        }
-
-        // Retourner les infos utilisateur
-        return {
-          id: user._id,
-          email: user.email,
-          name: `${user.firstName} ${user.lastName}`,
-          userType: user.userType,
         }
       }
     })

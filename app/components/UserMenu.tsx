@@ -7,6 +7,7 @@ import { useState } from 'react'
 
 interface UserMenuProps {
   user?: {
+    id?: string
     name?: string | null
     email?: string | null
     userType?: string
