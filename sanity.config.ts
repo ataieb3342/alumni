@@ -9,18 +9,26 @@ const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET!
 export default defineConfig({
   name: 'default',
   title: 'Mon Site',
-  
+
   projectId,
   dataset,
-  
+
   plugins: [
     structureTool(),
     visionTool(),
   ],
-  
+
   basePath: '/studio',
-  
+
   schema: {
     types: schema.types,
+  },
+
+  cors: {
+    allowOrigins: [
+      'http://localhost:3000',
+      'https://alumni-gjvf5z012-ataieb3342s-projects.vercel.app',
+      // Ajoutez votre domaine de production ici
+    ],
   },
 })
