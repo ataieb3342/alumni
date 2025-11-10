@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { urlFor } from '@/sanity/lib/image'
+import Pagination from './Pagination'
 
 interface User {
   _id: string
@@ -11,13 +12,19 @@ interface User {
   lastName: string
   email: string
   userType: string
-  phone?: string
   promotionYear?: number
+  currentCity?: string
   currentJob?: string
   company?: string
   linkedIn?: string
   bio?: string
   profileImage?: {
+    asset: {
+      _id: string
+      url: string
+    }
+  }
+  coverImage?: {
     asset: {
       _id: string
       url: string
@@ -30,27 +37,45 @@ interface DirectoryListProps {
   staff: User[]
 }
 
-export default function DirectoryList({ alumni, staff }: DirectoryListProps) {
-  const [activeTab, setActiveTab] = useState<'alumni' | 'staff'>('alumni')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedPromotion, setSelectedPromotion] = useState<string>('all')
+const USERS_PER_PAGE = 12
 
-  const currentList = activeTab === 'alumni' ? alumni : staff
+export default function DirectoryList({ alumni, staff }: DirectoryListProps) {
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedPromotion, setSelectedPromotion] = useState<string>('')
+  const [selectedType, setSelectedType] = useState<'all' | 'alumni' | 'staff'>('all')
+  const [currentPage, setCurrentPage] = useState(1)
+
+  const allUsers = [...alumni, ...staff]
+  const currentList = selectedType === 'all' ? allUsers : selectedType === 'alumni' ? alumni : staff
 
   // Filtrage
-  const filteredUsers = currentList.filter((user) => {
-    const matchesSearch = 
-      user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.currentJob?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = useMemo(() => {
+    return currentList.filter((user) => {
+      const matchesSearch =
+        user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.currentJob?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.currentCity?.toLowerCase().includes(searchTerm.toLowerCase())
 
-    const matchesPromotion = 
-      selectedPromotion === 'all' || 
-      user.promotionYear?.toString() === selectedPromotion
+      const matchesPromotion =
+        !selectedPromotion ||
+        user.promotionYear?.toString() === selectedPromotion
 
-    return matchesSearch && matchesPromotion
-  })
+      return matchesSearch && matchesPromotion
+    })
+  }, [currentList, searchTerm, selectedPromotion])
+
+  // Reset à la première page quand les filtres changent
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, selectedPromotion, selectedType])
+
+  // Pagination
+  const indexOfLastUser = currentPage * USERS_PER_PAGE
+  const indexOfFirstUser = indexOfLastUser - USERS_PER_PAGE
+  const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser)
+  const totalPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE)
 
   // Extraire les années de promotion uniques
   const promotionYears = Array.from(
@@ -59,145 +84,200 @@ export default function DirectoryList({ alumni, staff }: DirectoryListProps) {
 
   return (
     <div className="space-y-6">
-      {/* Onglets */}
-      <div className="flex space-x-2 border-b">
-        <button
-          onClick={() => {
-            setActiveTab('alumni')
-            setSelectedPromotion('all')
-          }}
-          className={`px-6 py-3 font-semibold transition ${
-            activeTab === 'alumni'
-              ? 'border-b-2 border-blue-900 text-blue-900'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          Anciens élèves ({alumni.length})
-        </button>
-        <button
-          onClick={() => {
-            setActiveTab('staff')
-            setSelectedPromotion('all')
-          }}
-          className={`px-6 py-3 font-semibold transition ${
-            activeTab === 'staff'
-              ? 'border-b-2 border-green-600 text-green-600'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          Personnel ({staff.length})
-        </button>
-      </div>
-
       {/* Filtres */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Rechercher
-            </label>
+      <div className="flex flex-col sm:flex-row gap-3">
+        {/* Recherche */}
+        <div className="flex-1">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
             <input
               type="text"
-              placeholder="Nom, entreprise, poste..."
+              placeholder="Nom, entreprise, poste, ville..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900"
+              className="block w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white text-gray-900 placeholder:text-gray-400"
             />
           </div>
-
-          {activeTab === 'alumni' && promotionYears.length > 0 && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Promotion
-              </label>
-              <select
-                value={selectedPromotion}
-                onChange={(e) => setSelectedPromotion(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900"
-              >
-                <option value="all">Toutes les promotions</option>
-                {promotionYears.map((year) => (
-                  <option key={year} value={year?.toString()}>
-                    Promotion {year}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
         </div>
-      </div>
 
-      {/* Résultats */}
-      <div className="text-gray-600 mb-4">
-        {filteredUsers.length} résultat{filteredUsers.length > 1 ? 's' : ''}
+        {/* Filtre par type */}
+        <div className="w-full sm:w-48">
+          <select
+            value={selectedType}
+            onChange={(e) => {
+              setSelectedType(e.target.value as 'all' | 'alumni' | 'staff')
+              setSelectedPromotion('')
+            }}
+            className="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white text-gray-900"
+          >
+            <option value="all">Tous ({allUsers.length})</option>
+            <option value="alumni">Anciens élèves ({alumni.length})</option>
+            <option value="staff">Personnel ({staff.length})</option>
+          </select>
+        </div>
+
+        {/* Filtre par promotion (seulement pour alumni) */}
+        {(selectedType === 'alumni' || selectedType === 'all') && promotionYears.length > 0 && (
+          <div className="w-full sm:w-48">
+            <select
+              value={selectedPromotion}
+              onChange={(e) => setSelectedPromotion(e.target.value)}
+              className="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white text-gray-900"
+            >
+              <option value="" className="text-gray-500">Promotions</option>
+              {promotionYears.map((year) => (
+                <option key={year} value={year?.toString()} className="text-gray-900">
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Liste des utilisateurs */}
       {filteredUsers.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-md p-12 text-center">
-          <p className="text-gray-600">Aucun résultat trouvé</p>
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-12 text-center border border-white/20">
+          <div className="max-w-md mx-auto">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Aucun résultat trouvé</h3>
+            <p className="text-gray-600">
+              Essayez de modifier vos critères de recherche.
+            </p>
+          </div>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredUsers.map((user) => (
+        <>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {currentUsers.map((user) => (
             <Link
               key={user._id}
               href={`/annuaire/${user._id}`}
-              className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden group"
+              className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 group hover:border-blue-300 flex flex-col"
             >
-              {/* Image de profil ou initiales */}
-              <div className="h-48 bg-gradient-to-br from-blue-900 to-blue-600 flex items-center justify-center relative">
-                {user.profileImage ? (
+              {/* Photo de couverture */}
+              {user.coverImage ? (
+                <div className="w-full h-24 overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 relative">
                   <Image
-                    src={urlFor(user.profileImage).width(400).height(400).url()}
-                    alt={`${user.firstName} ${user.lastName}`}
-                    fill
-                    className="object-cover"
+                    src={urlFor(user.coverImage).width(800).height(192).fit('crop').crop('center').url()}
+                    alt="Couverture"
+                    width={800}
+                    height={96}
+                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                   />
-                ) : (
-                  <div className="text-6xl font-bold text-white">
-                    {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                </div>
+              ) : (
+                <div className="w-full h-24 bg-gradient-to-br from-blue-600 to-blue-800"></div>
+              )}
+
+              {/* Contenu de la carte */}
+              <div className="flex-1 flex flex-col relative">
+                {/* Photo de profil et nom */}
+                <div className="px-6 -mt-10 mb-4 relative z-10">
+                  <div className="flex items-end gap-4">
+                    {/* Photo de profil */}
+                    {user.profileImage ? (
+                      <div className="w-20 h-20 rounded-xl overflow-hidden ring-4 ring-white shadow-lg group-hover:ring-blue-100 transition-all flex-shrink-0 bg-white">
+                        <Image
+                          src={urlFor(user.profileImage).width(160).height(160).fit('crop').crop('center').url()}
+                          alt={`${user.firstName} ${user.lastName}`}
+                          width={80}
+                          height={80}
+                          className="object-cover w-full h-full"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center ring-4 ring-white shadow-lg group-hover:ring-blue-100 transition-all flex-shrink-0">
+                        <span className="text-2xl font-bold text-white">
+                          {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Badge promo */}
+                    {user.promotionYear && (
+                      <div className="mb-2">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 shadow-sm">
+                          Promo {user.promotionYear}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </div>
 
-              {/* Informations */}
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-blue-900 transition">
-                  {user.firstName} {user.lastName}
-                </h3>
+                {/* Nom et infos */}
+                <div className="px-6 pb-6 flex-1 flex flex-col">
+                  <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors mb-3">
+                    {user.firstName} {user.lastName}
+                  </h3>
 
-                {user.promotionYear && (
-                  <p className="text-sm text-gray-600 mb-2">
-                    Promotion {user.promotionYear}
-                  </p>
-                )}
+                  {/* Informations professionnelles */}
+                  <div className="space-y-2.5 flex-1">
+                    {user.currentJob && (
+                      <div className="flex items-start gap-2.5">
+                        <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <p className="text-sm font-medium text-gray-900 line-clamp-2 flex-1">
+                          {user.currentJob}
+                        </p>
+                      </div>
+                    )}
 
-                {user.currentJob && (
-                  <p className="text-gray-700 font-semibold mb-1">
-                    {user.currentJob}
-                  </p>
-                )}
+                    {user.company && (
+                      <div className="flex items-start gap-2.5">
+                        <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        <p className="text-sm text-gray-600 line-clamp-1 flex-1">
+                          {user.company}
+                        </p>
+                      </div>
+                    )}
 
-                {user.company && (
-                  <p className="text-gray-600 text-sm mb-3">
-                    {user.company}
-                  </p>
-                )}
+                    {user.currentCity && (
+                      <div className="flex items-start gap-2.5">
+                        <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <p className="text-sm text-gray-600 flex-1">
+                          {user.currentCity}
+                        </p>
+                      </div>
+                    )}
+                  </div>
 
-                {user.bio && (
-                  <p className="text-gray-600 text-sm line-clamp-2 mb-3">
-                    {user.bio}
-                  </p>
-                )}
-
-                <span className="text-blue-900 text-sm font-semibold group-hover:underline">
-                  Voir le profil →
-                </span>
+                  {/* Footer avec CTA */}
+                  <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+                    <span className="text-sm font-semibold text-blue-600 group-hover:text-blue-700 transition-colors">
+                      Voir le profil
+                    </span>
+                    <svg className="w-5 h-5 text-blue-600 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </div>
+                </div>
               </div>
             </Link>
           ))}
         </div>
+
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      </>
       )}
     </div>
   )

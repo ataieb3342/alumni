@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Header from '../components/Header'
+import PublicHeader from '../components/PublicHeader'
 import Footer from '../components/Footer'
 import Link from 'next/link'
 
@@ -49,7 +49,8 @@ export default function RegisterPage() {
         return
       }
 
-      router.push('/connexion?registered=true')
+      // Afficher un message de succès
+      router.push('/connexion?registered=true&pending=true')
     } catch (err) {
       console.error(err)
       setError('Une erreur est survenue lors de l\'inscription')
@@ -60,7 +61,7 @@ export default function RegisterPage() {
 
   return (
     <>
-      <Header />
+      <PublicHeader />
       
       <main className="min-h-screen bg-gray-50 py-12 px-4">
         <div className="max-w-2xl mx-auto">
@@ -86,7 +87,7 @@ export default function RegisterPage() {
                     value={formData.firstName}
                     onChange={(e) => setFormData({...formData, firstName: e.target.value})}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
                   />
                 </div>
                 
@@ -99,7 +100,7 @@ export default function RegisterPage() {
                     value={formData.lastName}
                     onChange={(e) => setFormData({...formData, lastName: e.target.value})}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
                   />
                 </div>
               </div>
@@ -113,7 +114,7 @@ export default function RegisterPage() {
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
                 />
               </div>
               
@@ -123,10 +124,10 @@ export default function RegisterPage() {
                 </label>
                 <select
                   value={formData.userType}
-                  onChange={(e) => setFormData({...formData, userType: e.target.value as 'current_student' | 'alumni' | 'staff'})}                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900">
-                  <option value="current_student">Élève actuel</option>
-                  <option value="alumni">Ancien élève</option>
-                  <option value="staff">Personnel</option>
+                  onChange={(e) => setFormData({...formData, userType: e.target.value as 'current_student' | 'alumni' | 'staff'})}                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900">
+                  <option value="current_student" className="text-gray-900">Élève actuel</option>
+                  <option value="alumni" className="text-gray-900">Ancien élève</option>
+                  <option value="staff" className="text-gray-900">Personnel</option>
                 </select>
               </div>
               
@@ -141,7 +142,7 @@ export default function RegisterPage() {
                     onChange={(e) => setFormData({...formData, password: e.target.value})}
                     required
                     minLength={6}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
                   />
                 </div>
                 
@@ -155,7 +156,7 @@ export default function RegisterPage() {
                     onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
                     required
                     minLength={6}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
                   />
                 </div>
               </div>

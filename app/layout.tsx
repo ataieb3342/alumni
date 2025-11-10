@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mon Site",
-  description: "Site créé avec Next.js et Sanity",
+  title: "VH Besançon Alumni",
+  description: "Réseau des anciens élèves de VH Besançon",
 };
 
 export default function RootLayout({

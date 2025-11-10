@@ -5,6 +5,7 @@ import { directoryUsersQuery } from '@/sanity/lib/queries'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import DirectoryList from '../components/DirectoryList'
+import HeroSection from '../components/HeroSection'
 
 interface User {
   _id: string
@@ -14,11 +15,44 @@ interface User {
   userType: string
   phone?: string
   promotionYear?: number
+  currentCity?: string
   currentJob?: string
   company?: string
   linkedIn?: string
+  website?: string
+  github?: string
+  twitter?: string
+  facebook?: string
+  instagram?: string
   bio?: string
+  description?: string
+  education?: Array<{
+    school: string
+    degree: string
+    field?: string
+    startYear: number
+    endYear?: number
+    description?: string
+  }>
+  experience?: Array<{
+    company: string
+    position: string
+    location?: string
+    startDate: string
+    endDate?: string
+    current?: boolean
+    description?: string
+  }>
+  roleAssociation?: string[]
+  personnelMetier?: string[]
+  anneesLvh?: string
   profileImage?: {
+    asset: {
+      _id: string
+      url: string
+    }
+  }
+  coverImage?: {
     asset: {
       _id: string
       url: string
@@ -42,54 +76,20 @@ export default async function AnnuairePage() {
   return (
     <>
       <Header />
-      
-      <main className="min-h-screen bg-gray-50 py-12">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Annuaire</h1>
-            <p className="text-gray-600">
-              Retrouvez les anciens élèves et le personnel du Lycée Victor Hugo
-            </p>
-          </div>
 
-          {/* Statistiques */}
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm">Total</p>
-                  <p className="text-3xl font-bold text-gray-900">{users.length}</p>
-                </div>
-                <div className="text-4xl">👥</div>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm">Anciens élèves</p>
-                  <p className="text-3xl font-bold text-blue-900">{alumni.length}</p>
-                </div>
-                <div className="text-4xl">🎓</div>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm">Personnel</p>
-                  <p className="text-3xl font-bold text-green-600">{staff.length}</p>
-                </div>
-                <div className="text-4xl">👨‍🏫</div>
-              </div>
-            </div>
-          </div>
+      <main className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
+        {/* Hero Section avec image en background */}
+        <HeroSection
+          title="Annuaire"
+          subtitle="Retrouvez les anciens élèves et le personnel du Lycée Victor Hugo"
+        />
 
-          {/* Liste des membres */}
+        {/* Directory Section */}
+        <section className="max-w-7xl mx-auto px-6 py-16 -mt-10">
           <DirectoryList alumni={alumni} staff={staff} />
-        </div>
+        </section>
       </main>
-      
+
       <Footer />
     </>
   )

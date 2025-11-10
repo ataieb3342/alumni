@@ -32,12 +32,12 @@ export default function UserMenu({ user }: UserMenuProps) {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 hover:text-blue-200 transition"
+        className="flex items-center space-x-2 text-white hover:text-cyan-400 transition"
       >
-        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center font-bold">
+        <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center font-bold text-white shadow-lg">
           {user.name?.charAt(0).toUpperCase() || 'U'}
         </div>
-        <span className="hidden lg:inline">{user.name}</span>
+        <span className="hidden lg:inline font-medium">{user.name}</span>
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
@@ -69,11 +69,11 @@ export default function UserMenu({ user }: UserMenuProps) {
                 Mon profil
               </Link>
               <Link
-                href="/dashboard"
+                href="/parametres"
                 className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition"
                 onClick={() => setIsOpen(false)}
               >
-                Dashboard
+                Paramètres
               </Link>
             </div>
             

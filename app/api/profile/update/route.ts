@@ -14,18 +14,24 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { 
-      userId, 
-      firstName, 
-      lastName, 
-      phone, 
-      promotionYear, 
+    const {
+      userId,
+      firstName,
+      lastName,
+      promotionYear,
+      currentCity,
       currentStudies,
       currentJob,
       company,
       linkedIn,
       bio,
-      isVisibleInDirectory
+      isVisibleInDirectory,
+      education,
+      experience,
+      profileImageAssetId,
+      deleteProfileImage,
+      coverImageAssetId,
+      deleteCoverImage
     } = body
 
     // Vérifier que l'utilisateur modifie bien son propre profil
@@ -41,22 +47,65 @@ export async function POST(request: Request) {
       )
     }
 
+    // Préparer les données de mise à jour
+    const updateData: Record<string, unknown> = {
+      firstName,
+      lastName,
+      promotionYear: promotionYear ? parseInt(promotionYear) : undefined,
+      currentCity,
+      currentStudies,
+      currentJob,
+      company,
+      linkedIn,
+      bio,
+      isVisibleInDirectory,
+    }
+
+    // Ajouter les formations et expériences si fournies (uniquement pour alumni et staff)
+    if (education !== undefined) {
+      updateData.education = education
+    }
+    if (experience !== undefined) {
+      updateData.experience = experience
+    }
+
+    // Ajouter l'image de profil si fournie
+    if (profileImageAssetId) {
+      updateData.profileImage = {
+        _type: 'image',
+        asset: {
+          _type: 'reference',
+          _ref: profileImageAssetId,
+        },
+      }
+    }
+
+    // Ajouter l'image de couverture si fournie
+    if (coverImageAssetId) {
+      updateData.coverImage = {
+        _type: 'image',
+        asset: {
+          _type: 'reference',
+          _ref: coverImageAssetId,
+        },
+      }
+    }
+
+    // Construire la requête de patch
+    let patchQuery = serverClient.patch(userId).set(updateData)
+
+    // Si l'utilisateur veut supprimer l'image de profil
+    if (deleteProfileImage && !profileImageAssetId) {
+      patchQuery = patchQuery.unset(['profileImage'])
+    }
+
+    // Si l'utilisateur veut supprimer l'image de couverture
+    if (deleteCoverImage && !coverImageAssetId) {
+      patchQuery = patchQuery.unset(['coverImage'])
+    }
+
     // Mettre à jour l'utilisateur
-    await serverClient
-      .patch(userId)
-      .set({
-        firstName,
-        lastName,
-        phone,
-        promotionYear: promotionYear ? parseInt(promotionYear) : undefined,
-        currentStudies,
-        currentJob,
-        company,
-        linkedIn,
-        bio,
-        isVisibleInDirectory,
-      })
-      .commit()
+    await patchQuery.commit()
 
     return NextResponse.json(
       { message: 'Profil mis à jour avec succès' },

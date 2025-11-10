@@ -26,12 +26,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               firstName,
               lastName,
               password,
-              userType
+              userType,
+              accountStatus
             }`,
             { email: credentials.email }
           )
 
           if (!user || !user.password) {
+            return null
+          }
+
+          // Vérifier le statut du compte
+          if (user.accountStatus !== 'active') {
+            // Retourner null pour bloquer la connexion
             return null
           }
 

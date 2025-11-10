@@ -52,6 +52,21 @@ export const postType = defineType({
       description: 'Court résumé de l\'article (150-200 caractères)',
     }),
     defineField({
+      name: 'visibility',
+      title: 'Visibilité',
+      type: 'string',
+      options: {
+        list: [
+          { title: '🌍 Public', value: 'public' },
+          { title: '🔒 Membres uniquement', value: 'members_only' },
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'public',
+      validation: (Rule) => Rule.required(),
+      description: 'Qui peut voir cet article ?',
+    }),
+    defineField({
       name: 'body',
       title: 'Contenu',
       type: 'array',
