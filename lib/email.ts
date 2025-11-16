@@ -206,7 +206,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
               <p>Vous avez demandé à réinitialiser votre mot de passe pour votre compte Association VH Besançon.</p>
               <p>Cliquez sur le bouton ci-dessous pour créer un nouveau mot de passe :</p>
               <div style="text-align: center;">
-                <a href="${resetUrl}" class="button">Réinitialiser mon mot de passe</a>
+                <a href="${resetUrl}" class="button" style="display: inline-block; padding: 12px 24px; background-color: #1e3a8a; color: #ffffff !important; text-decoration: none; border-radius: 5px; margin: 20px 0;">Réinitialiser mon mot de passe</a>
               </div>
               <p>Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :</p>
               <p style="word-break: break-all; color: #1e3a8a;">${resetUrl}</p>

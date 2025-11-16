@@ -1,35 +1,22 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { serverClient } from '@/sanity/lib/server-client'
 import { google } from 'googleapis'
 
-export async function POST() {
+export async function GET(request: NextRequest) {
   try {
-    const { auth } = await import('@/lib/auth')
-    const session = await auth()
-    if (!session?.user?.id) {
+    // Vérifier l'autorisation via le secret Vercel Cron
+    const authHeader = request.headers.get('authorization')
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
       return NextResponse.json(
-        { error: 'Non authentifié' },
+        { error: 'Non autorisé' },
         { status: 401 }
-      )
-    }
-
-    // Vérifier que l'utilisateur est admin
-    const user = await serverClient.fetch(
-      `*[_type == "user" && _id == $userId][0]{ role }`,
-      { userId: session.user.id }
-    )
-
-    if (user?.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Accès non autorisé' },
-        { status: 403 }
       )
     }
 
     // Vérifier la configuration Google Drive
     if (!process.env.GOOGLE_DRIVE_CLIENT_EMAIL || !process.env.GOOGLE_DRIVE_PRIVATE_KEY || !process.env.GOOGLE_DRIVE_FOLDER_ID) {
       return NextResponse.json(
-        { error: 'Configuration Google Drive manquante. Ajoutez GOOGLE_DRIVE_CLIENT_EMAIL, GOOGLE_DRIVE_PRIVATE_KEY, et GOOGLE_DRIVE_FOLDER_ID dans .env' },
+        { error: 'Configuration Google Drive manquante' },
         { status: 500 }
       )
     }
@@ -133,14 +120,21 @@ export async function POST() {
     }
 
     return NextResponse.json({
+      success: true,
       message: 'Export synchronisé avec Google Drive',
       fileId: response.data.id,
       fileName: fileName,
+      subscribersCount: subscriptions.length,
+      timestamp: new Date().toISOString(),
     })
   } catch (error) {
-    console.error('Erreur lors de la synchronisation:', error)
+    console.error('Erreur lors de la synchronisation cron:', error)
     return NextResponse.json(
-      { error: 'Erreur lors de la synchronisation avec Google Drive', details: error instanceof Error ? error.message : 'Erreur inconnue' },
+      {
+        error: 'Erreur lors de la synchronisation',
+        details: error instanceof Error ? error.message : 'Erreur inconnue',
+        timestamp: new Date().toISOString(),
+      },
       { status: 500 }
     )
   }

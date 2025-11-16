@@ -89,7 +89,7 @@ export default function HeroSection({
 
               <p className="text-xl md:text-2xl text-blue-50 leading-relaxed font-light">
                 L&apos;association qui{' '}
-                <span className="font-semibold text-white">connecte</span> les anciens élèves et personnels
+                <span className="font-semibold text-white">connecte</span> élèves actuels, anciens élèves et personnels
                 du Lycée Victor Hugo de Besançon
               </p>
 

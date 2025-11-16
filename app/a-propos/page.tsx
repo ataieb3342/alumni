@@ -111,14 +111,14 @@ export default async function AProposPage() {
                 <p className="text-gray-700 leading-relaxed mb-4">
                   <strong className="text-blue-600">VH Besançon Alumni</strong> est une association loi 1901 fondée en <strong>2022</strong> à
                   l&apos;initiative de quatre anciennes élèves du Lycée Victor Hugo de Besançon.
-                  Animées par la volonté de maintenir et développer les liens entre anciens élèves,
-                  elles ont créé ce réseau pour permettre à tous ceux qui ont un lien avec notre établissement
-                  de rester connectés.
+                  Animées par la volonté d&apos;aider les élèves actuels dans leur orientation et de maintenir
+                  les liens entre tous ceux qui ont un lien avec notre établissement, elles ont créé ce réseau
+                  pour connecter anciens et actuels autour de valeurs communes.
                 </p>
                 <p className="text-gray-700 leading-relaxed">
                   Aujourd&apos;hui, l&apos;association est composée de membres actifs au sein du bureau
                   qui œuvrent quotidiennement pour animer la communauté, organiser des événements et
-                  développer de nouveaux services pour tous les alumni. 🚀
+                  développer de nouveaux services pour élèves actuels, anciens et personnels. 🚀
                 </p>
               </div>
             </div>
@@ -345,8 +345,8 @@ export default async function AProposPage() {
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">Annuaire des Membres</h3>
                   <p className="text-gray-600">
-                Accédez à un annuaire complet des anciens élèves et personnels. Retrouvez vos anciens
-                camarades et développez votre réseau professionnel.
+                Retrouvez vos camarades, échangez avec des anciens pour découvrir des parcours inspirants
+                et développez votre réseau professionnel au sein de la communauté VH.
               </p>
                 </div>
 

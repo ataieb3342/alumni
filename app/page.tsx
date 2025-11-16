@@ -123,7 +123,7 @@ export default async function Home() {
                 <h3 className="text-xl font-bold text-white">Annuaire</h3>
               </div>
               <p className="text-blue-100 text-sm mb-4">
-                Retrouvez vos anciens camarades et développez votre réseau professionnel.
+                Retrouvez vos camarades, développez votre réseau professionnel et échangez avec des anciens pour vous guider dans votre parcours.
               </p>
               <div className="space-y-2 mb-4">
                 <div className="flex items-center gap-2 text-sm text-blue-200">
