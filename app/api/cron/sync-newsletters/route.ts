@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serverClient } from '@/sanity/lib/server-client'
-import { google } from 'googleapis'
+import { getGoogleDriveClient } from '@/lib/google-drive'
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Vérifier la configuration Google Drive
-    if (!process.env.GOOGLE_DRIVE_CLIENT_EMAIL || !process.env.GOOGLE_DRIVE_PRIVATE_KEY || !process.env.GOOGLE_DRIVE_FOLDER_ID) {
+    if (!process.env.CLIENT_ID || !process.env.CLIENT_SECRET || !process.env.GOOGLE_REFRESH_TOKEN) {
       return NextResponse.json(
         { error: 'Configuration Google Drive manquante' },
         { status: 500 }
@@ -73,17 +73,8 @@ export async function GET(request: NextRequest) {
 
     const csv = csvHeader + csvRows
 
-    // Configurer l'authentification Google Drive avec Service Account
-    const googleAuth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-      },
-      scopes: ['https://www.googleapis.com/auth/drive'],
-    })
-
-    const drive = google.drive({ version: 'v3', auth: googleAuth })
-
+    // Configurer l'authentification Google Drive avec OAuth
+    const drive = getGoogleDriveClient()
     const fileName = 'newsletters_preferences.csv'
 
     // Chercher si le fichier existe déjà dans le dossier
