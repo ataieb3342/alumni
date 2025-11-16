@@ -91,7 +91,7 @@ export default async function AProposPage() {
         {/* Hero Section avec image en background */}
         <HeroSection
           title="À propos"
-          subtitle="L'association qui connecte les anciens élèves et personnels du Lycée Victor Hugo"
+          subtitle="L'association qui connecte élèves actuels, anciens élèves et personnels du Lycée Victor Hugo"
         />
 
         {/* Contenu */}
@@ -444,16 +444,6 @@ export default async function AProposPage() {
                     </svg>
                   </a>
                 </div>
-              </div>
-
-              <div className="mt-6 p-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg transform hover:scale-105 transition-transform duration-300">
-                <p className="text-md flex items-start gap-3">
-                  <span className="text-2xl">💡</span>
-                  <span>
-                    <strong>Bon à savoir :</strong> Après avoir adhéré sur HelloAsso,
-                    créez votre compte sur ce site pour accéder à toutes les fonctionnalités !
-                  </span>
-                </p>
               </div>
             </div>
           </section>
