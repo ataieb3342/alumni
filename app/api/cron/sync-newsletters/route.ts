@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
         client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
         private_key: process.env.GOOGLE_DRIVE_PRIVATE_KEY.replace(/\\n/g, '\n'),
       },
-      scopes: ['https://www.googleapis.com/auth/drive.file'],
+      scopes: ['https://www.googleapis.com/auth/drive'],
     })
 
     const drive = google.drive({ version: 'v3', auth: googleAuth })
@@ -87,16 +87,20 @@ export async function GET(request: NextRequest) {
     const fileName = 'newsletters_preferences.csv'
 
     // Chercher si le fichier existe déjà dans le dossier
+    const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID
     const existingFiles = await drive.files.list({
-      q: `name='${fileName}' and '${process.env.GOOGLE_DRIVE_FOLDER_ID}' in parents and trashed=false`,
+      q: folderId
+        ? `name='${fileName}' and '${folderId}' in parents and trashed=false`
+        : `name='${fileName}' and trashed=false`,
       fields: 'files(id, name)',
     })
 
     let response
+    let fileId: string
 
     if (existingFiles.data.files && existingFiles.data.files.length > 0) {
       // Le fichier existe, on le met à jour
-      const fileId = existingFiles.data.files[0].id!
+      fileId = existingFiles.data.files[0].id!
       response = await drive.files.update({
         fileId,
         media: {
@@ -109,14 +113,15 @@ export async function GET(request: NextRequest) {
       response = await drive.files.create({
         requestBody: {
           name: fileName,
-          parents: [process.env.GOOGLE_DRIVE_FOLDER_ID],
           mimeType: 'text/csv',
+          ...(folderId && { parents: [folderId] }),
         },
         media: {
           mimeType: 'text/csv',
           body: csv,
         },
       })
+      fileId = response.data.id!
     }
 
     return NextResponse.json({
