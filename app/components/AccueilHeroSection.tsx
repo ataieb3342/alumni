@@ -5,10 +5,12 @@ import Image from 'next/image'
 
 interface AccueilHeroSectionProps {
   userName: string | null
+  backgroundImage?: string
 }
 
 export default function AccueilHeroSection({
   userName,
+  backgroundImage = '/images/lycee-victor-hugo.jpg'
 }: AccueilHeroSectionProps) {
   const [scrollY, setScrollY] = useState(0)
 
@@ -32,7 +34,7 @@ export default function AccueilHeroSection({
         }}
       >
         <Image
-          src="/images/lycee-victor-hugo.jpg"
+          src={backgroundImage}
           alt="Lycée Victor Hugo"
           fill
           className="object-cover object-bottom"

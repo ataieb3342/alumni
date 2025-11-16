@@ -30,7 +30,6 @@ const POSTS_PER_PAGE = 9
 
 // Images de fallback disponibles
 const FALLBACK_IMAGES = [
-  '/images/logo.jpg',
   '/images/lvh-facade-640x360.jpg',
   '/images/lycee-victor-hugo.jpg'
 ]

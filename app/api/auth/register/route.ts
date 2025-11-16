@@ -3,11 +3,31 @@ import { serverClient } from '@/sanity/lib/server-client'
 import bcrypt from 'bcryptjs'
 import { sendAdminNotificationEmail } from '@/lib/email'
 import { logActivity, getClientIp, getUserAgent } from '@/lib/activity-logger'
+import { z } from 'zod'
+
+const registerSchema = z.object({
+  firstName: z.string().min(2, 'Le prénom doit contenir au moins 2 caractères').max(50, 'Le prénom est trop long').regex(/^[a-zA-ZÀ-ÿ\s\-']+$/, 'Le prénom contient des caractères invalides'),
+  lastName: z.string().min(2, 'Le nom doit contenir au moins 2 caractères').max(50, 'Le nom est trop long').regex(/^[a-zA-ZÀ-ÿ\s\-']+$/, 'Le nom contient des caractères invalides'),
+  email: z.string().email('Email invalide').toLowerCase(),
+  password: z.string().min(12, 'Le mot de passe doit contenir au moins 12 caractères').regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, 'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*?&)'),
+  userType: z.enum(['current_student', 'alumni', 'staff'], { message: 'Type d\'utilisateur invalide' }),
+})
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { firstName, lastName, email, password, userType } = body
+
+    // Valider les données avec Zod
+    const validation = registerSchema.safeParse(body)
+    if (!validation.success) {
+      const firstError = validation.error.issues[0]
+      return NextResponse.json(
+        { error: firstError.message },
+        { status: 400 }
+      )
+    }
+
+    const { firstName, lastName, email, password, userType } = validation.data
 
     // Vérifier si l'utilisateur existe déjà (peu importe le statut)
     const existingUser = await serverClient.fetch(

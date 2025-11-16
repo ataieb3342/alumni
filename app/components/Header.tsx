@@ -16,7 +16,7 @@ export default async function Header() {
           <Link href="/" className="flex items-center space-x-3 flex-shrink-0 group">
             <div className="relative w-12 h-12 rounded-lg overflow-hidden ring-2 ring-slate-700 group-hover:ring-cyan-400 transition-all duration-300">
               <Image
-                src="/images/logo.jpg"
+                src="/logo.png"
                 alt="VH Besançon Alumni Logo"
                 width={48}
                 height={48}

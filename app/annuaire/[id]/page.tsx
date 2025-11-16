@@ -66,7 +66,7 @@ export default async function MemberDetailPage({
           {/* Breadcrumb */}
           <Link
             href="/annuaire"
-            className="group inline-flex items-center gap-2 text-white hover:text-blue-100 font-medium transition-colors mb-6 drop-shadow-lg"
+            className="group inline-flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-sm hover:bg-white text-blue-900 font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl mb-6 border border-white/20"
           >
             <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -231,7 +231,15 @@ export default async function MemberDetailPage({
                     Expérience professionnelle
                   </h2>
                   <div className="space-y-6">
-                    {user.experience.map((exp: {
+                    {[...user.experience]
+                      .sort((a, b) => {
+                        // Ordre chronologique : du plus récent au plus ancien
+                        // On compare les dates de fin (ou la date actuelle si poste en cours)
+                        const dateA = a.current ? new Date() : (a.endDate ? new Date(a.endDate) : new Date(a.startDate))
+                        const dateB = b.current ? new Date() : (b.endDate ? new Date(b.endDate) : new Date(b.startDate))
+                        return dateB.getTime() - dateA.getTime()
+                      })
+                      .map((exp: {
                       company: string
                       position: string
                       location?: string
@@ -293,7 +301,20 @@ export default async function MemberDetailPage({
                     Formation
                   </h2>
                   <div className="space-y-6">
-                    {user.education.map((edu: {
+                    {[...user.education]
+                      .sort((a, b) => {
+                        // Ordre chronologique : du plus récent au plus ancien
+                        // On compare les années de fin (ou l'année en cours si formation en cours)
+                        const currentYear = new Date().getFullYear()
+                        const yearA = a.endYear || currentYear
+                        const yearB = b.endYear || currentYear
+                        // Si les années de fin sont égales, comparer les années de début
+                        if (yearA === yearB) {
+                          return (b.startYear || 0) - (a.startYear || 0)
+                        }
+                        return yearB - yearA
+                      })
+                      .map((edu: {
                       school: string
                       degree: string
                       field?: string

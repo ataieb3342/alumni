@@ -5,6 +5,7 @@ import Footer from '../components/Footer'
 import BlogContent from '../components/BlogContent'
 import Link from 'next/link'
 import HeroSection from '../components/HeroSection'
+import { getRandomImage } from '@/lib/images'
 
 interface Post {
   _id: string
@@ -23,6 +24,7 @@ interface Post {
 
 export default async function BlogPage() {
   const posts = await client.fetch<Post[]>(postsQuery)
+  const randomImage = getRandomImage()
 
   return (
     <>
@@ -33,6 +35,8 @@ export default async function BlogPage() {
         <HeroSection
           title="Notre Blog"
           subtitle="Explorez nos derniers articles, actualités et insights pour rester informé"
+          backgroundImage={randomImage}
+          showButtons={false}
         />
 
         {/* Blog Posts Section */}

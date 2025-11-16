@@ -5,6 +5,7 @@ import { announcementQuery } from '@/sanity/lib/queries'
 import { PortableText } from '@portabletext/react'
 import { urlFor } from '@/sanity/lib/image'
 import Link from 'next/link'
+import Image from 'next/image'
 import Header from '@/app/components/Header'
 import Footer from '@/app/components/Footer'
 
@@ -197,9 +198,11 @@ export default async function AnnouncementDetailPage({
             <div className="pt-6 border-t border-gray-200">
               <div className="flex items-center gap-3">
                 {authorImage ? (
-                  <img
+                  <Image
                     src={authorImage}
                     alt={`${announcement.author.firstName} ${announcement.author.lastName}`}
+                    width={48}
+                    height={48}
                     className="w-12 h-12 rounded-full object-cover"
                   />
                 ) : (

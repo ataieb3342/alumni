@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { urlFor } from '@/sanity/lib/image'
 
 interface Author {
@@ -131,9 +132,11 @@ export default function AnnouncementCard({ announcement }: AnnouncementCardProps
         <div className="p-6 pt-0 mt-auto">
           <div className="flex items-center gap-3 mb-4">
             {authorImage ? (
-              <img
+              <Image
                 src={authorImage}
                 alt={`${announcement.author.firstName} ${announcement.author.lastName}`}
+                width={40}
+                height={40}
                 className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm"
               />
             ) : (

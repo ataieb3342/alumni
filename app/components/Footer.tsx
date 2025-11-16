@@ -4,7 +4,7 @@ export default function Footer() {
   return (
     <footer className="bg-gray-900 text-white py-8 mt-16">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="grid md:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-8">
           <div>
             <h4 className="font-bold text-lg mb-4">À propos</h4>
             <p className="text-gray-400 text-sm mb-3">
@@ -23,6 +23,14 @@ export default function Footer() {
               <li><Link href="/blog" className="hover:text-white">Actualités</Link></li>
               <li><Link href="/annuaire" className="hover:text-white">Annuaire</Link></li>
               <li><Link href="/annonces" className="hover:text-white">Annonces</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-bold text-lg mb-4">Informations légales</h4>
+            <ul className="space-y-2 text-gray-400 text-sm">
+              <li><Link href="/mentions-legales" className="hover:text-white">Mentions légales</Link></li>
+              <li><Link href="/politique-confidentialite" className="hover:text-white">Politique de confidentialité (RGPD)</Link></li>
             </ul>
           </div>
 

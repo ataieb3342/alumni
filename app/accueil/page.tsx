@@ -8,12 +8,12 @@ import Footer from '@/app/components/Footer'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Briefcase } from 'lucide-react'
+import { getRandomImage } from '@/lib/images'
 
 export const revalidate = 60 // Revalider la page toutes les 60 secondes
 
 // Images de fallback disponibles
 const FALLBACK_IMAGES = [
-  '/images/logo.jpg',
   '/images/lvh-facade-640x360.jpg',
   '/images/lycee-victor-hugo.jpg'
 ]
@@ -87,6 +87,8 @@ export default async function AccueilPage() {
     client.fetch<Announcement[]>(recentAnnouncementsQuery)
   ])
 
+  const randomImage = getRandomImage()
+
   return (
     <>
       <Header />
@@ -94,6 +96,7 @@ export default async function AccueilPage() {
         {/* Hero Section avec effet de scroll */}
         <AccueilHeroSection
           userName={session.user?.name || null}
+          backgroundImage={randomImage}
         />
 
         {/* Actions rapides - Design épuré */}

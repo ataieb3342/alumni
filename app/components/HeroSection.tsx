@@ -8,9 +8,17 @@ interface HeroSectionProps {
   title?: string
   subtitle?: string
   showButtons?: boolean
+  backgroundImage?: string
+  sideImage?: string
 }
 
-export default function HeroSection({ title, subtitle, showButtons = true }: HeroSectionProps = {}) {
+export default function HeroSection({
+  title,
+  subtitle,
+  showButtons = true,
+  backgroundImage = '/images/lycee-victor-hugo.jpg',
+  sideImage = '/images/lvh-facade-640x360.jpg'
+}: HeroSectionProps = {}) {
   const [scrollY, setScrollY] = useState(0)
 
   useEffect(() => {
@@ -36,7 +44,7 @@ export default function HeroSection({ title, subtitle, showButtons = true }: Her
         }}
       >
         <Image
-          src="/images/lycee-victor-hugo.jpg"
+          src={backgroundImage}
           alt="Lycée Victor Hugo"
           fill
           className="object-cover object-bottom"
@@ -115,12 +123,6 @@ export default function HeroSection({ title, subtitle, showButtons = true }: Her
                       </svg>
                       Adhésion gratuite
                     </div>
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      Accès complet
-                    </div>
                   </div>
                 </>
               )}
@@ -129,7 +131,7 @@ export default function HeroSection({ title, subtitle, showButtons = true }: Her
             <div className="relative hidden md:block">
               <div className="relative h-[450px] rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white/20 transition-transform duration-500">
                 <Image
-                  src="/images/lvh-facade-640x360.jpg"
+                  src={sideImage}
                   alt="Lycée Victor Hugo"
                   fill
                   className="object-cover"
