@@ -37,48 +37,8 @@ export async function GET(request: Request) {
       "activeUsers": count(*[_type == "user" && accountStatus == "active"]),
       "pendingUsers": count(*[_type == "user" && accountStatus == "pending"]),
       "totalAnnouncements": count(*[_type == "announcement"]),
-      "recentActivities": *[_type == "activityLog" && timestamp >= $startDate] | order(timestamp desc)[0...100] {
-        _id,
-        action,
-        resource,
-        resourceId,
-        timestamp,
-        user->{
-          firstName,
-          lastName,
-          email
-        }
-      },
-      "activityByAction": *[_type == "activityLog" && timestamp >= $startDate] | order(timestamp desc) {
-        action
-      },
-      "loginStats": *[_type == "activityLog" && action == "login" && timestamp >= $startDate] | order(timestamp desc) {
-        timestamp,
-        user->{
-          firstName,
-          lastName
-        }
-      },
       "newsletterSubscriptions": count(*[_type == "newsletterSubscription" && (generalNewsletter == true || announcementsNewsletter == true)])
     }`, { startDate: startDate.toISOString() })
-
-    interface ActivityLog {
-      action: string
-      timestamp: string
-    }
-
-    // Compter les actions par type
-    const actionCounts: Record<string, number> = {}
-    stats.activityByAction.forEach((log: ActivityLog) => {
-      actionCounts[log.action] = (actionCounts[log.action] || 0) + 1
-    })
-
-    // Statistiques par jour pour les connexions
-    const loginsByDay: Record<string, number> = {}
-    stats.loginStats.forEach((log: ActivityLog) => {
-      const date = new Date(log.timestamp).toLocaleDateString('fr-FR')
-      loginsByDay[date] = (loginsByDay[date] || 0) + 1
-    })
 
     return NextResponse.json({
       period: daysAgo,
@@ -87,9 +47,6 @@ export async function GET(request: Request) {
       pendingUsers: stats.pendingUsers,
       totalAnnouncements: stats.totalAnnouncements,
       newsletterSubscriptions: stats.newsletterSubscriptions,
-      recentActivities: stats.recentActivities,
-      actionCounts,
-      loginsByDay,
     })
   } catch (error) {
     console.error('Erreur lors de la récupération des stats:', error)

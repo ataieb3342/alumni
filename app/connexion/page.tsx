@@ -6,6 +6,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import PublicHeader from '../components/PublicHeader'
 import Footer from '../components/Footer'
+import OAuthButtons from '../components/OAuthButtons'
 import Link from 'next/link'
 
 function LoginForm() {
@@ -128,6 +129,10 @@ function LoginForm() {
               {loading ? 'Connexion...' : 'Se connecter'}
             </button>
           </form>
+
+          <div className="mt-6">
+            <OAuthButtons mode="signin" callbackUrl="/accueil" />
+          </div>
 
           <div className="mt-6 text-center">
             <p className="text-gray-600">

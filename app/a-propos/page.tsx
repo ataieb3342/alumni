@@ -141,22 +141,6 @@ export default async function AProposPage() {
                   Fondé à la <strong className="text-amber-600">fin du XVIe siècle</strong> par les Jésuites, l&apos;établissement a traversé les siècles
                   et les régimes, passant du Collège Saint Louis au Lycée Impérial, pour finalement prendre le nom
                   de <strong className="text-amber-600">Victor Hugo en 1885</strong>, en hommage au poète français né à Besançon.
-                </p>
-                <div className="grid md:grid-cols-2 gap-4 my-6">
-                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-100">
-                    <div className="text-2xl mb-2">🔬</div>
-                    <p className="text-sm text-gray-700">
-                      <strong>Louis Pasteur</strong>, figure emblématique de la science française, fut élève puis maître d&apos;études au lycée
-                    </p>
-                  </div>
-                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-100">
-                    <div className="text-2xl mb-2">✨</div>
-                    <p className="text-sm text-gray-700">
-                      Une <strong>réputation scientifique</strong> forgée notamment grâce aux succès de ses élèves à Polytechnique
-                    </p>
-                  </div>
-                </div>
-                <p className="text-gray-700 leading-relaxed">
                   Déménagé en 1980 dans le quartier de Planoise, le lycée continue aujourd&apos;hui de former
                   les générations futures tout en maintenant son héritage d&apos;excellence et d&apos;innovation.
                 </p>

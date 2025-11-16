@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { serverClient } from '@/sanity/lib/server-client'
 import bcrypt from 'bcryptjs'
 import { sendAdminNotificationEmail } from '@/lib/email'
-import { logActivity, getClientIp, getUserAgent } from '@/lib/activity-logger'
 import { z } from 'zod'
 
 const registerSchema = z.object({
@@ -81,17 +80,6 @@ export async function POST(request: Request) {
       console.error('Erreur lors de l\'envoi de l\'email:', emailError)
       // On continue même si l'email échoue
     }
-
-    // Logger l'activité
-    await logActivity({
-      userId: newUser._id,
-      action: 'signup',
-      resource: 'user',
-      resourceId: newUser._id,
-      details: `Nouvelle inscription: ${firstName} ${lastName} (${userType})`,
-      ipAddress: getClientIp(request),
-      userAgent: getUserAgent(request),
-    })
 
     return NextResponse.json(
       {

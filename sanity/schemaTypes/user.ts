@@ -30,6 +30,46 @@ export const userType = defineType({
       hidden: true, // Caché dans le studio
     }),
     defineField({
+      name: 'oauthProvider',
+      title: 'Provider OAuth',
+      type: 'string',
+      description: 'Provider OAuth utilisé (google, linkedin)',
+      options: {
+        list: [
+          { title: 'Google', value: 'google' },
+          { title: 'LinkedIn', value: 'linkedin' },
+        ],
+      },
+      hidden: true,
+    }),
+    defineField({
+      name: 'oauthId',
+      title: 'ID OAuth',
+      type: 'string',
+      description: 'ID du compte OAuth',
+      hidden: true,
+    }),
+    defineField({
+      name: 'linkedInProfile',
+      title: 'Profil LinkedIn (données brutes)',
+      type: 'object',
+      description: 'Données du profil LinkedIn pour mapping',
+      fields: [
+        { name: 'raw', title: 'Données brutes', type: 'text' }
+      ],
+      hidden: true,
+    }),
+    defineField({
+      name: 'googleProfile',
+      title: 'Profil Google (données brutes)',
+      type: 'object',
+      description: 'Données du profil Google pour mapping',
+      fields: [
+        { name: 'raw', title: 'Données brutes', type: 'text' }
+      ],
+      hidden: true,
+    }),
+    defineField({
       name: 'userType',
       title: 'Type de membre',
       type: 'string',

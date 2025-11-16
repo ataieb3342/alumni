@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import PublicHeader from '../components/PublicHeader'
 import Footer from '../components/Footer'
+import OAuthButtons from '../components/OAuthButtons'
 import Link from 'next/link'
 
 export default function RegisterPage() {
@@ -169,7 +170,11 @@ export default function RegisterPage() {
                 {loading ? 'Inscription...' : 'S\'inscrire'}
               </button>
             </form>
-            
+
+            <div className="mt-6">
+              <OAuthButtons mode="signup" callbackUrl="/setup-profil" />
+            </div>
+
             <div className="mt-6 text-center">
               <p className="text-gray-600">
                 Déjà un compte ?{' '}
