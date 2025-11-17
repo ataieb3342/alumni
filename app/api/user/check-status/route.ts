@@ -13,12 +13,15 @@ export async function POST(request: Request) {
       )
     }
 
+    // Normaliser l'email en minuscules pour la comparaison
+    const normalizedEmail = email.toLowerCase()
+
     // Récupérer le statut du compte
     const user = await serverClient.fetch(
       `*[_type == "user" && email == $email][0]{
         accountStatus
       }`,
-      { email }
+      { email: normalizedEmail }
     )
 
     if (!user) {

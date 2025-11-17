@@ -14,10 +14,13 @@ export async function POST(request: Request) {
       )
     }
 
+    // Normaliser l'email en minuscules pour la comparaison
+    const normalizedEmail = email.toLowerCase()
+
     // Vérifier si l'utilisateur existe
     const user = await serverClient.fetch(
       `*[_type == "user" && email == $email][0]`,
-      { email }
+      { email: normalizedEmail }
     )
 
     // Pour des raisons de sécurité, on renvoie toujours un message de succès
@@ -36,7 +39,7 @@ export async function POST(request: Request) {
     // Invalider les anciens tokens pour cet email
     const oldTokens = await serverClient.fetch(
       `*[_type == "passwordResetToken" && email == $email && used == false]`,
-      { email }
+      { email: normalizedEmail }
     )
 
     for (const oldToken of oldTokens) {
@@ -46,7 +49,7 @@ export async function POST(request: Request) {
     // Créer un nouveau token dans Sanity
     await serverClient.create({
       _type: 'passwordResetToken',
-      email,
+      email: normalizedEmail,
       token,
       expiresAt: expiresAt.toISOString(),
       used: false,
@@ -54,7 +57,7 @@ export async function POST(request: Request) {
     })
 
     // Envoyer l'email
-    const emailResult = await sendPasswordResetEmail(email, token)
+    const emailResult = await sendPasswordResetEmail(normalizedEmail, token)
 
     if (!emailResult.success) {
       return NextResponse.json(

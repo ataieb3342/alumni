@@ -32,8 +32,15 @@ function ResetPasswordForm() {
       return
     }
 
-    if (password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères')
+    if (password.length < 12) {
+      setError('Le mot de passe doit contenir au moins 12 caractères')
+      return
+    }
+
+    // Vérifier la complexité du mot de passe
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/
+    if (!passwordRegex.test(password)) {
+      setError('Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*?&)')
       return
     }
 
@@ -162,9 +169,9 @@ function ResetPasswordForm() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      minLength={6}
+                      minLength={12}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 focus:border-transparent text-gray-900 placeholder:text-gray-400"
-                      placeholder="Au moins 6 caractères"
+                      placeholder="12 caractères min, avec majuscule, minuscule, chiffre et @$!%*?&"
                     />
                   </div>
 
@@ -181,7 +188,7 @@ function ResetPasswordForm() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
-                      minLength={6}
+                      minLength={12}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 focus:border-transparent text-gray-900 placeholder:text-gray-400"
                       placeholder="Retapez le mot de passe"
                     />

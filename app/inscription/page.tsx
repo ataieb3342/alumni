@@ -29,8 +29,15 @@ export default function RegisterPage() {
       return
     }
 
-    if (formData.password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères')
+    if (formData.password.length < 12) {
+      setError('Le mot de passe doit contenir au moins 12 caractères')
+      return
+    }
+
+    // Vérifier la complexité du mot de passe
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/
+    if (!passwordRegex.test(formData.password)) {
+      setError('Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*?&)')
       return
     }
 
@@ -142,8 +149,9 @@ export default function RegisterPage() {
                     value={formData.password}
                     onChange={(e) => setFormData({...formData, password: e.target.value})}
                     required
-                    minLength={6}
+                    minLength={12}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
+                    placeholder="12 caractères min, avec majuscule, minuscule, chiffre et @$!%*?&"
                   />
                 </div>
                 
@@ -156,8 +164,9 @@ export default function RegisterPage() {
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
                     required
-                    minLength={6}
+                    minLength={12}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
+                    placeholder="Retapez le mot de passe"
                   />
                 </div>
               </div>

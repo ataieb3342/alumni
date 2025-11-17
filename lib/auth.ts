@@ -62,6 +62,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
 
         try {
+          // Normaliser l'email en minuscules pour la comparaison
+          const normalizedEmail = (credentials.email as string).toLowerCase()
+
           // Récupérer l'utilisateur depuis Sanity
           const user = await client.fetch(
             `*[_type == "user" && email == $email][0]{
@@ -73,7 +76,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               userType,
               accountStatus
             }`,
-            { email: credentials.email }
+            { email: normalizedEmail }
           )
 
           if (!user || !user.password) {
@@ -120,6 +123,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // Connexion OAuth (Google ou LinkedIn)
       if (account && (account.provider === "google" || account.provider === "linkedin")) {
         try {
+          // Normaliser l'email en minuscules pour la comparaison
+          const normalizedEmail = user.email?.toLowerCase()
+
           // Vérifier si l'utilisateur existe déjà
           const existingUser = await client.fetch(
             `*[_type == "user" && email == $email][0]{
@@ -132,7 +138,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               oauthProvider,
               oauthId
             }`,
-            { email: user.email }
+            { email: normalizedEmail }
           )
 
           if (existingUser) {
@@ -196,9 +202,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           // Créer le nouvel utilisateur dans Sanity avec données OAuth
           const newUser = await serverClient.create({
             _type: 'user',
-            firstName,
-            lastName,
-            email: user.email!,
+            firstName: firstName,
+            lastName: lastName,
+            email: normalizedEmail!,
             oauthProvider: account.provider,
             oauthId: account.providerAccountId,
             accountStatus: 'pending', // En attente de validation admin (cohérence avec inscription classique)
@@ -275,13 +281,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return token
     },
     async session({ session, token }) {
-      if (session.user) {
+      if (session.user && token.id) {
         session.user.id = token.id as string
         session.user.userType = token.userType as string
         session.user.isNewUser = token.isNewUser as boolean
         session.user.needsProfileSetup = token.needsProfileSetup as boolean
         session.user.provider = token.provider as string
         session.user.accountStatus = token.accountStatus as string
+
+        // Récupérer les données à jour depuis Sanity
+        const userData = await client.fetch(
+          `*[_type == "user" && _id == $id][0]{
+            firstName,
+            lastName
+          }`,
+          { id: token.id }
+        )
+
+        if (userData) {
+          session.user.firstName = userData.firstName
+          session.user.lastName = userData.lastName
+          session.user.name = `${userData.firstName} ${userData.lastName}`
+        }
       }
       return session
     }

@@ -170,7 +170,7 @@ export default async function AccueilPage() {
 
         {/* Section Articles */}
         <section className="max-w-7xl mx-auto px-6 py-16">
-          <div className="flex items-end justify-between mb-10">
+          <div className="flex items-end justify-between mb-6">
             <div>
               <h2 className="text-3xl font-bold tracking-tight text-gray-900 mb-2">Derniers articles</h2>
               <div className="flex items-center gap-2">

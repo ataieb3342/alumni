@@ -57,8 +57,8 @@ export async function POST(request: Request) {
     // Créer l'utilisateur dans Sanity avec statut "pending"
     const newUser = await serverClient.create({
       _type: 'user',
-      firstName,
-      lastName,
+      firstName: firstName,
+      lastName: lastName,
       email,
       password: hashedPassword,
       userType,

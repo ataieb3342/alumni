@@ -6,6 +6,8 @@ declare module "next-auth" {
     user: {
       id: string
       userType: string
+      firstName?: string
+      lastName?: string
       isNewUser?: boolean
       needsProfileSetup?: boolean
       provider?: string

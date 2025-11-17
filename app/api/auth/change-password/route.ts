@@ -24,9 +24,18 @@ export async function POST(request: Request) {
       )
     }
 
-    if (newPassword.length < 6) {
+    if (newPassword.length < 12) {
       return NextResponse.json(
-        { error: 'Le nouveau mot de passe doit contenir au moins 6 caractères' },
+        { error: 'Le nouveau mot de passe doit contenir au moins 12 caractères' },
+        { status: 400 }
+      )
+    }
+
+    // Vérifier la complexité du mot de passe
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/
+    if (!passwordRegex.test(newPassword)) {
+      return NextResponse.json(
+        { error: 'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*?&)' },
         { status: 400 }
       )
     }
