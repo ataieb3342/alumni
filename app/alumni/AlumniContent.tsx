@@ -43,7 +43,7 @@ export default function AlumniContent() {
             </span>
           </h1>
           <p className="text-xl md:text-2xl text-purple-100 font-medium max-w-2xl mx-auto">
-            Retrouve ton réseau Victor Hugo
+            Parce que tu as aussi galéré avec ton orientation
           </p>
         </div>
 
@@ -85,8 +85,8 @@ export default function AlumniContent() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">Retrouve tes camarades</h3>
-            <p className="text-purple-100">Reconnecte avec tes anciens de promo et agrandis ton réseau pro</p>
+            <h3 className="text-xl font-bold text-white mb-2">Guide les élèves actuels</h3>
+            <p className="text-purple-100">Aide-les dans leur orientation, propose des stages, partage ton expérience</p>
           </div>
 
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105">
@@ -95,8 +95,8 @@ export default function AlumniContent() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">Opportunités pro</h3>
-            <p className="text-purple-100">Offres d&apos;emploi, collaborations et conseils de carrière</p>
+            <h3 className="text-xl font-bold text-white mb-2">Retrouve tes camarades</h3>
+            <p className="text-purple-100">Reconnecte avec tes anciens et développe ton réseau professionnel</p>
           </div>
 
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105">
@@ -105,8 +105,8 @@ export default function AlumniContent() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">Événements alumni</h3>
-            <p className="text-purple-100">Apéros networking, conférences et rencontres inspirantes</p>
+            <h3 className="text-xl font-bold text-white mb-2">Crée du lien</h3>
+            <p className="text-purple-100">Événements entre anciens, rencontres avec les élèves, transmission</p>
           </div>
         </div>
 
@@ -121,10 +121,10 @@ export default function AlumniContent() {
                 Adhésion 100% gratuite
               </div>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                Rejoins VH Besançon Alumni
+                Aide la prochaine génération
               </h2>
               <p className="text-lg text-gray-600 mb-2">
-                Ancien élève ou personnel de Victor Hugo ? Rejoins notre communauté et développe ton réseau professionnel.
+                Tu te souviens du stress du post-bac ? Des galères pour trouver un stage ? Aujourd&apos;hui, tu peux aider ceux qui vivent la même chose.
               </p>
               <div className="inline-flex items-center gap-2 text-sm text-blue-600 font-semibold bg-blue-50 px-4 py-2 rounded-full">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
