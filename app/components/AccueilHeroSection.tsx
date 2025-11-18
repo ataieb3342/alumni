@@ -56,14 +56,6 @@ export default function AccueilHeroSection({
         }}
       >
         <div className="text-center space-y-6">
-          {/* Badge de bienvenue */}
-          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium mb-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-            </span>
-            Salut {userName?.split(' ')[0] || 'toi'} !
-          </div>
 
           <h1 className="text-5xl md:text-7xl font-black leading-tight">
             <span className="bg-gradient-to-r from-white via-blue-50 to-white bg-clip-text text-transparent drop-shadow-lg">
@@ -76,7 +68,7 @@ export default function AccueilHeroSection({
           </h1>
 
           <p className="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto leading-relaxed">
-            Découvre les derniers articles et opportunités qui pourraient t&apos;intéresser
+            Découvre les derniers articles, opportunités ou témoignages qui pourraient t&apos;intéresser
           </p>
 
         </div>

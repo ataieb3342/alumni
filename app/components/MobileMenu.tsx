@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Session } from 'next-auth'
-import { Home, BookOpen, Users, Megaphone, Settings, Info, LogOut, LogIn, Menu, X } from 'lucide-react'
+import { Home, BookOpen, Users, Megaphone, Settings, Info, LogOut, LogIn, Menu, X, MessageSquare } from 'lucide-react'
 
 interface MobileMenuProps {
   session: Session | null
@@ -16,7 +16,7 @@ export default function MobileMenu({ session }: MobileMenuProps) {
   const closeMenu = () => setIsOpen(false)
 
   return (
-    <div className="md:hidden">
+    <div className="lg:hidden">
       {/* Burger Button */}
       <button
         onClick={toggleMenu}
@@ -70,13 +70,16 @@ export default function MobileMenu({ session }: MobileMenuProps) {
                 <BookOpen className="w-5 h-5 group-hover:scale-110 transition-transform" />
                 <span className="font-medium">Blog</span>
               </Link>
+              <Link
+                href="/temoignages"
+                onClick={closeMenu}
+                className="flex items-center space-x-3 py-3 px-4 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors group"
+              >
+                <MessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                <span className="font-medium">Témoignages</span>
+              </Link>
               {session && (
                 <>
-                  <div className="pt-2 pb-2">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 pb-2">
-                      Espace membre
-                    </p>
-                  </div>
                   <Link
                     href="/annuaire"
                     onClick={closeMenu}
@@ -94,20 +97,37 @@ export default function MobileMenu({ session }: MobileMenuProps) {
                     <span className="font-medium">Annonces</span>
                   </Link>
                   <Link
-                    href="/parametres"
-                    onClick={closeMenu}
-                    className="flex items-center space-x-3 py-3 px-4 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors group"
-                  >
-                    <Settings className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                    <span className="font-medium">Paramètres</span>
-                  </Link>
-                  <Link
                     href="/a-propos"
                     onClick={closeMenu}
                     className="flex items-center space-x-3 py-3 px-4 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors group"
                   >
                     <Info className="w-5 h-5 group-hover:scale-110 transition-transform" />
                     <span className="font-medium">À propos</span>
+                  </Link>
+
+                  {/* Section Mon compte */}
+                  <div className="pt-4 pb-2 border-t border-slate-700 mt-2">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 pb-2">
+                      Mon compte
+                    </p>
+                  </div>
+                  <Link
+                    href="/profil"
+                    onClick={closeMenu}
+                    className="flex items-center space-x-3 py-3 px-4 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors group"
+                  >
+                    <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span className="font-medium">Profil</span>
+                  </Link>
+                  <Link
+                    href="/parametres"
+                    onClick={closeMenu}
+                    className="flex items-center space-x-3 py-3 px-4 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors group"
+                  >
+                    <Settings className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                    <span className="font-medium">Paramètres</span>
                   </Link>
                 </>
               )}

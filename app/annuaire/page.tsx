@@ -13,17 +13,8 @@ interface User {
   lastName: string
   email: string
   userType: string
-  phone?: string
   promotionYear?: number
-  currentCity?: string
-  currentJob?: string
-  company?: string
   linkedIn?: string
-  website?: string
-  github?: string
-  twitter?: string
-  facebook?: string
-  instagram?: string
   bio?: string
   description?: string
   education?: Array<{
@@ -45,7 +36,6 @@ interface User {
   }>
   roleAssociation?: string[]
   personnelMetier?: string[]
-  anneesLvh?: string
   profileImage?: {
     asset: {
       _id: string
@@ -70,7 +60,12 @@ export default async function AnnuairePage() {
   const users = await client.fetch<User[]>(directoryUsersQuery)
 
   // Séparer les alumni et le personnel
-  const alumni = users.filter((u) => u.userType === 'alumni')
+  // Les lycéens ne sont pas affichés dans l'annuaire (profil restreint)
+  const alumni = users.filter((u) =>
+    u.userType === 'alumni' ||
+    u.userType === 'bts' ||
+    u.userType === 'prepa'
+  )
   const staff = users.filter((u) => u.userType === 'staff')
 
   return (

@@ -70,10 +70,11 @@ export const postQuery = groq`*[_type == "post" && slug.current == $slug][0] {
 }`
 
 // Récupérer tous les utilisateurs visibles dans l'annuaire
+// Les lycéens sont exclus car ils ont un profil restreint (nom, prénom, email uniquement)
 export const directoryUsersQuery = groq`*[
   _type == "user" &&
   isVisibleInDirectory == true &&
-  (userType == "alumni" || userType == "staff")
+  (userType == "alumni" || userType == "bts" || userType == "prepa" || userType == "staff")
 ] | order(lastName asc) {
   _id,
   firstName,
@@ -81,23 +82,13 @@ export const directoryUsersQuery = groq`*[
   email,
   userType,
   promotionYear,
-  currentCity,
-  currentJob,
-  company,
-  phone,
   linkedIn,
-  website,
-  github,
-  twitter,
-  facebook,
-  instagram,
   bio,
   description,
   education,
   experience,
   roleAssociation,
   personnelMetier,
-  anneesLvh,
   profileImage {
     asset->{
       _id,
@@ -120,24 +111,14 @@ export const userByIdQuery = groq`*[_type == "user" && _id == $userId][0] {
   email,
   userType,
   promotionYear,
-  currentCity,
   currentStudies,
-  currentJob,
-  company,
-  phone,
   linkedIn,
-  website,
-  github,
-  twitter,
-  facebook,
-  instagram,
   bio,
   description,
   education,
   experience,
   roleAssociation,
   personnelMetier,
-  anneesLvh,
   profileImage {
     asset->{
       _id,
@@ -241,9 +222,8 @@ export const announcementQuery = groq`*[_type == "announcement" && slug.current 
     email,
     phone,
     userType,
-    company,
-    currentJob,
     linkedIn,
+    experience,
     profileImage {
       asset->{
         _id,
@@ -341,4 +321,203 @@ export const announcementsNewsletterSubscribersQuery = groq`*[
     firstName,
     lastName
   }
+}`
+
+// ========================================
+// QUERIES POUR LES TÉMOIGNAGES
+// ========================================
+
+// Récupérer tous les témoignages publiés
+export const testimonialsQuery = groq`*[
+  _type == "testimonial" &&
+  status == "published"
+] | order(publishedAt desc) {
+  _id,
+  title,
+  slug,
+  type,
+  excerpt,
+  rating,
+  likes,
+  tags,
+  publishedAt,
+  featuredImage {
+    asset->{
+      _id,
+      url
+    }
+  },
+  author->{
+    _id,
+    firstName,
+    lastName,
+    userType,
+    promotionYear,
+    profileImage {
+      asset->{
+        _id,
+        url
+      }
+    }
+  }
+}`
+
+// Récupérer les témoignages les plus populaires pour la page d'accueil
+export const popularTestimonialsQuery = groq`*[
+  _type == "testimonial" &&
+  status == "published"
+] | order(likes desc, publishedAt desc) [0...6] {
+  _id,
+  title,
+  slug,
+  type,
+  excerpt,
+  rating,
+  likes,
+  tags,
+  publishedAt,
+  featuredImage {
+    asset->{
+      _id,
+      url
+    }
+  },
+  author->{
+    _id,
+    firstName,
+    lastName,
+    userType,
+    promotionYear,
+    profileImage {
+      asset->{
+        _id,
+        url
+      }
+    }
+  }
+}`
+
+// Récupérer un témoignage par son slug avec tous les détails
+export const testimonialQuery = groq`*[_type == "testimonial" && slug.current == $slug][0] {
+  _id,
+  title,
+  slug,
+  type,
+  excerpt,
+  rating,
+  likes,
+  tags,
+  publishedAt,
+  createdAt,
+  featuredImage {
+    asset->{
+      _id,
+      url
+    }
+  },
+  author->{
+    _id,
+    firstName,
+    lastName,
+    email,
+    userType,
+    promotionYear,
+    bio,
+    linkedIn,
+    profileImage {
+      asset->{
+        _id,
+        url
+      }
+    }
+  },
+
+  // Champs spécifiques études
+  studies_school,
+  studies_program,
+  studies_year,
+  studies_why,
+  studies_strengths,
+  studies_challenges,
+  studies_advice,
+
+  // Champs spécifiques entreprise
+  company_name,
+  company_position,
+  company_duration,
+  company_context,
+  company_missions,
+  company_learnings,
+  company_how,
+
+  // Champs spécifiques parcours
+  career_journey,
+  career_transition,
+  career_turning_point,
+  career_advice,
+
+  // Champs spécifiques international
+  international_location,
+  international_duration,
+  international_why,
+  international_daily_life,
+  international_best_memory,
+  international_challenges,
+
+  // Champs spécifiques mentorat
+  mentoring_topic,
+  mentoring_context,
+  mentoring_advice,
+  mentoring_mistakes,
+
+  // Champs spécifiques projet
+  project_name,
+  project_description,
+  project_role,
+  project_challenges,
+  project_outcome,
+  project_learnings
+}`
+
+// Récupérer les témoignages par type
+export const testimonialsByTypeQuery = groq`*[
+  _type == "testimonial" &&
+  status == "published" &&
+  type == $type
+] | order(publishedAt desc) {
+  _id,
+  title,
+  slug,
+  type,
+  excerpt,
+  rating,
+  likes,
+  publishedAt,
+  author->{
+    _id,
+    firstName,
+    lastName,
+    profileImage {
+      asset->{
+        _id,
+        url
+      }
+    }
+  }
+}`
+
+// Récupérer les témoignages d'un utilisateur
+export const userTestimonialsQuery = groq`*[
+  _type == "testimonial" &&
+  author._ref == $userId
+] | order(publishedAt desc) {
+  _id,
+  title,
+  slug,
+  type,
+  status,
+  rating,
+  likes,
+  publishedAt,
+  createdAt
 }`

@@ -4,13 +4,14 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { urlFor } from '@/sanity/lib/image'
+import ImageCropModal from './ImageCropModal'
 
 interface Education {
   school: string
   degree: string
   field?: string
-  startYear: number | string
-  endYear?: number | string
+  startYear: number | ''
+  endYear?: number | ''
   description?: string
 }
 
@@ -32,10 +33,7 @@ interface ProfileFormProps {
     email: string
     userType: string
     promotionYear?: number
-    currentCity?: string
     currentStudies?: string
-    currentJob?: string
-    company?: string
     linkedIn?: string
     bio?: string
     isVisibleInDirectory?: boolean
@@ -57,14 +55,19 @@ interface ProfileFormProps {
 }
 
 export default function ProfileForm({ userData }: ProfileFormProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    firstName: string
+    lastName: string
+    promotionYear: number | ''
+    currentStudies: string
+    linkedIn: string
+    bio: string
+    isVisibleInDirectory: boolean
+  }>({
     firstName: userData.firstName || '',
     lastName: userData.lastName || '',
-    promotionYear: userData.promotionYear || '',
-    currentCity: userData.currentCity || '',
+    promotionYear: userData.promotionYear ?? '',
     currentStudies: userData.currentStudies || '',
-    currentJob: userData.currentJob || '',
-    company: userData.company || '',
     linkedIn: userData.linkedIn || '',
     bio: userData.bio || '',
     isVisibleInDirectory: userData.isVisibleInDirectory ?? true,
@@ -77,6 +80,11 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
   const [imageDeleted, setImageDeleted] = useState(false)
   const [coverImage, setCoverImage] = useState<File | null>(null)
   const [coverImageDeleted, setCoverImageDeleted] = useState(false)
+
+  // États pour le modal de recadrage
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null)
+  const [coverImageToCrop, setCoverImageToCrop] = useState<string | null>(null)
+  const [cropModalType, setCropModalType] = useState<'profile' | 'cover' | null>(null)
 
   // Utiliser urlFor pour l'image existante de Sanity, ou null
   const existingImageUrl = userData.profileImage
@@ -111,16 +119,16 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
         return
       }
 
-      setProfileImage(file)
-      setImageDeleted(false) // Réinitialiser le flag si une nouvelle image est sélectionnée
-
-      // Créer une prévisualisation
+      // Créer une URL temporaire pour le recadrage
       const reader = new FileReader()
       reader.onloadend = () => {
-        setImagePreview(reader.result as string)
+        setImageToCrop(reader.result as string)
+        setCropModalType('profile')
       }
       reader.readAsDataURL(file)
     }
+    // Réinitialiser l'input pour permettre de sélectionner la même image plusieurs fois
+    e.target.value = ''
   }
 
   const removeImage = () => {
@@ -147,22 +155,67 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
         return
       }
 
-      setCoverImage(file)
-      setCoverImageDeleted(false)
-
-      // Créer une prévisualisation
+      // Créer une URL temporaire pour le recadrage
       const reader = new FileReader()
       reader.onloadend = () => {
-        setCoverImagePreview(reader.result as string)
+        setCoverImageToCrop(reader.result as string)
+        setCropModalType('cover')
       }
       reader.readAsDataURL(file)
     }
+    // Réinitialiser l'input pour permettre de sélectionner la même image plusieurs fois
+    e.target.value = ''
   }
 
   const removeCoverImage = () => {
     setCoverImage(null)
     setCoverImagePreview(null)
     setCoverImageDeleted(true)
+  }
+
+  // Gestion du recadrage de la photo de profil
+  const handleProfileCropComplete = (croppedImage: Blob) => {
+    // Convertir le Blob en File
+    const file = new File([croppedImage], 'profile-image.jpg', { type: 'image/jpeg' })
+    setProfileImage(file)
+    setImageDeleted(false)
+
+    // Créer une prévisualisation
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+
+    // Fermer le modal
+    setImageToCrop(null)
+    setCropModalType(null)
+  }
+
+  // Gestion du recadrage de la photo de couverture
+  const handleCoverCropComplete = (croppedImage: Blob) => {
+    // Convertir le Blob en File
+    const file = new File([croppedImage], 'cover-image.jpg', { type: 'image/jpeg' })
+    setCoverImage(file)
+    setCoverImageDeleted(false)
+
+    // Créer une prévisualisation
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setCoverImagePreview(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+
+    // Fermer le modal
+    setCoverImageToCrop(null)
+    setCropModalType(null)
+  }
+
+  // Annuler le recadrage
+  const handleCropCancel = () => {
+    setImageToCrop(null)
+    setCoverImageToCrop(null)
+    setCropModalType(null)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -258,15 +311,23 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
       setImageDeleted(false) // Réinitialiser le flag de suppression
       setCoverImage(null) // Réinitialiser le fichier de couverture
       setCoverImageDeleted(false) // Réinitialiser le flag de suppression de couverture
+
+      // Remonter en haut de la page pour voir le message de succès
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+
       router.refresh()
     } catch (error) {
       setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Erreur lors de la mise à jour du profil' })
+      // Remonter en haut de la page pour voir le message d'erreur
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     } finally {
       setLoading(false)
     }
   }
 
-  const isAlumniOrStaff = userData.userType === 'alumni' || userData.userType === 'staff'
+  const isLyceen = userData.userType === 'lyceen'
+  const canEditFullProfile = userData.userType === 'alumni' || userData.userType === 'staff'
+  const canEditEducation = userData.userType !== 'lyceen'
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -280,9 +341,37 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
         </div>
       )}
 
-      {/* Photo de profil */}
+      {/* Type d'utilisateur */}
       <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Photo de profil</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Type de profil</h2>
+        <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="flex-shrink-0 w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+            {userData.userType === 'lyceen' && '🎓'}
+            {userData.userType === 'bts' && '📚'}
+            {userData.userType === 'prepa' && '📖'}
+            {userData.userType === 'alumni' && '🎓'}
+            {userData.userType === 'staff' && '👨‍🏫'}
+          </div>
+          <div>
+            <div className="font-semibold text-gray-900">
+              {userData.userType === 'lyceen' && 'Lycéen'}
+              {userData.userType === 'bts' && 'BTS'}
+              {userData.userType === 'prepa' && 'Prépa'}
+              {userData.userType === 'alumni' && 'Ancien élève (Alumni)'}
+              {userData.userType === 'staff' && 'Personnel'}
+            </div>
+            <div className="text-sm text-gray-600">
+              {isLyceen && 'Profil simplifié : nom, prénom et email uniquement'}
+              {!isLyceen && 'Accès complet à toutes les fonctionnalités du profil'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Photo de profil */}
+      {!isLyceen && (
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Photo de profil</h2>
         <div>
           <div className="flex items-start gap-6">
           {/* Prévisualisation de l'image */}
@@ -341,10 +430,12 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
           </div>
         </div>
         </div>
-      </div>
+        </div>
+      )}
 
       {/* Photo de couverture */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      {!isLyceen && (
+        <div className="bg-white rounded-lg shadow-sm border p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Photo de couverture</h2>
         <div className="space-y-4">
           {/* Prévisualisation de l'image de couverture */}
@@ -414,37 +505,103 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      )}
 
       {/* Informations de base */}
       <div className="bg-white rounded-lg shadow-sm border p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Informations de base</h2>
-        <div className="grid md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Prénom *
-            </label>
-            <input
-              type="text"
-              value={formData.firstName}
-              onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900"
-            />
+        <div className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Prénom *
+              </label>
+              <input
+                type="text"
+                value={formData.firstName}
+                onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nom *
+              </label>
+              <input
+                type="text"
+                value={formData.lastName}
+                onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900"
+              />
+            </div>
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nom *
-            </label>
-            <input
-              type="text"
-              value={formData.lastName}
-              onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900"
-            />
-          </div>
+
+          {canEditEducation && (
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {userData.userType === 'alumni' ? 'Année du baccalauréat' : 'Année du baccalauréat (prévue)'}
+                </label>
+                <input
+                  type="number"
+                  value={formData.promotionYear === '' ? '' : formData.promotionYear}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    setFormData({...formData, promotionYear: value === '' ? '' : parseInt(value, 10)})
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
+                  placeholder="2025"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {userData.userType === 'alumni'
+                    ? 'L\'année où vous avez obtenu votre baccalauréat'
+                    : 'L\'année prévue d\'obtention de votre baccalauréat'
+                  }
+                </p>
+              </div>
+
+              {canEditFullProfile && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    LinkedIn
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.linkedIn}
+                    onChange={(e) => setFormData({...formData, linkedIn: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
+                    placeholder="https://linkedin.com/in/votre-nom"
+                  />
+                </div>
+              )}
+
+              {!canEditFullProfile && userData.userType !== 'alumni' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Classe/Formation actuelle
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.currentStudies}
+                    onChange={(e) => setFormData({...formData, currentStudies: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
+                    placeholder={
+                      userData.userType === 'bts' ? 'BTS SIO, BTS MCO...' :
+                      userData.userType === 'prepa' ? 'MPSI, PCSI, ECG...' :
+                      'Votre classe actuelle'
+                    }
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Votre classe ou formation actuelle
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -464,134 +621,26 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
         </div>
       </div>
 
-      {/* Parcours */}
-      {!isAlumniOrStaff && (
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Parcours</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Année de promotion
-              </label>
-              <input
-                type="number"
-                value={formData.promotionYear}
-                onChange={(e) => setFormData({...formData, promotionYear: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
-                placeholder="2025"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Études actuelles
-              </label>
-              <input
-                type="text"
-                value={formData.currentStudies}
-                onChange={(e) => setFormData({...formData, currentStudies: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
-                placeholder="École/Université"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Professionnel (Alumni et Staff) */}
-      {isAlumniOrStaff && (
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Informations professionnelles</h2>
-          <div className="space-y-4">
-            <div className="grid md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Année de promotion
-                </label>
-                <input
-                  type="number"
-                  value={formData.promotionYear}
-                  onChange={(e) => setFormData({...formData, promotionYear: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
-                  placeholder="2010"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Poste actuel
-                </label>
-                <input
-                  type="text"
-                  value={formData.currentJob}
-                  onChange={(e) => setFormData({...formData, currentJob: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
-                  placeholder="Développeur Full Stack"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ville actuelle
-                </label>
-                <input
-                  type="text"
-                  value={formData.currentCity}
-                  onChange={(e) => setFormData({...formData, currentCity: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
-                  placeholder="Paris, Lyon..."
-                />
-              </div>
-            </div>
-            
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Entreprise
-                </label>
-                <input
-                  type="text"
-                  value={formData.company}
-                  onChange={(e) => setFormData({...formData, company: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
-                  placeholder="Nom de l'entreprise"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  LinkedIn
-                </label>
-                <input
-                  type="text"
-                  value={formData.linkedIn}
-                  onChange={(e) => setFormData({...formData, linkedIn: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
-                  placeholder="https://linkedin.com/in/votre-nom ou linkedin.com/in/votre-nom"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Biographie */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Biographie</h2>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Parlez de vous
-        </label>
-        <textarea
-          value={formData.bio}
-          onChange={(e) => setFormData({...formData, bio: e.target.value})}
-          rows={4}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
-          placeholder="Parlez de vous, votre parcours, vos intérêts..."
-        />
-      </div>
+      {!isLyceen && (
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Biographie</h2>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Parlez de vous
+          </label>
+          <textarea
+            value={formData.bio}
+            onChange={(e) => setFormData({...formData, bio: e.target.value})}
+            rows={4}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
+            placeholder="Parlez de vous, votre parcours, vos intérêts..."
+          />
+        </div>
+      )}
 
       {/* Formations (uniquement pour alumni et staff) */}
-      {isAlumniOrStaff && (
+      {canEditFullProfile && (
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Formations</h2>
 
@@ -701,10 +750,11 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
                           </label>
                           <input
                             type="number"
-                            value={edu.startYear}
+                            value={edu.startYear === '' ? '' : edu.startYear}
                             onChange={(e) => {
                               const newEducation = [...education]
-                              newEducation[index].startYear = e.target.value
+                              const value = e.target.value
+                              newEducation[index].startYear = value === '' ? '' : parseInt(value, 10)
                               setEducation(newEducation)
                             }}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
@@ -718,10 +768,11 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
                           </label>
                           <input
                             type="number"
-                            value={edu.endYear || ''}
+                            value={edu.endYear === '' ? '' : (edu.endYear || '')}
                             onChange={(e) => {
                               const newEducation = [...education]
-                              newEducation[index].endYear = e.target.value
+                              const value = e.target.value
+                              newEducation[index].endYear = value === '' ? '' : parseInt(value, 10)
                               setEducation(newEducation)
                             }}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
@@ -814,7 +865,7 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
       )}
 
       {/* Expériences professionnelles (uniquement pour alumni et staff) */}
-      {isAlumniOrStaff && (
+      {canEditFullProfile && (
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Expériences professionnelles</h2>
           <div className="space-y-4">
@@ -917,9 +968,17 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
                             checked={exp.current || false}
                             onChange={(e) => {
                               const newExperience = [...experience]
-                              newExperience[index].current = e.target.checked
+                              // Si on coche cette expérience comme actuelle, décocher toutes les autres
                               if (e.target.checked) {
-                                newExperience[index].endDate = ''
+                                newExperience.forEach((exp, i) => {
+                                  if (i !== index) {
+                                    exp.current = false
+                                  }
+                                })
+                                newExperience[index].current = true
+                                newExperience[index].endDate = undefined
+                              } else {
+                                newExperience[index].current = false
                               }
                               setExperience(newExperience)
                             }}
@@ -929,6 +988,9 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
                             C&apos;est mon poste actuel
                           </span>
                         </label>
+                        <p className="text-xs text-gray-500 mt-1 ml-6">
+                          Une seule expérience peut être marquée comme poste actuel. Elle sera utilisée pour l&apos;annuaire.
+                        </p>
                       </div>
 
                       <div className="md:col-span-2">
@@ -1024,7 +1086,7 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
       )}
 
       {/* Visibilité dans l'annuaire */}
-      {isAlumniOrStaff && (
+      {!isLyceen && (
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Visibilité</h2>
             <div className="flex items-start gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
@@ -1064,6 +1126,28 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
           {loading ? 'Enregistrement...' : 'Enregistrer'}
         </button>
       </div>
+
+      {/* Modal de recadrage pour la photo de profil */}
+      {cropModalType === 'profile' && imageToCrop && (
+        <ImageCropModal
+          image={imageToCrop}
+          onComplete={handleProfileCropComplete}
+          onCancel={handleCropCancel}
+          aspectRatio={1}
+          title="Recadrer la photo de profil"
+        />
+      )}
+
+      {/* Modal de recadrage pour la photo de couverture */}
+      {cropModalType === 'cover' && coverImageToCrop && (
+        <ImageCropModal
+          image={coverImageToCrop}
+          onComplete={handleCoverCropComplete}
+          onCancel={handleCropCancel}
+          aspectRatio={3}
+          title="Recadrer la photo de couverture"
+        />
+      )}
     </form>
   )
 }

@@ -33,7 +33,6 @@ export const postType = defineType({
           name: 'alt',
           type: 'string',
           title: 'Texte alternatif',
-          validation: (Rule) => Rule.required(),
         }
       ]
     }),
@@ -71,7 +70,7 @@ export const postType = defineType({
       title: 'Contenu',
       type: 'array',
       of: [
-        { 
+        {
           type: 'block',
           styles: [
             { title: 'Normal', value: 'normal' },
@@ -79,23 +78,47 @@ export const postType = defineType({
             { title: 'H3', value: 'h3' },
             { title: 'Citation', value: 'blockquote' },
           ],
+          marks: {
+            // Décorateurs de base
+            decorators: [
+              { title: 'Gras', value: 'strong' },
+              { title: 'Italique', value: 'em' },
+              { title: 'Souligné', value: 'underline' },
+              { title: 'Barré', value: 'strike-through' },
+              { title: 'Code', value: 'code' },
+            ],
+            // Annotations pour les liens - VERSION FLEXIBLE
+            annotations: [
+              {
+                name: 'link',
+                type: 'object',
+                title: 'Lien',
+                fields: [
+                  {
+                    name: 'href',
+                    type: 'string', // ← CHANGEMENT IMPORTANT : string au lieu de url
+                    title: 'URL ou email',
+                    description: 'https://..., mailto:email@exemple.fr, tel:+33123456789, /page-interne, #ancre, etc.',
+                    validation: (Rule) => Rule.required()
+                  },
+                  {
+                    name: 'target',
+                    type: 'string',
+                    title: 'Cible',
+                    options: {
+                      list: [
+                        { title: 'Même fenêtre', value: '' },
+                        { title: 'Nouvel onglet', value: '_blank' },
+                      ],
+                      layout: 'radio'
+                    },
+                    initialValue: '_blank'
+                  }
+                ]
+              }
+            ]
+          }
         },
-        {
-          type: 'image',
-          options: { hotspot: true },
-          fields: [
-            {
-              name: 'alt',
-              type: 'string',
-              title: 'Texte alternatif',
-            },
-            {
-              name: 'caption',
-              type: 'string',
-              title: 'Légende',
-            }
-          ]
-        }
       ],
     }),
   ],

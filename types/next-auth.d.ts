@@ -12,6 +12,7 @@ declare module "next-auth" {
       needsProfileSetup?: boolean
       provider?: string
       accountStatus?: string
+      profileImage?: any // Sanity image object
     } & DefaultSession["user"]
   }
 

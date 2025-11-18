@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { urlFor } from '@/sanity/lib/image'
 import Pagination from './Pagination'
+import { getMostRecentActivity } from '@/lib/userUtils'
 
 interface User {
   _id: string
@@ -13,11 +14,25 @@ interface User {
   email: string
   userType: string
   promotionYear?: number
-  currentCity?: string
-  currentJob?: string
-  company?: string
   linkedIn?: string
   bio?: string
+  experience?: Array<{
+    company: string
+    position: string
+    location?: string
+    startDate: string
+    endDate?: string
+    current?: boolean
+    description?: string
+  }>
+  education?: Array<{
+    school: string
+    degree: string
+    field?: string
+    startYear: number
+    endYear?: number
+    description?: string
+  }>
   profileImage?: {
     asset: {
       _id: string
@@ -51,12 +66,15 @@ export default function DirectoryList({ alumni, staff }: DirectoryListProps) {
   // Filtrage
   const filteredUsers = useMemo(() => {
     return currentList.filter((user) => {
+      // Extraire les infos les plus récentes (expérience ou formation)
+      const { currentJob, company, currentCity } = getMostRecentActivity(user)
+
       const matchesSearch =
         user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.currentJob?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.currentCity?.toLowerCase().includes(searchTerm.toLowerCase())
+        company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        currentJob?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        currentCity?.toLowerCase().includes(searchTerm.toLowerCase())
 
       const matchesPromotion =
         !selectedPromotion ||
@@ -157,7 +175,11 @@ export default function DirectoryList({ alumni, staff }: DirectoryListProps) {
       ) : (
         <>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {currentUsers.map((user) => (
+            {currentUsers.map((user) => {
+              // Extraire les infos les plus récentes (expérience ou formation)
+              const { currentJob, company, currentCity } = getMostRecentActivity(user)
+
+              return (
             <Link
               key={user._id}
               href={`/annuaire/${user._id}`}
@@ -221,36 +243,36 @@ export default function DirectoryList({ alumni, staff }: DirectoryListProps) {
 
                   {/* Informations professionnelles */}
                   <div className="space-y-2.5 flex-1">
-                    {user.currentJob && (
+                    {currentJob && (
                       <div className="flex items-start gap-2.5">
                         <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                         <p className="text-sm font-medium text-gray-900 line-clamp-2 flex-1">
-                          {user.currentJob}
+                          {currentJob}
                         </p>
                       </div>
                     )}
 
-                    {user.company && (
+                    {company && (
                       <div className="flex items-start gap-2.5">
                         <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                         <p className="text-sm text-gray-600 line-clamp-1 flex-1">
-                          {user.company}
+                          {company}
                         </p>
                       </div>
                     )}
 
-                    {user.currentCity && (
+                    {currentCity && (
                       <div className="flex items-start gap-2.5">
                         <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                         <p className="text-sm text-gray-600 flex-1">
-                          {user.currentCity}
+                          {currentCity}
                         </p>
                       </div>
                     )}
@@ -268,7 +290,8 @@ export default function DirectoryList({ alumni, staff }: DirectoryListProps) {
                 </div>
               </div>
             </Link>
-          ))}
+              )
+            })}
         </div>
 
         {/* Pagination */}

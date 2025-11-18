@@ -3,7 +3,7 @@ import Image from 'next/image'
 import { auth } from '@/lib/auth'
 import UserMenu from './UserMenu'
 import MobileMenu from './MobileMenu'
-import { Home, BookOpen, Users, Megaphone } from 'lucide-react'
+import { Home, BookOpen, Users, Megaphone, MessageSquare } from 'lucide-react'
 
 export default async function Header() {
   const session = await auth()
@@ -32,7 +32,7 @@ export default async function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
+          <nav className="hidden lg:flex items-center space-x-1 lg:space-x-2">
             <Link
               href={session ? "/accueil" : "/"}
               className="flex items-center space-x-2 px-3 lg:px-4 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-all group"
@@ -46,6 +46,13 @@ export default async function Header() {
             >
               <BookOpen className="w-4 h-4 group-hover:scale-110 transition-transform" />
               <span className="text-sm lg:text-base font-medium">Blog</span>
+            </Link>
+            <Link
+              href="/temoignages"
+              className="flex items-center space-x-2 px-3 lg:px-4 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-all group"
+            >
+              <MessageSquare className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              <span className="text-sm lg:text-base font-medium">Témoignages</span>
             </Link>
             {session && (
               <>

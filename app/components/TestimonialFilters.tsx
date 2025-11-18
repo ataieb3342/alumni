@@ -2,13 +2,14 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import AnnouncementCard from './AnnouncementCard'
+import TestimonialCard from './TestimonialCard'
 
 interface Author {
   _id: string
   firstName: string
   lastName: string
   userType: string
+  promotionYear?: string
   profileImage?: {
     asset: {
       _id: string
@@ -17,58 +18,64 @@ interface Author {
   }
 }
 
-interface Announcement {
+interface Testimonial {
   _id: string
   title: string
   slug: {
     current: string
   }
   type: string
-  company?: string
-  location?: string
-  description: unknown[]
-  contactEmail?: string
-  externalLink?: string
+  excerpt: string
+  rating?: number
+  likes?: number
+  tags?: string[]
   publishedAt: string
-  expiresAt?: string
+  featuredImage?: {
+    asset: {
+      _id: string
+      url: string
+    }
+  }
   author: Author
 }
 
-interface AnnouncementFiltersProps {
-  announcements: Announcement[]
+interface TestimonialFiltersProps {
+  testimonials: Testimonial[]
 }
 
-const filterButtons = [
-  { id: 'all', label: 'Toutes', type: null },
-  { id: 'job_offer', label: '💼 Emplois', type: 'job_offer' },
-  { id: 'internship', label: '🎓 Stages', type: 'internship' },
-  { id: 'opportunity', label: '✨ Opportunités', type: 'opportunity' },
-  { id: 'event', label: '📅 Événements', type: 'event' },
-  { id: 'school_supplies', label: '📚 Vente matos', type: 'school_supplies' },
+const typeFilters = [
+  { value: 'all', label: 'Tous' },
+  { value: 'studies', label: 'Études & Formation', emoji: '🎓' },
+  { value: 'company', label: 'Entreprise & Stage', emoji: '💼' },
+  { value: 'career', label: 'Parcours Pro', emoji: '🚀' },
+  { value: 'international', label: 'International', emoji: '🌍' },
+  { value: 'mentoring', label: 'Conseil & Mentorat', emoji: '💡' },
+  { value: 'project', label: 'Projet', emoji: '🎯' },
 ]
 
-export default function AnnouncementFilters({ announcements }: AnnouncementFiltersProps) {
-  const [selectedFilter, setSelectedFilter] = useState<string | null>(null)
+export default function TestimonialFilters({ testimonials }: TestimonialFiltersProps) {
+  const [selectedType, setSelectedType] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
 
-  const filteredAndSortedAnnouncements = useMemo(() => {
-    let filtered = announcements
+  // Filtrer et trier les témoignages
+  const filteredAndSortedTestimonials = useMemo(() => {
+    let filtered = testimonials
 
     // Filtrer par type
-    if (selectedFilter) {
-      filtered = filtered.filter((announcement) => announcement.type === selectedFilter)
+    if (selectedType !== 'all') {
+      filtered = filtered.filter((t) => t.type === selectedType)
     }
 
-    // Filtrer par recherche (titre, entreprise, localisation, auteur)
+    // Filtrer par recherche (titre, extrait, tags)
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
-      filtered = filtered.filter((announcement) => {
-        const titleMatch = announcement.title.toLowerCase().includes(query)
-        const companyMatch = announcement.company?.toLowerCase().includes(query)
-        const locationMatch = announcement.location?.toLowerCase().includes(query)
+      filtered = filtered.filter((t) => {
+        const titleMatch = t.title.toLowerCase().includes(query)
+        const excerptMatch = t.excerpt.toLowerCase().includes(query)
+        const tagsMatch = t.tags?.some((tag) => tag.toLowerCase().includes(query))
         const authorMatch =
-          `${announcement.author.firstName} ${announcement.author.lastName}`.toLowerCase().includes(query)
-        return titleMatch || companyMatch || locationMatch || authorMatch
+          `${t.author.firstName} ${t.author.lastName}`.toLowerCase().includes(query)
+        return titleMatch || excerptMatch || tagsMatch || authorMatch
       })
     }
 
@@ -76,7 +83,7 @@ export default function AnnouncementFilters({ announcements }: AnnouncementFilte
     return [...filtered].sort(
       (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
     )
-  }, [announcements, selectedFilter, searchQuery])
+  }, [testimonials, selectedType, searchQuery])
 
   return (
     <div className="space-y-6">
@@ -87,7 +94,7 @@ export default function AnnouncementFilters({ announcements }: AnnouncementFilte
           <div className="relative flex-1">
             <input
               type="text"
-              placeholder="Rechercher par titre, entreprise, localisation, auteur..."
+              placeholder="Rechercher par titre, auteur, tags..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full px-4 py-2.5 pl-11 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none text-gray-700 text-sm"
@@ -110,49 +117,50 @@ export default function AnnouncementFilters({ announcements }: AnnouncementFilte
           {/* Actions */}
           <div className="flex gap-2">
             <Link
-              href="/annonces/mes-annonces"
+              href="/temoignages/mes-temoignages"
               className="flex-1 lg:flex-none px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              Mes annonces
+              Mes témoignages
             </Link>
             <Link
-              href="/annonces/nouvelle"
+              href="/temoignages/nouveau"
               className="flex-1 lg:flex-none px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Publier
+              Créer
             </Link>
           </div>
         </div>
 
         {/* Filtres */}
         <div className="flex flex-wrap gap-2">
-          {filterButtons.map((button) => (
+          {typeFilters.map((filter) => (
             <button
-              key={button.id}
-              onClick={() => setSelectedFilter(button.type)}
+              key={filter.value}
+              onClick={() => setSelectedType(filter.value)}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                selectedFilter === button.type
+                selectedType === filter.value
                   ? 'bg-blue-600 text-white shadow-md'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              {button.label}
+              <span className="mr-1.5">{filter.emoji}</span>
+              {filter.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Grille des annonces */}
-      {filteredAndSortedAnnouncements.length > 0 ? (
+      {/* Grille de témoignages */}
+      {filteredAndSortedTestimonials.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredAndSortedAnnouncements.map((announcement) => (
-            <AnnouncementCard key={announcement._id} announcement={announcement} />
+          {filteredAndSortedTestimonials.map((testimonial) => (
+            <TestimonialCard key={testimonial._id} testimonial={testimonial} />
           ))}
         </div>
       ) : (
@@ -174,14 +182,14 @@ export default function AnnouncementFilters({ announcements }: AnnouncementFilte
               </svg>
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">
-              Aucune annonce trouvée
+              Aucun témoignage trouvé
             </h3>
             <p className="text-gray-600 mb-6">
               Essayez de modifier vos critères de recherche ou de filtres
             </p>
             <button
               onClick={() => {
-                setSelectedFilter(null)
+                setSelectedType('all')
                 setSearchQuery('')
               }}
               className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"

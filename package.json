@@ -10,7 +10,8 @@
     "test:migration": "tsx scripts/test-extraction.ts",
     "migrate:users": "tsx scripts/migrate-users.ts",
     "send:reset-emails": "tsx scripts/send-reset-emails.ts",
-    "delete:users": "tsx scripts/delete-migrated-users.ts"
+    "delete:users": "tsx scripts/delete-migrated-users.ts",
+    "enable-newsletter": "tsx scripts/enable-newsletter-for-all.ts"
   },
   "dependencies": {
     "@portabletext/react": "^4.0.3",
@@ -27,6 +28,7 @@
     "nodemailer": "^7.0.10",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-easy-crop": "^5.5.3",
     "sanity": "^4.10.2",
     "styled-components": "^6.1.19",
     "zod": "^4.1.12"

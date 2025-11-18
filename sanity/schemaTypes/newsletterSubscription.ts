@@ -17,7 +17,7 @@ export const newsletterSubscriptionType = defineType({
       name: 'generalNewsletter',
       title: 'Newsletter générale',
       type: 'boolean',
-      initialValue: false,
+      initialValue: true,
       description: 'Newsletter périodique de l\'association',
     }),
     defineField({

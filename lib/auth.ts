@@ -293,7 +293,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const userData = await client.fetch(
           `*[_type == "user" && _id == $id][0]{
             firstName,
-            lastName
+            lastName,
+            profileImage
           }`,
           { id: token.id }
         )
@@ -302,6 +303,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           session.user.firstName = userData.firstName
           session.user.lastName = userData.lastName
           session.user.name = `${userData.firstName} ${userData.lastName}`
+          session.user.profileImage = userData.profileImage
         }
       }
       return session

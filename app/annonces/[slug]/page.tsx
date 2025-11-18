@@ -16,9 +16,16 @@ interface Author {
   email: string
   phone?: string
   userType: string
-  company?: string
-  currentJob?: string
   linkedIn?: string
+  experience?: Array<{
+    company: string
+    position: string
+    location?: string
+    startDate: string
+    endDate?: string
+    current?: boolean
+    description?: string
+  }>
   profileImage?: {
     asset: {
       _id: string
@@ -85,9 +92,21 @@ export default async function AnnouncementDetailPage({
 
   const typeInfo = typeLabels[announcement.type] || typeLabels.other
   const authorInitials = `${announcement.author.firstName[0]}${announcement.author.lastName[0]}`
-  const authorImage = announcement.author.profileImage?.asset?.url
-    ? urlFor(announcement.author.profileImage.asset.url).width(80).height(80).url()
-    : null
+
+  let authorImage: string | null = null
+  try {
+    if (announcement.author.profileImage?.asset?.url) {
+      authorImage = urlFor(announcement.author.profileImage.asset.url).width(80).height(80).url()
+    }
+  } catch (error) {
+    console.error('Error generating author image URL:', error)
+    authorImage = null
+  }
+
+  // Extraire les infos du poste actuel de l'auteur
+  const currentExperience = announcement.author.experience?.find(exp => exp.current)
+  const authorCurrentJob = currentExperience?.position
+  const authorCompany = currentExperience?.company
 
   return (
     <>
@@ -217,11 +236,11 @@ export default async function AnnouncementDetailPage({
                   >
                     {announcement.author.firstName} {announcement.author.lastName}
                   </Link>
-                  {(announcement.author.currentJob || announcement.author.company) && (
+                  {(authorCurrentJob || authorCompany) && (
                     <p className="text-xs text-gray-600">
-                      {announcement.author.currentJob}
-                      {announcement.author.currentJob && announcement.author.company && ' · '}
-                      {announcement.author.company}
+                      {authorCurrentJob}
+                      {authorCurrentJob && authorCompany && ' · '}
+                      {authorCompany}
                     </p>
                   )}
                 </div>

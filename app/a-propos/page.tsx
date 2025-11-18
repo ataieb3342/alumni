@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth'
 import { client } from '@/sanity/lib/client'
+import { getMostRecentActivity } from '@/lib/userUtils'
 import Header from '../components/Header'
 import PublicHeader from '../components/PublicHeader'
 import Footer from '../components/Footer'
@@ -12,6 +13,25 @@ export const metadata = {
 }
 
 // Types
+interface Experience {
+  company: string
+  position: string
+  location?: string
+  startDate: string
+  endDate?: string
+  current?: boolean
+  description?: string
+}
+
+interface Education {
+  school: string
+  degree: string
+  field?: string
+  startYear: number
+  endYear?: number
+  description?: string
+}
+
 interface BoardMember {
   _id: string
   firstName: string
@@ -24,7 +44,8 @@ interface BoardMember {
     }
   }
   roleAssociation?: string[]
-  currentJob?: string
+  experience?: Experience[]
+  education?: Education[]
 }
 
 // Mapping des rôles
@@ -55,6 +76,21 @@ const roleOrder = [
   'pole_informatique',
 ]
 
+// Helper pour récupérer l'activité la plus récente (expérience ou formation)
+function getDisplayInfo(member: BoardMember): string | null {
+  const { currentJob, company, isEducation } = getMostRecentActivity(member)
+
+  if (!currentJob || !company) return null
+
+  // Si c'est une formation, on adapte le format
+  if (isEducation) {
+    return `${currentJob} - ${company}`
+  }
+
+  // Sinon c'est une expérience
+  return `${currentJob} chez ${company}`
+}
+
 export default async function AProposPage() {
   const session = await auth()
 
@@ -72,7 +108,8 @@ export default async function AProposPage() {
         }
       },
       roleAssociation,
-      currentJob
+      experience,
+      education
     }`
   )
 
@@ -243,9 +280,9 @@ export default async function AProposPage() {
                           </p>
 
                           {/* Poste actuel (optionnel) */}
-                          {member.currentJob && (
+                          {getDisplayInfo(member) && (
                             <p className="text-xs text-gray-600">
-                              {member.currentJob}
+                              {getDisplayInfo(member)}
                             </p>
                           )}
                         </div>
@@ -295,9 +332,9 @@ export default async function AProposPage() {
                           </p>
 
                           {/* Poste actuel (optionnel) */}
-                          {member.currentJob && (
+                          {getDisplayInfo(member) && (
                             <p className="text-xs text-gray-600">
-                              {member.currentJob}
+                              {getDisplayInfo(member)}
                             </p>
                           )}
                         </div>

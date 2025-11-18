@@ -3,6 +3,7 @@ import { userType } from './user'
 import { announcementType } from './announcement'
 import { newsletterSubscriptionType } from './newsletterSubscription'
 import passwordResetToken from './passwordResetToken'
+import { testimonial } from './testimonial'
 
 export const schema = {
   types: [
@@ -11,5 +12,6 @@ export const schema = {
     announcementType,
     newsletterSubscriptionType,
     passwordResetToken,
+    testimonial,
   ],
 }

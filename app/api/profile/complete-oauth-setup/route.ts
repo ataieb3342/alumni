@@ -14,17 +14,14 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await request.json()
-    const { userType, promotionYear, currentJob, company, bio, phone } = data
+    const { userType, promotionYear, bio } = data
 
     // Mettre à jour le profil de l'utilisateur
     const updates: Record<string, string | number> = {
       userType,
     }
 
-    if (phone) updates.phone = phone
     if (bio) updates.bio = bio
-    if (currentJob) updates.currentJob = currentJob
-    if (company) updates.company = company
     if (promotionYear) updates.promotionYear = parseInt(promotionYear)
 
     await serverClient

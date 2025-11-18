@@ -136,16 +136,26 @@ const components = {
     em: ({ children }: { children?: React.ReactNode }) => (
       <em className="italic text-gray-800">{children}</em>
     ),
-    link: ({ children, value }: { children?: React.ReactNode; value?: { href?: string } }) => (
-      <a
-        href={value?.href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-blue-600 hover:text-blue-800 underline decoration-blue-300 hover:decoration-blue-600 transition-colors font-medium"
-      >
-        {children}
-      </a>
-    ),
+    link: ({ children, value }: { children?: React.ReactNode; value?: { href?: string; blank?: boolean } }) => {
+      if (!value?.href) {
+        return <span>{children}</span>
+      }
+
+      // Vérifier si c'est un lien externe
+      const isExternal = value.href.startsWith('http')
+      const shouldOpenInNewTab = value.blank !== undefined ? value.blank : isExternal
+
+      return (
+        <a
+          href={value.href}
+          target={shouldOpenInNewTab ? "_blank" : "_self"}
+          rel={shouldOpenInNewTab ? "noopener noreferrer" : undefined}
+          className="text-blue-600 hover:text-blue-800 underline decoration-blue-300 hover:decoration-blue-600 transition-colors font-medium"
+        >
+          {children}
+        </a>
+      )
+    },
   },
 }
 
@@ -188,8 +198,7 @@ export default async function ArticlePage({
               </Link>
             </div>
 
-            {/* Image mise en valeur - Entière et centrée */}
-            {post.mainImage && (
+            {post.mainImage?.asset?._id && (
               <div className="relative w-full px-6 sm:px-10 md:px-16 mt-8 mb-10">
                 <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-gray-100">
                   <Image

@@ -56,14 +56,14 @@ export default async function AnnouncementsPage() {
       <Header />
 
       <main className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
-        {/* Hero Section avec image en background */}
+        {/* Hero Section */}
         <HeroSection
           title="Forum des Annonces"
           subtitle="Découvrez les opportunités partagées par la communauté"
         />
 
         {/* Announcements Section */}
-        <section className="max-w-7xl mx-auto px-6 py-16 -mt-10">
+        <section className="max-w-7xl mx-auto px-6 py-16">
           <AnnouncementFilters announcements={announcements} />
         </section>
       </main>

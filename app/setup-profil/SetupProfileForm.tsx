@@ -8,12 +8,9 @@ export default function SetupProfileForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [formData, setFormData] = useState({
-    userType: 'alumni' as 'current_student' | 'alumni' | 'staff',
+    userType: 'alumni' as 'lyceen' | 'bts' | 'prepa' | 'alumni' | 'staff',
     promotionYear: '',
-    currentJob: '',
-    company: '',
     bio: '',
-    phone: '',
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,25 +62,27 @@ export default function SetupProfileForm() {
         </label>
         <select
           value={formData.userType}
-          onChange={(e) => setFormData({...formData, userType: e.target.value as 'current_student' | 'alumni' | 'staff'})}
+          onChange={(e) => setFormData({...formData, userType: e.target.value as 'lyceen' | 'bts' | 'prepa' | 'alumni' | 'staff'})}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900"
         >
-          <option value="current_student" className="text-gray-900">Élève actuel</option>
-          <option value="alumni" className="text-gray-900">Ancien élève</option>
+          <option value="lyceen" className="text-gray-900">Lycéen</option>
+          <option value="bts" className="text-gray-900">BTS</option>
+          <option value="prepa" className="text-gray-900">Prépa</option>
+          <option value="alumni" className="text-gray-900">Ancien élève (Alumni)</option>
           <option value="staff" className="text-gray-900">Personnel</option>
         </select>
       </div>
 
-      {formData.userType !== 'staff' && (
+      {formData.userType !== 'staff' && formData.userType !== 'lyceen' && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Année de promotion
+            {formData.userType === 'alumni' ? 'Année de promotion' : 'Année prévue du baccalauréat'}
           </label>
           <input
             type="number"
             value={formData.promotionYear}
             onChange={(e) => setFormData({...formData, promotionYear: e.target.value})}
-            placeholder="Ex: 2020"
+            placeholder="Ex: 2025"
             min="1950"
             max="2100"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
@@ -91,61 +90,20 @@ export default function SetupProfileForm() {
         </div>
       )}
 
-      {formData.userType !== 'current_student' && (
-        <>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Poste actuel
-            </label>
-            <input
-              type="text"
-              value={formData.currentJob}
-              onChange={(e) => setFormData({...formData, currentJob: e.target.value})}
-              placeholder="Ex: Développeur Full-Stack"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Entreprise
-            </label>
-            <input
-              type="text"
-              value={formData.company}
-              onChange={(e) => setFormData({...formData, company: e.target.value})}
-              placeholder="Ex: Google"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
-            />
-          </div>
-        </>
+      {formData.userType !== 'lyceen' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Biographie
+          </label>
+          <textarea
+            value={formData.bio}
+            onChange={(e) => setFormData({...formData, bio: e.target.value})}
+            rows={4}
+            placeholder="Parlez-nous de vous..."
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
+          />
+        </div>
       )}
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Téléphone
-        </label>
-        <input
-          type="tel"
-          value={formData.phone}
-          onChange={(e) => setFormData({...formData, phone: e.target.value})}
-          placeholder="Ex: +33 6 12 34 56 78"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Biographie
-        </label>
-        <textarea
-          value={formData.bio}
-          onChange={(e) => setFormData({...formData, bio: e.target.value})}
-          rows={4}
-          placeholder="Parlez-nous de vous..."
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
-        />
-      </div>
 
       <div className="flex gap-4">
         <button
