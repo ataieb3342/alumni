@@ -11,6 +11,8 @@ declare module "next-auth" {
       isNewUser?: boolean
       provider?: string
       accountStatus?: string
+      needsTypeSelection?: boolean
+      linkedInUrl?: string
       profileImage?: any // Sanity image object
     } & DefaultSession["user"]
   }
@@ -19,15 +21,27 @@ declare module "next-auth" {
     userType?: string
     isNewUser?: boolean
     accountStatus?: string
+    needsTypeSelection?: boolean
+    firstName?: string
+    lastName?: string
+    linkedInUrl?: string
+    provider?: string
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT extends DefaultJWT {
-    id: string
-    userType: string
+    id?: string
+    userType?: string
     isNewUser?: boolean
     provider?: string
     accountStatus?: string
+    needsTypeSelection?: boolean
+    oauthProvider?: string
+    oauthId?: string
+    firstName?: string
+    lastName?: string
+    linkedInUrl?: string
+    profileData?: string
   }
 }

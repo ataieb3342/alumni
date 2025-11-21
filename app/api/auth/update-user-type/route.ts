@@ -34,7 +34,73 @@ export async function POST(request: Request) {
 
     const { userType } = validation.data
 
-    // Récupérer l'utilisateur depuis Sanity
+    // Vérifier si c'est une nouvelle inscription OAuth (ID temporaire)
+    if (session.user.id.startsWith('temp-')) {
+      // C'est une nouvelle inscription OAuth, créer l'utilisateur dans Sanity
+      const email = session.user.email?.toLowerCase()
+
+      if (!email) {
+        return NextResponse.json(
+          { error: 'Email manquant' },
+          { status: 400 }
+        )
+      }
+
+      // Vérifier si l'utilisateur existe déjà avec cet email
+      const existingUser = await serverClient.fetch(
+        `*[_type == "user" && email == $email][0]{ _id }`,
+        { email }
+      )
+
+      if (existingUser) {
+        return NextResponse.json(
+          { error: 'Un utilisateur avec cet email existe déjà' },
+          { status: 400 }
+        )
+      }
+
+      // Créer le nouvel utilisateur dans Sanity
+      const newUser = await serverClient.create({
+        _type: 'user',
+        firstName: session.user.firstName || '',
+        lastName: session.user.lastName || '',
+        email,
+        oauthProvider: session.user.provider,
+        oauthId: session.user.id.replace('temp-', ''),
+        userType,
+        accountStatus: 'pending',
+        isVisibleInDirectory: userType !== 'lyceen',
+        createdAt: new Date().toISOString(),
+        // Ajouter les données spécifiques au provider
+        ...(session.user.provider === 'linkedin' && session.user.linkedInUrl ? {
+          linkedIn: session.user.linkedInUrl
+        } : {}),
+      })
+
+      // Envoyer l'email admin
+      try {
+        await sendAdminNotificationEmail({
+          firstName: session.user.firstName || '',
+          lastName: session.user.lastName || '',
+          email,
+          userType,
+          userId: newUser._id,
+        })
+      } catch (emailError) {
+        console.error('Erreur lors de l\'envoi de l\'email admin:', emailError)
+      }
+
+      return NextResponse.json(
+        {
+          message: 'Utilisateur créé avec succès',
+          userType,
+          userId: newUser._id,
+        },
+        { status: 200 }
+      )
+    }
+
+    // Sinon, c'est une mise à jour classique d'un utilisateur existant
     const user = await serverClient.fetch(
       `*[_type == "user" && _id == $userId][0]{
         _id,
@@ -59,23 +125,9 @@ export async function POST(request: Request) {
       .patch(user._id)
       .set({
         userType,
-        isVisibleInDirectory: userType !== 'lyceen', // Les lycéens ne sont pas dans l'annuaire par défaut
+        isVisibleInDirectory: userType !== 'lyceen',
       })
       .commit()
-
-    // Envoyer un email de notification aux admins
-    try {
-      await sendAdminNotificationEmail({
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        userType,
-        userId: user._id,
-      })
-    } catch (emailError) {
-      console.error('Erreur lors de l\'envoi de l\'email admin:', emailError)
-      // On continue même si l'email échoue
-    }
 
     return NextResponse.json(
       {

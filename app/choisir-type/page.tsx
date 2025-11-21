@@ -1,21 +1,31 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import PublicHeader from '../components/PublicHeader'
 import Footer from '../components/Footer'
 
 export default function ChooseTypePage() {
-  const { data: session, status, update } = useSession()
+  const { data: session, status } = useSession()
   const [userType, setUserType] = useState<'lyceen' | 'bts' | 'prepa' | 'alumni' | 'staff'>('alumni')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const formSubmittedRef = useRef(false)
+  const sessionRef = useRef(session)
+
+  // Garder la ref de session à jour
+  useEffect(() => {
+    sessionRef.current = session
+  }, [session])
 
   useEffect(() => {
     // Attendre que la session soit chargée avant de vérifier
     if (status === 'loading') return
+
+    // Ne pas rediriger si le formulaire a été soumis avec succès (l'utilisateur va être redirigé vers /validation-en-cours)
+    if (formSubmittedRef.current) return
 
     // Rediriger si l'utilisateur n'est pas connecté
     if (status === 'unauthenticated') {
@@ -23,11 +33,24 @@ export default function ChooseTypePage() {
       return
     }
 
-    // Si l'utilisateur est authentifié mais n'est pas nouveau, rediriger vers le profil
-    if (status === 'authenticated' && session?.user && !session.user.isNewUser) {
+    // Si l'utilisateur est authentifié mais n'a pas besoin de sélectionner son type, rediriger vers le profil
+    if (status === 'authenticated' && session?.user && !session.user.needsTypeSelection) {
       router.push('/profil')
     }
   }, [status, session, router])
+
+  // Déconnecter l'utilisateur s'il quitte la page sans avoir choisi son type
+  useEffect(() => {
+    return () => {
+      // Si le formulaire n'a pas été soumis, déconnecter pour nettoyer le token temporaire
+      // On utilise sessionRef pour avoir la dernière valeur de session
+      if (!formSubmittedRef.current && sessionRef.current?.user?.id?.startsWith('temp-')) {
+        signOut({ redirect: false })
+      }
+    }
+    // Pas de dépendances : le cleanup ne se déclenche que quand le composant se démonte vraiment
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,8 +72,17 @@ export default function ChooseTypePage() {
         return
       }
 
-      // Mettre à jour la session pour marquer l'utilisateur comme non-nouveau
-      await update()
+      // Marquer le formulaire comme soumis avec succès pour éviter la déconnexion automatique
+      formSubmittedRef.current = true
+
+      // L'utilisateur a été créé dans Sanity avec succès
+      // Vider la session et rediriger vers la page de validation
+
+      // Attendre un peu que Sanity ait bien enregistré l'utilisateur
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      // Déconnecter l'utilisateur pour vider la session
+      await signOut({ redirect: false })
 
       // Rediriger vers la page de validation en cours
       router.push('/validation-en-cours')

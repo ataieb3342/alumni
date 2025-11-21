@@ -3,7 +3,6 @@ import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import GoogleProvider from "next-auth/providers/google"
 import LinkedInProvider from "next-auth/providers/linkedin"
-import { client } from "@/sanity/lib/client"
 import { serverClient } from "@/sanity/lib/server-client"
 import bcrypt from "bcryptjs"
 
@@ -66,7 +65,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           const normalizedEmail = (credentials.email as string).toLowerCase()
 
           // Récupérer l'utilisateur depuis Sanity
-          const user = await client.fetch(
+          const user = await serverClient.fetch(
             `*[_type == "user" && email == $email][0]{
               _id,
               email,
@@ -127,7 +126,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           const normalizedEmail = user.email?.toLowerCase()
 
           // Vérifier si l'utilisateur existe déjà
-          const existingUser = await client.fetch(
+          const existingUser = await serverClient.fetch(
             `*[_type == "user" && email == $email][0]{
               _id,
               email,
@@ -153,89 +152,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 .commit()
             }
 
+            // Stocker l'ID de l'utilisateur pour l'utiliser dans les callbacks jwt/session
+            // On le fait AVANT de vérifier le statut pour que la session soit créée correctement
+            user.id = existingUser._id
+            user.userType = existingUser.userType
+            user.accountStatus = existingUser.accountStatus
+            user.isNewUser = false
+
             // Vérifier le statut du compte
-            // Si le compte n'est pas actif, bloquer la connexion
+            // Si le compte n'est pas actif, rediriger vers la page de validation en attente
             if (existingUser.accountStatus !== 'active') {
               return '/validation-en-cours'
             }
 
-            // Stocker l'ID de l'utilisateur pour l'utiliser dans les callbacks jwt/session
-            user.id = existingUser._id
-            user.userType = existingUser.userType
-            user.isNewUser = false
             return true
           }
 
-          // Créer un nouvel utilisateur
-          // Mapper les données du profil OAuth
-          let firstName = ""
-          let lastName = ""
-          let _profileImageUrl = ""
-          let linkedInUrl = ""
+          // Ne pas créer l'utilisateur dans Sanity tout de suite
+          // Les données seront stockées dans le token JWT via le callback jwt
+          // L'utilisateur sera créé dans Sanity après la sélection du type
 
-          if (account.provider === "linkedin" && profile) {
-            // LinkedIn renvoie given_name et family_name
-            const linkedInProfile = profile as LinkedInProfile
-            firstName = linkedInProfile.given_name || ""
-            lastName = linkedInProfile.family_name || ""
-            _profileImageUrl = linkedInProfile.picture || user.image || ""
-            // L'URL LinkedIn peut être dans le profil ou construite
-            linkedInUrl = linkedInProfile.profile || ""
-
-            console.log('LinkedIn profile data:', profile) // Pour debug - voir toutes les données disponibles
-          } else if (account.provider === "google" && profile) {
-            const googleProfile = profile as GoogleProfile
-            firstName = googleProfile.given_name || ""
-            lastName = googleProfile.family_name || ""
-            _profileImageUrl = googleProfile.picture || user.image || ""
-
-            console.log('Google profile data:', profile) // Pour debug
-          }
-
-          // Si on n'a pas les noms, on les extrait du name complet
-          if (!firstName && !lastName && user.name) {
-            const nameParts = user.name.split(' ')
-            firstName = nameParts[0] || ""
-            lastName = nameParts.slice(1).join(' ') || ""
-          }
-
-          // Créer le nouvel utilisateur dans Sanity avec données OAuth
-          const newUser = await serverClient.create({
-            _type: 'user',
-            firstName: firstName,
-            lastName: lastName,
-            email: normalizedEmail!,
-            oauthProvider: account.provider,
-            oauthId: account.providerAccountId,
-            accountStatus: 'pending', // En attente de validation admin (cohérence avec inscription classique)
-            userType: 'alumni', // Par défaut, peut être changé après
-            role: 'member',
-            isVisibleInDirectory: false, // Caché jusqu'à validation
-            createdAt: new Date().toISOString(),
-            // Ajouter l'URL LinkedIn si disponible
-            ...(linkedInUrl ? { linkedIn: linkedInUrl } : {}),
-            // TODO: Télécharger et stocker la photo de profil depuis profileImageUrl
-            // Pour LinkedIn, stocker toutes les données brutes du profil pour mapping ultérieur
-            ...(account.provider === 'linkedin' && profile ? {
-              linkedInProfile: {
-                raw: JSON.stringify(profile, null, 2)
-              },
-            } : {}),
-            // Pour Google, stocker aussi les données si besoin
-            ...(account.provider === 'google' && profile ? {
-              googleProfile: {
-                raw: JSON.stringify(profile, null, 2)
-              },
-            } : {})
-          })
-
-          user.id = newUser._id
-          user.userType = 'alumni'
+          user.id = 'temp-' + account.providerAccountId // ID temporaire
           user.isNewUser = true
-          user.accountStatus = 'pending'
 
-          // Créer la session pour permettre l'accès à la page de sélection du type
-          // La redirection sera gérée par le callback redirect
           return true
         } catch (error) {
           console.error("OAuth sign in error:", error)
@@ -245,34 +184,103 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       return true
     },
-    async jwt({ token, user, account, trigger }) {
+    async jwt({ token, user, account, trigger, profile }) {
       if (user) {
         token.id = user.id ?? ''
         token.userType = user.userType ?? ''
         token.isNewUser = user.isNewUser ?? false
         token.provider = account?.provider ?? ''
         token.accountStatus = user.accountStatus ?? ''
+
+        // Si c'est une nouvelle inscription OAuth (ID temporaire), stocker toutes les données
+        if (user.id?.startsWith('temp-') && account && profile) {
+          token.needsTypeSelection = true
+          token.oauthProvider = account.provider
+          token.oauthId = account.providerAccountId
+          token.email = user.email
+
+          // Extraire firstName et lastName du profil
+          let firstName = ""
+          let lastName = ""
+
+          if (account.provider === "linkedin") {
+            const linkedInProfile = profile as LinkedInProfile
+            firstName = linkedInProfile.given_name || ""
+            lastName = linkedInProfile.family_name || ""
+            token.linkedInUrl = linkedInProfile.profile || ""
+          } else if (account.provider === "google") {
+            const googleProfile = profile as GoogleProfile
+            firstName = googleProfile.given_name || ""
+            lastName = googleProfile.family_name || ""
+          }
+
+          // Fallback sur le name
+          if (!firstName && !lastName && user.name) {
+            const nameParts = user.name.split(' ')
+            firstName = nameParts[0] || ""
+            lastName = nameParts.slice(1).join(' ') || ""
+          }
+
+          token.firstName = firstName
+          token.lastName = lastName
+          token.profileData = JSON.stringify(profile)
+        }
       }
 
       // Si c'est une mise à jour de session, récupérer les dernières données
-      if (trigger === "update" && token.id) {
-        const updatedUser = await client.fetch(
-          `*[_type == "user" && _id == $id][0]{
-            _id,
-            email,
-            firstName,
-            lastName,
-            userType,
-            accountStatus
-          }`,
-          { id: token.id }
-        )
+      if (trigger === "update") {
+        // Si c'est un ID temporaire, chercher l'utilisateur par email
+        if (token.id?.startsWith('temp-')) {
+          const email = token.email
+          console.log('🔄 JWT Update: ID temporaire détecté, email:', email)
+          if (email) {
+            const newUser = await serverClient.fetch(
+              `*[_type == "user" && email == $email][0]{
+                _id,
+                email,
+                firstName,
+                lastName,
+                userType,
+                accountStatus
+              }`,
+              { email }
+            )
 
-        if (updatedUser) {
-          token.userType = updatedUser.userType
-          token.accountStatus = updatedUser.accountStatus
-          // Marquer l'utilisateur comme non-nouveau après la mise à jour
-          token.isNewUser = false
+            console.log('🔄 JWT Update: Utilisateur trouvé?', !!newUser, newUser?._id)
+
+            if (newUser) {
+              // Remplacer l'ID temporaire par le vrai ID Sanity
+              console.log('✅ JWT Update: Remplacement du token temporaire par', newUser._id)
+              token.id = newUser._id
+              token.userType = newUser.userType
+              token.accountStatus = newUser.accountStatus
+              token.firstName = newUser.firstName
+              token.lastName = newUser.lastName
+              token.isNewUser = false
+              token.needsTypeSelection = false
+            } else {
+              console.log('❌ JWT Update: Utilisateur non trouvé pour email:', email)
+            }
+          }
+        } else if (token.id) {
+          // Utilisateur existant, récupérer les données mises à jour
+          const updatedUser = await serverClient.fetch(
+            `*[_type == "user" && _id == $id][0]{
+              _id,
+              email,
+              firstName,
+              lastName,
+              userType,
+              accountStatus
+            }`,
+            { id: token.id }
+          )
+
+          if (updatedUser) {
+            token.userType = updatedUser.userType
+            token.accountStatus = updatedUser.accountStatus
+            token.isNewUser = false
+          }
         }
       }
 
@@ -285,22 +293,32 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.isNewUser = token.isNewUser as boolean
         session.user.provider = token.provider as string
         session.user.accountStatus = token.accountStatus as string
+        session.user.needsTypeSelection = token.needsTypeSelection as boolean
 
-        // Récupérer les données à jour depuis Sanity
-        const userData = await client.fetch(
-          `*[_type == "user" && _id == $id][0]{
-            firstName,
-            lastName,
-            profileImage
-          }`,
-          { id: token.id }
-        )
+        // Si c'est un ID temporaire, utiliser les données du token
+        if (token.id.startsWith('temp-')) {
+          session.user.firstName = token.firstName as string
+          session.user.lastName = token.lastName as string
+          session.user.name = `${token.firstName} ${token.lastName}`
+          session.user.email = token.email as string
+          session.user.linkedInUrl = token.linkedInUrl as string
+        } else {
+          // Sinon, récupérer les données depuis Sanity
+          const userData = await serverClient.fetch(
+            `*[_type == "user" && _id == $id][0]{
+              firstName,
+              lastName,
+              profileImage
+            }`,
+            { id: token.id }
+          )
 
-        if (userData) {
-          session.user.firstName = userData.firstName
-          session.user.lastName = userData.lastName
-          session.user.name = `${userData.firstName} ${userData.lastName}`
-          session.user.profileImage = userData.profileImage
+          if (userData) {
+            session.user.firstName = userData.firstName
+            session.user.lastName = userData.lastName
+            session.user.name = `${userData.firstName} ${userData.lastName}`
+            session.user.profileImage = userData.profileImage
+          }
         }
       }
       return session

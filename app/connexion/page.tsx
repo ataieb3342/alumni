@@ -21,9 +21,23 @@ function LoginForm() {
   useEffect(() => {
     const registered = searchParams.get('registered')
     const pending = searchParams.get('pending')
+    const message = searchParams.get('message')
 
     if (registered === 'true' && pending === 'true') {
       setSuccessMessage('Votre demande d\'inscription a été envoyée avec succès. Vous recevrez un email une fois votre compte validé par un administrateur.')
+    }
+
+    // Si l'utilisateur vient de créer son compte via OAuth, le reconnecter automatiquement
+    if (message === 'account-created') {
+      const provider = searchParams.get('provider')
+      if (provider && (provider === 'google' || provider === 'linkedin')) {
+        // Afficher le message de validation en attente
+        setSuccessMessage('Votre demande d\'inscription a été envoyée avec succès. Vous recevrez un email une fois votre compte validé par un administrateur. Reconnexion en cours...')
+        // Attendre un peu avant de déclencher la reconnexion (2s pour laisser le temps de lire le message)
+        setTimeout(() => {
+          signIn(provider, { callbackUrl: '/validation-en-cours' })
+        }, 2000)
+      }
     }
   }, [searchParams])
 

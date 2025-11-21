@@ -57,8 +57,8 @@ export default function RegisterPage() {
         return
       }
 
-      // Afficher un message de succès
-      router.push('/connexion?registered=true&pending=true')
+      // Rediriger vers la page de validation en cours
+      router.push('/validation-en-cours')
     } catch (err) {
       console.error(err)
       setError('Une erreur est survenue lors de l\'inscription')
