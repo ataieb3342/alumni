@@ -156,7 +156,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             // Vérifier le statut du compte
             // Si le compte n'est pas actif, bloquer la connexion
             if (existingUser.accountStatus !== 'active') {
-              return '/connexion?error=pending'
+              return '/validation-en-cours'
             }
 
             // Stocker l'ID de l'utilisateur pour l'utiliser dans les callbacks jwt/session
@@ -238,7 +238,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           // pour éviter les problèmes avec l'edge runtime du middleware
 
           // Bloquer la connexion pour les nouveaux utilisateurs OAuth en attente de validation
-          return '/validation-en-cours'
+          return '/connexion?registered=true&pending=true'
         } catch (error) {
           console.error("OAuth sign in error:", error)
           return false

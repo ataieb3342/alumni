@@ -7,13 +7,8 @@ import Link from 'next/link'
 export default async function ValidationEnCoursPage() {
   const session = await auth()
 
-  // Si pas connecté, rediriger vers connexion
-  if (!session?.user?.email) {
-    redirect('/connexion')
-  }
-
-  // Si le compte est actif, rediriger vers l'accueil
-  if (session.user.accountStatus === 'active') {
+  // Si connecté et compte actif, rediriger vers l'accueil
+  if (session?.user?.accountStatus === 'active') {
     redirect('/accueil')
   }
 
@@ -46,14 +41,16 @@ export default async function ValidationEnCoursPage() {
               </p>
             </div>
 
-            <div className="space-y-3">
-              <p className="text-sm text-gray-500">
-                Inscrit en tant que : <strong>{session.user.name}</strong>
-              </p>
-              <p className="text-sm text-gray-500">
-                Email : <strong>{session.user.email}</strong>
-              </p>
-            </div>
+            {session?.user ? (
+              <div className="space-y-3">
+                <p className="text-sm text-gray-500">
+                  Inscrit en tant que : <strong>{session.user.name}</strong>
+                </p>
+                <p className="text-sm text-gray-500">
+                  Email : <strong>{session.user.email}</strong>
+                </p>
+              </div>
+            ) : null}
 
             <div className="mt-8 pt-6 border-t border-gray-200">
               <Link
