@@ -13,6 +13,7 @@ export default auth((req) => {
     '/mot-de-passe-oublie',
     '/reinitialiser-mot-de-passe',
     '/validation-en-cours',
+    '/a-propos',
     '/politique-confidentialite',
     '/mentions-legales',
   ]
@@ -20,8 +21,10 @@ export default auth((req) => {
   const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith(route + '/'))
 
   // Si l'utilisateur a un ID temporaire (nouveau OAuth), il doit choisir son type
+  // S'il essaie d'aller ailleurs, on le déconnecte automatiquement
   if (session?.user?.id?.startsWith('temp-') && pathname !== '/choisir-type' && !pathname.startsWith('/api/auth')) {
-    return NextResponse.redirect(new URL('/choisir-type', req.url))
+    // Rediriger vers la route de déconnexion avec retour vers /connexion
+    return NextResponse.redirect(new URL('/api/auth/signout?callbackUrl=/connexion', req.url))
   }
 
   // Si l'utilisateur est connecté mais son compte n'est pas validé, limiter l'accès
