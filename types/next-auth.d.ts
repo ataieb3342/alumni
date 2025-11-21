@@ -9,7 +9,6 @@ declare module "next-auth" {
       firstName?: string
       lastName?: string
       isNewUser?: boolean
-      needsProfileSetup?: boolean
       provider?: string
       accountStatus?: string
       profileImage?: any // Sanity image object
@@ -19,7 +18,6 @@ declare module "next-auth" {
   interface User extends DefaultUser {
     userType?: string
     isNewUser?: boolean
-    needsProfileSetup?: boolean
     accountStatus?: string
   }
 }
@@ -29,7 +27,6 @@ declare module "next-auth/jwt" {
     id: string
     userType: string
     isNewUser?: boolean
-    needsProfileSetup?: boolean
     provider?: string
     accountStatus?: string
   }

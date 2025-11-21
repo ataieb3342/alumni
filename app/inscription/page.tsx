@@ -181,7 +181,7 @@ export default function RegisterPage() {
             </form>
 
             <div className="mt-6">
-              <OAuthButtons mode="signup" callbackUrl="/setup-profil" />
+              <OAuthButtons mode="signup" callbackUrl="/validation-en-cours" />
             </div>
 
             <div className="mt-6 text-center">

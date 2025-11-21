@@ -232,14 +232,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           user.id = newUser._id
           user.userType = 'alumni'
           user.isNewUser = true
-          user.needsProfileSetup = true // Tous les nouveaux utilisateurs OAuth doivent compléter leur profil
-          user.accountStatus = 'pending' // Passer le statut pour gérer le flux
+          user.accountStatus = 'pending'
 
           // L'envoi d'email admin sera géré par une route API séparée
           // pour éviter les problèmes avec l'edge runtime du middleware
-          // Le flag emailNotificationPending sera utilisé pour savoir si l'email doit être envoyé
 
-          return true
+          // Bloquer la connexion pour les nouveaux utilisateurs OAuth en attente de validation
+          return '/validation-en-cours'
         } catch (error) {
           console.error("OAuth sign in error:", error)
           return false
@@ -253,7 +252,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = user.id ?? ''
         token.userType = user.userType ?? ''
         token.isNewUser = user.isNewUser ?? false
-        token.needsProfileSetup = user.needsProfileSetup ?? false
         token.provider = account?.provider ?? ''
         token.accountStatus = user.accountStatus ?? ''
       }
@@ -285,7 +283,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.id = token.id as string
         session.user.userType = token.userType as string
         session.user.isNewUser = token.isNewUser as boolean
-        session.user.needsProfileSetup = token.needsProfileSetup as boolean
         session.user.provider = token.provider as string
         session.user.accountStatus = token.accountStatus as string
 
