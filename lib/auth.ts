@@ -234,11 +234,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           user.isNewUser = true
           user.accountStatus = 'pending'
 
-          // L'envoi d'email admin sera géré par une route API séparée
-          // pour éviter les problèmes avec l'edge runtime du middleware
-
-          // Bloquer la connexion pour les nouveaux utilisateurs OAuth en attente de validation
-          return '/connexion?registered=true&pending=true'
+          // Créer la session pour permettre l'accès à la page de sélection du type
+          // La redirection sera gérée par le callback redirect
+          return true
         } catch (error) {
           console.error("OAuth sign in error:", error)
           return false
@@ -273,6 +271,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (updatedUser) {
           token.userType = updatedUser.userType
           token.accountStatus = updatedUser.accountStatus
+          // Marquer l'utilisateur comme non-nouveau après la mise à jour
+          token.isNewUser = false
         }
       }
 
@@ -304,6 +304,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
       }
       return session
+    },
+    async redirect({ url, baseUrl }) {
+      // Si l'URL contient déjà une destination, l'utiliser
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      if (url.startsWith(baseUrl)) return url
+
+      // Sinon rediriger vers la page d'accueil par défaut
+      return baseUrl
     }
   },
   pages: {

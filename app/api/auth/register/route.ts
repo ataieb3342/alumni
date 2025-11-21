@@ -9,7 +9,7 @@ const registerSchema = z.object({
   lastName: z.string().min(2, 'Le nom doit contenir au moins 2 caractères').max(50, 'Le nom est trop long').regex(/^[a-zA-ZÀ-ÿ\s\-']+$/, 'Le nom contient des caractères invalides'),
   email: z.string().email('Email invalide').toLowerCase(),
   password: z.string().min(12, 'Le mot de passe doit contenir au moins 12 caractères').regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, 'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*?&)'),
-  userType: z.enum(['current_student', 'alumni', 'staff'], { message: 'Type d\'utilisateur invalide' }),
+  userType: z.enum(['lyceen', 'bts', 'prepa', 'alumni', 'staff'], { message: 'Type d\'utilisateur invalide' }),
 })
 
 export async function POST(request: Request) {
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
       password: hashedPassword,
       userType,
       accountStatus: 'pending', // L'utilisateur doit être validé par un admin
-      isVisibleInDirectory: userType !== 'current_student', // Les élèves ne sont pas dans l'annuaire par défaut
+      isVisibleInDirectory: userType !== 'lyceen', // Les lycéens ne sont pas dans l'annuaire par défaut
       createdAt: new Date().toISOString(),
     })
 

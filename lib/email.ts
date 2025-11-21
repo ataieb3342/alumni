@@ -24,7 +24,9 @@ export async function sendAdminNotificationEmail(userData: NewUserNotification) 
   const sanityUrl = `${process.env.SANITY_STUDIO_URL || 'https://mon-site.sanity.studio'}/structure/user;${userId}`
 
   const userTypeLabels: Record<string, string> = {
-    current_student: 'Élève actuel',
+    lyceen: 'Lycéen',
+    bts: 'BTS',
+    prepa: 'Prépa',
     alumni: 'Ancien élève',
     staff: 'Personnel',
   }

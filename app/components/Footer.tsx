@@ -100,6 +100,24 @@ export default function Footer() {
 
         <div className="border-t border-gray-800 mt-8 pt-6 text-center text-gray-400">
           <p>&copy; 2025 VH Besançon Alumni. Tous droits réservés.</p>
+          <p className="mt-2 text-sm">
+            Site développé et maintenu par{' '}
+            <a
+              href="https://ataieb-dev.fr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300"
+            >
+              Adam Taieb
+            </a>
+            {' | '}
+            <a
+              href="mailto:contact@ataieb-dev.fr"
+              className="text-blue-400 hover:text-blue-300"
+            >
+              contact@ataieb-dev.fr
+            </a>
+          </p>
         </div>
       </div>
     </footer>

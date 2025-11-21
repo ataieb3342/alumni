@@ -31,7 +31,9 @@ export default async function MemberDetailPage({
   const { currentJob, company, currentCity, isEducation } = getMostRecentActivity(user)
 
   const userTypeLabels: Record<string, string> = {
-    current_student: 'Élève actuel',
+    lyceen: 'Lycéen',
+    bts: 'BTS',
+    prepa: 'Prépa',
     alumni: 'Ancien élève',
     staff: 'Personnel',
   }

@@ -56,7 +56,9 @@ export async function GET() {
     const csvHeader = 'Prénom,Nom,Email,Type de membre,Newsletter générale,Notifications annonces,Date d\'inscription\n'
     const csvRows = subscriptions.map((sub: Subscription) => {
       const userTypeLabels: Record<string, string> = {
-        current_student: 'Élève actuel',
+        lyceen: 'Lycéen',
+        bts: 'BTS',
+        prepa: 'Prépa',
         alumni: 'Ancien élève',
         staff: 'Personnel',
       }

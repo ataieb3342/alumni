@@ -14,7 +14,7 @@ export default function RegisterPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    userType: 'alumni' as 'current_student' | 'alumni' | 'staff',
+    userType: 'alumni' as 'lyceen' | 'bts' | 'prepa' | 'alumni' | 'staff',
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -132,9 +132,12 @@ export default function RegisterPage() {
                 </label>
                 <select
                   value={formData.userType}
-                  onChange={(e) => setFormData({...formData, userType: e.target.value as 'current_student' | 'alumni' | 'staff'})}                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900">
-                  <option value="current_student" className="text-gray-900">Élève actuel</option>
-                  <option value="alumni" className="text-gray-900">Ancien élève</option>
+                  onChange={(e) => setFormData({...formData, userType: e.target.value as 'lyceen' | 'bts' | 'prepa' | 'alumni' | 'staff'})}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900">
+                  <option value="lyceen" className="text-gray-900">Lycéen</option>
+                  <option value="bts" className="text-gray-900">BTS</option>
+                  <option value="prepa" className="text-gray-900">Prépa</option>
+                  <option value="alumni" className="text-gray-900">Ancien élève (Alumni)</option>
                   <option value="staff" className="text-gray-900">Personnel</option>
                 </select>
               </div>

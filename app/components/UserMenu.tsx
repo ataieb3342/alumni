@@ -30,7 +30,9 @@ export default function UserMenu({ user }: UserMenuProps) {
   }
 
   const userTypeLabels: Record<string, string> = {
-    current_student: 'Élève',
+    lyceen: 'Lycéen',
+    bts: 'BTS',
+    prepa: 'Prépa',
     alumni: 'Alumni',
     staff: 'Personnel',
   }
