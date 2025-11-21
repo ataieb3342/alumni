@@ -42,6 +42,11 @@ export default async function ProfilePage() {
 
   const userData = await getUserData(session.user.email)
 
+  // Si l'utilisateur n'existe pas dans Sanity, rediriger vers la page d'inscription
+  if (!userData) {
+    redirect('/inscription')
+  }
+
   return (
     <>
       <Header />
