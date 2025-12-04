@@ -22,16 +22,24 @@ export async function POST(request: Request) {
   try {
     // Lire le body brut pour la vérification de signature
     const body = await request.text()
-    const signature = request.headers.get('sanity-webhook-signature')
+    const signature = request.headers.get('x-sanity-signature')
+
+    // Logs pour debug
+    console.log('[Webhook] Requête reçue')
+    console.log('[Webhook] Signature header:', signature ? 'Présent' : 'Absent')
+    console.log('[Webhook] Body length:', body.length)
 
     // Vérifier la signature du webhook
     if (!verifyWebhookSignature(body, signature)) {
-      console.error('Signature du webhook invalide')
+      console.error('[Webhook] Signature du webhook invalide')
+      console.error('[Webhook] Secret configuré:', process.env.SANITY_WEBHOOK_SECRET ? 'Oui' : 'Non')
       return NextResponse.json(
         { error: 'Signature invalide' },
         { status: 401 }
       )
     }
+
+    console.log('[Webhook] Signature valide')
 
     // Parser le body JSON
     const payload = JSON.parse(body)
@@ -41,14 +49,18 @@ export async function POST(request: Request) {
 
     // Vérifier que c'est bien un document user
     if (_type !== 'user') {
+      console.log('[Webhook] Type de document non concerné:', _type)
       return NextResponse.json(
         { message: 'Type de document non concerné' },
         { status: 200 }
       )
     }
 
+    console.log('[Webhook] Document user détecté:', { firstName, lastName, accountStatus })
+
     // Vérifier que le statut est "active"
     if (accountStatus !== 'active') {
+      console.log('[Webhook] Statut non actif:', accountStatus)
       return NextResponse.json(
         { message: 'Statut non actif, aucun email envoyé' },
         { status: 200 }
@@ -65,7 +77,7 @@ export async function POST(request: Request) {
     }
 
     // Envoyer l'email de validation à l'utilisateur
-    console.log(`Envoi de l'email de validation à ${email} (${firstName} ${lastName})`)
+    console.log(`[Webhook] Envoi de l'email de validation à ${email} (${firstName} ${lastName})`)
     const emailResult = await sendAccountValidatedEmail({
       firstName,
       lastName,
@@ -73,13 +85,14 @@ export async function POST(request: Request) {
     })
 
     if (!emailResult.success) {
-      console.error('Erreur lors de l\'envoi de l\'email:', emailResult.error)
+      console.error('[Webhook] Erreur lors de l\'envoi de l\'email:', emailResult.error)
       return NextResponse.json(
         { error: 'Erreur lors de l\'envoi de l\'email' },
         { status: 500 }
       )
     }
 
+    console.log('[Webhook] Email envoyé avec succès à', email)
     return NextResponse.json(
       {
         success: true,
