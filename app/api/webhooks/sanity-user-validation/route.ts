@@ -35,7 +35,7 @@ function verifyWebhookSignature(body: string, signatureHeader: string | null): b
   const hash = crypto
     .createHmac('sha256', process.env.SANITY_WEBHOOK_SECRET)
     .update(payload)
-    .digest('base64')
+    .digest('base64url')
 
   // Logs de debug
   console.log('[Webhook] Timestamp:', timestamp)
