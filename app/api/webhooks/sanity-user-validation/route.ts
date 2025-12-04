@@ -3,8 +3,8 @@ import { sendAccountValidatedEmail } from '@/lib/email'
 import crypto from 'crypto'
 
 // Fonction pour vérifier la signature du webhook (sécurité)
-function verifyWebhookSignature(body: string, signature: string | null): boolean {
-  if (!signature) {
+function verifyWebhookSignature(body: string, signatureHeader: string | null): boolean {
+  if (!signatureHeader) {
     console.log('[Webhook] Pas de signature fournie')
     return false
   }
@@ -14,12 +14,31 @@ function verifyWebhookSignature(body: string, signature: string | null): boolean
     return true // En développement, on peut continuer sans signature
   }
 
+  // Parser le header de signature: "t=timestamp,v1=signature"
+  const parts = signatureHeader.split(',')
+  let timestamp = ''
+  let signature = ''
+
+  for (const part of parts) {
+    const [key, value] = part.split('=')
+    if (key === 't') timestamp = value
+    if (key === 'v1') signature = value
+  }
+
+  if (!signature || !timestamp) {
+    console.error('[Webhook] Format de signature invalide:', signatureHeader)
+    return false
+  }
+
+  // Calculer la signature avec le format: timestamp.body
+  const payload = `${timestamp}.${body}`
   const hash = crypto
     .createHmac('sha256', process.env.SANITY_WEBHOOK_SECRET)
-    .update(body)
+    .update(payload)
     .digest('hex')
 
   // Logs de debug
+  console.log('[Webhook] Timestamp:', timestamp)
   console.log('[Webhook] Signature reçue:', signature.substring(0, 20) + '...')
   console.log('[Webhook] Signature calculée:', hash.substring(0, 20) + '...')
   console.log('[Webhook] Signatures égales:', hash === signature)
@@ -41,8 +60,8 @@ export async function POST(request: Request) {
       }
     })
 
-    const signature = request.headers.get('x-sanity-signature')
-    console.log('[Webhook] Signature header (x-sanity-signature):', signature ? 'Présent' : 'Absent')
+    const signature = request.headers.get('sanity-webhook-signature')
+    console.log('[Webhook] Signature header (sanity-webhook-signature):', signature ? 'Présent' : 'Absent')
     console.log('[Webhook] Body length:', body.length)
     console.log('[Webhook] Body preview:', body.substring(0, 100) + '...')
 
