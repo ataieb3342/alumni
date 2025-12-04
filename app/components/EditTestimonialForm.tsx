@@ -88,7 +88,7 @@ export default function EditTestimonialForm({ testimonial }: EditTestimonialForm
 
       <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg">
         <p className="text-sm">
-          <strong>Note :</strong> Cette page permet d'éditer les informations générales du témoignage.
+          <strong>Note :</strong> Cette page permet d&apos;éditer les informations générales du témoignage.
           Pour modifier le contenu détaillé, veuillez supprimer et recréer le témoignage.
         </p>
       </div>
