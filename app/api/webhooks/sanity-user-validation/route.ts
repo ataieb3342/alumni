@@ -4,9 +4,13 @@ import crypto from 'crypto'
 
 // Fonction pour vérifier la signature du webhook (sécurité)
 function verifyWebhookSignature(body: string, signature: string | null): boolean {
-  if (!signature) return false
+  if (!signature) {
+    console.log('[Webhook] Pas de signature fournie')
+    return false
+  }
+
   if (!process.env.SANITY_WEBHOOK_SECRET) {
-    console.warn('SANITY_WEBHOOK_SECRET non configuré, vérification de signature désactivée')
+    console.warn('[Webhook] SANITY_WEBHOOK_SECRET non configuré, vérification de signature désactivée')
     return true // En développement, on peut continuer sans signature
   }
 
@@ -15,6 +19,11 @@ function verifyWebhookSignature(body: string, signature: string | null): boolean
     .update(body)
     .digest('hex')
 
+  // Logs de debug
+  console.log('[Webhook] Signature reçue:', signature.substring(0, 20) + '...')
+  console.log('[Webhook] Signature calculée:', hash.substring(0, 20) + '...')
+  console.log('[Webhook] Signatures égales:', hash === signature)
+
   return hash === signature
 }
 
@@ -22,12 +31,20 @@ export async function POST(request: Request) {
   try {
     // Lire le body brut pour la vérification de signature
     const body = await request.text()
-    const signature = request.headers.get('x-sanity-signature')
 
-    // Logs pour debug
+    // Logs détaillés des headers
     console.log('[Webhook] Requête reçue')
-    console.log('[Webhook] Signature header:', signature ? 'Présent' : 'Absent')
+    console.log('[Webhook] Headers disponibles:')
+    request.headers.forEach((value, key) => {
+      if (key.toLowerCase().includes('sanity') || key.toLowerCase().includes('signature')) {
+        console.log(`  ${key}: ${value.substring(0, 30)}...`)
+      }
+    })
+
+    const signature = request.headers.get('x-sanity-signature')
+    console.log('[Webhook] Signature header (x-sanity-signature):', signature ? 'Présent' : 'Absent')
     console.log('[Webhook] Body length:', body.length)
+    console.log('[Webhook] Body preview:', body.substring(0, 100) + '...')
 
     // Vérifier la signature du webhook
     if (!verifyWebhookSignature(body, signature)) {
