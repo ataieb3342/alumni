@@ -20,6 +20,16 @@ export default auth((req) => {
 
   const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith(route + '/'))
 
+  // Les webhooks et certaines routes API doivent être accessibles sans authentification
+  const isPublicApiRoute = pathname.startsWith('/api/auth') ||
+                          pathname.startsWith('/api/webhooks') ||
+                          pathname.startsWith('/api/cron')
+
+  // Les routes API publiques ne nécessitent pas d'authentification
+  if (isPublicApiRoute) {
+    return NextResponse.next()
+  }
+
   // Si l'utilisateur a un ID temporaire (nouveau OAuth), il doit choisir son type
   // S'il essaie d'aller ailleurs, on le déconnecte automatiquement
   if (session?.user?.id?.startsWith('temp-') && pathname !== '/choisir-type' && !pathname.startsWith('/api/auth')) {
