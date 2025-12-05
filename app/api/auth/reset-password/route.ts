@@ -32,7 +32,7 @@ export async function POST(request: Request) {
         expiresAt,
         used
       }`,
-      { token }
+      { token } as any
     )
 
     if (!resetToken) {
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
         _id,
         email
       }`,
-      { email: resetToken.email }
+      { email: resetToken.email } as any
     )
 
     if (!user) {

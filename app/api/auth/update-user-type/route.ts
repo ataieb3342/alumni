@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { serverClient } from '@/sanity/lib/server-client'
-import { sendAdminNotificationEmail } from '@/lib/emails'
+import { sendAdminNewUserNotification } from '@/lib/emails'
 import { z } from 'zod'
 
 const updateTypeSchema = z.object({
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
 
       // Envoyer l'email admin
       try {
-        await sendAdminNotificationEmail({
+        await sendAdminNewUserNotification({
           firstName: session.user.firstName || '',
           lastName: session.user.lastName || '',
           email,

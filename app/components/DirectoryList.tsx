@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { urlFor } from '@/sanity/lib/image'
 import Pagination from './Pagination'
 import { getMostRecentActivity } from '@/lib/userUtils'

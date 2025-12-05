@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { sendAccountValidatedEmail } from '@/lib/emails'
+import { sendUserAccountValidated } from '@/lib/emails'
 import crypto from 'crypto'
 
 // Fonction pour vérifier la signature du webhook (sécurité)
@@ -114,7 +114,7 @@ export async function POST(request: Request) {
 
     // Envoyer l'email de validation à l'utilisateur
     console.log(`[Webhook] Envoi de l'email de validation à ${email} (${firstName} ${lastName})`)
-    const emailResult = await sendAccountValidatedEmail({
+    const emailResult = await sendUserAccountValidated({
       firstName,
       lastName,
       email,

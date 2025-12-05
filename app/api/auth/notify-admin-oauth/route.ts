@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { sendAdminNotificationEmail } from '@/lib/emails'
+import { sendAdminNewUserNotification } from '@/lib/emails'
 import { client } from '@/sanity/lib/client'
 
 // Force cette route à utiliser le Node.js runtime (pas edge)
@@ -39,7 +39,7 @@ export async function POST(_request: NextRequest) {
     }
 
     // Envoyer l'email à l'admin
-    await sendAdminNotificationEmail({
+    await sendAdminNewUserNotification({
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
