@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { serverClient } from '@/sanity/lib/server-client'
 import bcrypt from 'bcryptjs'
-import { sendAdminNotificationEmail } from '@/lib/emails'
+import { sendAdminNewUserNotification } from '@/lib/emails'
 import { z } from 'zod'
 
 const registerSchema = z.object({
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
 
     // Envoyer un email de notification aux admins
     try {
-      await sendAdminNotificationEmail({
+      await sendAdminNewUserNotification({
         firstName,
         lastName,
         email,

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
 import { NextResponse } from 'next/server'
 import { serverClient } from '@/sanity/lib/server-client'
 import bcrypt from 'bcryptjs'

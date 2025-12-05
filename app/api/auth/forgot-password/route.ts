@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { serverClient } from '@/sanity/lib/server-client'
-import { sendPasswordResetEmail } from '@/lib/emails'
+import { sendUserPasswordReset } from '@/lib/emails'
 import crypto from 'crypto'
 
 export async function POST(request: Request) {
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     })
 
     // Envoyer l'email
-    const emailResult = await sendPasswordResetEmail(normalizedEmail, token)
+    const emailResult = await sendUserPasswordReset(normalizedEmail, token)
 
     if (!emailResult.success) {
       return NextResponse.json(
