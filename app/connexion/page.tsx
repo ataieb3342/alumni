@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import PublicHeader from '../components/PublicHeader'
 import Footer from '../components/Footer'
 import OAuthButtons from '../components/OAuthButtons'
+import PasswordInput from '../components/PasswordInput'
 import Link from 'next/link'
 
 function LoginForm() {
@@ -115,25 +116,18 @@ function LoginForm() {
               />
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                  Mot de passe
-                </label>
+            <PasswordInput
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              label="Mot de passe"
+              required
+              labelExtra={
                 <Link href="/mot-de-passe-oublie" className="text-sm text-blue-900 hover:underline">
                   Mot de passe oublié ?
                 </Link>
-              </div>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 focus:border-transparent text-gray-900 placeholder:text-gray-400"
-                placeholder="••••••••"
-              />
-            </div>
+              }
+            />
 
             <button
               type="submit"

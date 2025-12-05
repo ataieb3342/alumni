@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import PasswordInput from './PasswordInput'
 
 interface User {
   id: string
@@ -230,52 +231,33 @@ export default function SettingsForm({ user, initialPreferences }: SettingsFormP
               </div>
             )}
 
-            <div>
-              <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                Mot de passe actuel
-              </label>
-              <input
-                type="password"
-                id="currentPassword"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 focus:border-transparent text-gray-900 placeholder:text-gray-400"
-                placeholder="••••••••"
-              />
-            </div>
+            <PasswordInput
+              id="currentPassword"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              label="Mot de passe actuel"
+              required
+            />
 
-            <div>
-              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                Nouveau mot de passe
-              </label>
-              <input
-                type="password"
-                id="newPassword"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                minLength={12}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 focus:border-transparent text-gray-900 placeholder:text-gray-400"
-                placeholder="12 caractères min, avec majuscule, minuscule, chiffre et @$!%*?&"
-              />
-            </div>
+            <PasswordInput
+              id="newPassword"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              label="Nouveau mot de passe"
+              placeholder="12 caractères min, avec majuscule, minuscule, chiffre et @$!%*?&"
+              required
+              minLength={12}
+            />
 
-            <div>
-              <label htmlFor="confirmNewPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                Confirmer le nouveau mot de passe
-              </label>
-              <input
-                type="password"
-                id="confirmNewPassword"
-                value={confirmNewPassword}
-                onChange={(e) => setConfirmNewPassword(e.target.value)}
-                required
-                minLength={12}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 focus:border-transparent text-gray-900 placeholder:text-gray-400"
-                placeholder="Retapez le nouveau mot de passe"
-              />
-            </div>
+            <PasswordInput
+              id="confirmNewPassword"
+              value={confirmNewPassword}
+              onChange={(e) => setConfirmNewPassword(e.target.value)}
+              label="Confirmer le nouveau mot de passe"
+              placeholder="Retapez le nouveau mot de passe"
+              required
+              minLength={12}
+            />
 
             <button
               type="submit"
