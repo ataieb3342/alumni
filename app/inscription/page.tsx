@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import PublicHeader from '../components/PublicHeader'
 import Footer from '../components/Footer'
 import OAuthButtons from '../components/OAuthButtons'
+import PasswordInput from '../components/PasswordInput'
 import Link from 'next/link'
 
 export default function RegisterPage() {
@@ -143,35 +144,25 @@ export default function RegisterPage() {
               </div>
               
               <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mot de passe *
-                  </label>
-                  <input
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({...formData, password: e.target.value})}
-                    required
-                    minLength={12}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
-                    placeholder="12 caractères min, avec majuscule, minuscule, chiffre et @$!%*?&"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Confirmer le mot de passe *
-                  </label>
-                  <input
-                    type="password"
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                    required
-                    minLength={12}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
-                    placeholder="Retapez le mot de passe"
-                  />
-                </div>
+                <PasswordInput
+                  id="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  label="Mot de passe *"
+                  placeholder="12 caractères min, avec majuscule, minuscule, chiffre et @$!%*?&"
+                  required
+                  minLength={12}
+                />
+
+                <PasswordInput
+                  id="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                  label="Confirmer le mot de passe *"
+                  placeholder="Retapez le mot de passe"
+                  required
+                  minLength={12}
+                />
               </div>
               
               <button
