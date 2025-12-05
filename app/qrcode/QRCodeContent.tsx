@@ -133,7 +133,7 @@ export default function QRCodeContent() {
               <iframe
                 id="haWidget"
                 allowTransparency={true}
-                src="https://www.helloasso.com/associations/vh-besancon-alumni/adhesions/formulaire-d-adhesion/widget"
+                src="https://www.helloasso.com/associations/vh-besancon-alumni/adhesions/formulaire-d-adhesion-1/widget"
                 style={{ width: '100%', border: 'none', minHeight: '600px' }}
               />
             </div>

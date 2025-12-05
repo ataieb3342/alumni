@@ -11,7 +11,12 @@
     "migrate:users": "tsx scripts/migrate-users.ts",
     "send:reset-emails": "tsx scripts/send-reset-emails.ts",
     "delete:users": "tsx scripts/delete-migrated-users.ts",
-    "enable-newsletter": "tsx scripts/enable-newsletter-for-all.ts"
+    "enable-newsletter": "tsx scripts/enable-newsletter-for-all.ts",
+    "send-migration-emails": "tsx scripts/send-migration-emails.ts",
+    "send-migration-emails:dry-run": "tsx scripts/send-migration-emails.ts --dry-run",
+    "test-drive-sync": "tsx scripts/test-drive-sync.ts",
+    "sync-drive": "tsx scripts/sync-drive-direct.ts",
+    "get-refresh-token": "tsx scripts/get-google-refresh-token.ts"
   },
   "dependencies": {
     "@portabletext/react": "^4.0.3",

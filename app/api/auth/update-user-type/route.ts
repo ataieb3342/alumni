@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { serverClient } from '@/sanity/lib/server-client'
-import { sendAdminNotificationEmail } from '@/lib/email'
+import { sendAdminNotificationEmail } from '@/lib/emails'
 import { z } from 'zod'
 
 const updateTypeSchema = z.object({

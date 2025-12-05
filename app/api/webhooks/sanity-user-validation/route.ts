@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { sendAccountValidatedEmail } from '@/lib/email'
+import { sendAccountValidatedEmail } from '@/lib/emails'
 import crypto from 'crypto'
 
 // Fonction pour vérifier la signature du webhook (sécurité)

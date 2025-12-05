@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { serverClient } from '@/sanity/lib/server-client'
 import bcrypt from 'bcryptjs'
-import { sendAdminNotificationEmail } from '@/lib/email'
+import { sendAdminNotificationEmail } from '@/lib/emails'
 import { z } from 'zod'
 
 const registerSchema = z.object({

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { serverClient } from '@/sanity/lib/server-client'
-import { sendPasswordResetEmail } from '@/lib/email'
+import { sendPasswordResetEmail } from '@/lib/emails'
 import crypto from 'crypto'
 
 export async function POST(request: Request) {

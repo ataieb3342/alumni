@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { sendAdminNotificationEmail } from '@/lib/email'
+import { sendAdminNotificationEmail } from '@/lib/emails'
 import { client } from '@/sanity/lib/client'
 
 // Force cette route à utiliser le Node.js runtime (pas edge)
