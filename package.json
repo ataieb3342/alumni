@@ -16,10 +16,14 @@
     "send-migration-emails:dry-run": "tsx scripts/send-migration-emails.ts --dry-run",
     "test-drive-sync": "tsx scripts/test-drive-sync.ts",
     "sync-drive": "tsx scripts/sync-drive-direct.ts",
-    "get-refresh-token": "tsx scripts/get-google-refresh-token.ts"
+    "get-refresh-token": "tsx scripts/get-google-refresh-token.ts",
+    "check-alumni": "tsx scripts/check-alumni-members.ts",
+    "check-alumni:dry-run": "tsx scripts/check-alumni-members.ts --dry-run",
+    "migrate-email-log": "tsx scripts/migrate-email-log-to-sanity.ts"
   },
   "dependencies": {
     "@portabletext/react": "^4.0.3",
+    "@sanity/dashboard": "^5.0.0",
     "@sanity/image-url": "^1.2.0",
     "@sanity/vision": "^4.10.2",
     "@types/nodemailer": "^7.0.3",

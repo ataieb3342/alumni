@@ -5,6 +5,7 @@ import GoogleProvider from "next-auth/providers/google"
 import LinkedInProvider from "next-auth/providers/linkedin"
 import { serverClient } from "@/sanity/lib/server-client"
 import bcrypt from "bcryptjs"
+import { logActivity } from "./activity-logger"
 
 // Types pour les profils OAuth
 interface LinkedInProfile {
@@ -116,6 +117,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async signIn({ user, account, profile }) {
       // Connexion normale par credentials
       if (account?.provider === "credentials") {
+        // Logger la connexion par credentials
+        if (user?.id) {
+          await logActivity({
+            userId: user.id,
+            action: 'login',
+            details: 'Connexion par email/mot de passe',
+          })
+        }
         return true
       }
 
@@ -164,6 +173,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             if (existingUser.accountStatus !== 'active') {
               return '/validation-en-cours'
             }
+
+            // Logger la connexion OAuth
+            await logActivity({
+              userId: existingUser._id,
+              action: 'login',
+              details: `Connexion via ${account.provider === 'google' ? 'Google' : 'LinkedIn'}`,
+            })
 
             return true
           }
