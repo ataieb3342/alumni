@@ -50,7 +50,6 @@ export default function MyTestimonialCard({ testimonial }: MyTestimonialCardProp
       router.refresh()
       setShowDeleteConfirm(false)
     } catch (error) {
-      console.error('Erreur:', error)
       alert('Une erreur est survenue lors de la suppression')
     } finally {
       setIsDeleting(false)

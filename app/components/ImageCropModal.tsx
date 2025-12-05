@@ -92,7 +92,7 @@ export default function ImageCropModal({
       const croppedImage = await getCroppedImg(image, croppedAreaPixels)
       onComplete(croppedImage)
     } catch (error) {
-      console.error('Erreur lors du recadrage:', error)
+      // Erreur silencieuse
     } finally {
       setLoading(false)
     }

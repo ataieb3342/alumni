@@ -100,7 +100,7 @@ export default function SettingsForm({ user, initialPreferences }: SettingsFormP
     }
 
     // Vérifier la complexité du mot de passe
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/
     if (!passwordRegex.test(newPassword)) {
       setPasswordMessage({
         type: 'error',

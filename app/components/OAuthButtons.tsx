@@ -16,7 +16,6 @@ export default function OAuthButtons({ mode = 'signin', callbackUrl = '/accueil'
     try {
       await signIn(provider, { callbackUrl })
     } catch (error) {
-      console.error(`Erreur lors de la connexion ${provider}:`, error)
       setLoadingProvider(null)
     }
   }

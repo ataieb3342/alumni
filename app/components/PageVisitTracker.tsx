@@ -46,7 +46,6 @@ export default function PageVisitTracker() {
         })
       } catch (error) {
         // Échec silencieux pour ne pas affecter l'expérience utilisateur
-        console.debug('Erreur lors du logging de la visite:', error)
       }
     }
 

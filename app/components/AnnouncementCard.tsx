@@ -78,7 +78,6 @@ export default function AnnouncementCard({ announcement }: AnnouncementCardProps
       authorImage = urlFor(announcement.author.profileImage.asset.url).width(40).height(40).url()
     }
   } catch (error) {
-    console.error('Error generating author image URL:', error)
     authorImage = null
   }
 
