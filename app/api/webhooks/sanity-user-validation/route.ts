@@ -113,9 +113,24 @@ export async function POST(request: Request) {
         method: 'GET',
       })
 
-      logger.debug('[Webhook] Historique récupéré', {
-        transactionsCount: history?.transactions?.length || 0
+      logger.debug('[Webhook] Historique récupéré - Structure complète:', {
+        hasTransactions: !!history?.transactions,
+        transactionsCount: history?.transactions?.length || 0,
+        historyKeys: history ? Object.keys(history) : [],
+        firstTransactionKeys: history?.transactions?.[0] ? Object.keys(history.transactions[0]) : [],
       })
+
+      // Log des 2 premières transactions pour debug
+      if (history?.transactions && history.transactions.length >= 1) {
+        logger.debug('[Webhook] Transaction 0 (latest)', {
+          transaction: JSON.stringify(history.transactions[0], null, 2)
+        })
+      }
+      if (history?.transactions && history.transactions.length >= 2) {
+        logger.debug('[Webhook] Transaction 1 (previous)', {
+          transaction: JSON.stringify(history.transactions[1], null, 2)
+        })
+      }
 
       // Comparer les 2 dernières révisions
       if (history?.transactions && history.transactions.length >= 2) {
@@ -127,7 +142,9 @@ export async function POST(request: Request) {
 
         logger.debug('[Webhook] Comparaison des statuts', {
           currentStatus,
-          previousStatus
+          previousStatus,
+          hasCurrentStatus: !!currentStatus,
+          hasPreviousStatus: !!previousStatus,
         })
 
         // Si le statut n'a pas changé, ne pas envoyer l'email
@@ -143,11 +160,29 @@ export async function POST(request: Request) {
         if (previousStatus !== 'active' && currentStatus === 'active') {
           logger.debug('[Webhook] Changement de statut détecté : validation du compte')
           // On continue pour envoyer l'email
+        } else {
+          // Cas où on ne peut pas déterminer le changement
+          logger.warn('[Webhook] Impossible de déterminer si le statut a changé, on bloque l\'envoi par sécurité', {
+            currentStatus,
+            previousStatus
+          })
+          return NextResponse.json(
+            { message: 'Impossible de vérifier le changement de statut' },
+            { status: 200 }
+          )
         }
+      } else {
+        logger.warn('[Webhook] Pas assez de transactions dans l\'historique', {
+          count: history?.transactions?.length || 0
+        })
       }
     } catch (error) {
       logger.error('[Webhook] Erreur lors de la vérification de l\'historique', error)
-      // En cas d'erreur, on continue quand même pour ne pas bloquer l'envoi
+      // Bloquer l'envoi en cas d'erreur pour éviter les doublons
+      return NextResponse.json(
+        { error: 'Erreur lors de la vérification de l\'historique' },
+        { status: 500 }
+      )
     }
 
     // Vérifier que toutes les données nécessaires sont présentes
