@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { urlFor } from '@/sanity/lib/image'
+import { getImageProps } from '@/sanity/lib/image'
 import Pagination from './Pagination'
 import { getMostRecentActivity } from '@/lib/userUtils'
 
@@ -189,7 +189,7 @@ export default function DirectoryList({ alumni, staff }: DirectoryListProps) {
               {user.coverImage ? (
                 <div className="w-full h-24 overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 relative">
                   <Image
-                    src={urlFor(user.coverImage).width(800).height(192).fit('crop').crop('center').url()}
+                    {...getImageProps(user.coverImage, 800, 192)}
                     alt="Couverture"
                     width={800}
                     height={96}
@@ -209,7 +209,7 @@ export default function DirectoryList({ alumni, staff }: DirectoryListProps) {
                     {user.profileImage ? (
                       <div className="w-20 h-20 rounded-xl overflow-hidden ring-4 ring-white shadow-lg group-hover:ring-blue-100 transition-all flex-shrink-0 bg-white">
                         <Image
-                          src={urlFor(user.profileImage).width(160).height(160).fit('crop').crop('center').url()}
+                          {...getImageProps(user.profileImage, 160, 160)}
                           alt={`${user.firstName} ${user.lastName}`}
                           width={80}
                           height={80}

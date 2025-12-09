@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import type { RequestInit } from 'next/dist/server/web/spec-extension/request'
 
 /**
  * Crée un NextRequest pour les tests

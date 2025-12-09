@@ -5,7 +5,7 @@ import { signOut } from 'next-auth/react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
-import { urlFor } from '@/sanity/lib/image'
+import { getImageProps } from '@/sanity/lib/image'
 
 interface UserMenuProps {
   user?: {
@@ -37,7 +37,7 @@ export default function UserMenu({ user }: UserMenuProps) {
     staff: 'Personnel',
   }
 
-  const profileImageUrl = user.profileImage ? urlFor(user.profileImage).width(96).height(96).url() : null
+  const profileImageProps = user.profileImage ? getImageProps(user.profileImage, 96, 96) : null
 
   return (
     <div className="relative">
@@ -46,9 +46,9 @@ export default function UserMenu({ user }: UserMenuProps) {
         className="flex items-center space-x-2 text-white hover:text-cyan-400 transition-colors group"
       >
         <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-slate-700 group-hover:ring-cyan-400 transition-all shadow-lg">
-          {profileImageUrl ? (
+          {profileImageProps ? (
             <Image
-              src={profileImageUrl}
+              {...profileImageProps}
               alt={user.name || 'User'}
               width={32}
               height={32}
@@ -76,9 +76,9 @@ export default function UserMenu({ user }: UserMenuProps) {
             <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100 border-b border-slate-200">
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-cyan-400 flex-shrink-0">
-                  {profileImageUrl ? (
+                  {profileImageProps ? (
                     <Image
-                      src={profileImageUrl}
+                      {...profileImageProps}
                       alt={user.name || 'User'}
                       width={48}
                       height={48}

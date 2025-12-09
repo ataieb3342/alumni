@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { urlFor } from '@/sanity/lib/image'
+import { urlFor, getImageProps } from '@/sanity/lib/image'
 import ImageCropModal from './ImageCropModal'
+import { toast } from 'sonner'
 
 interface Education {
   school: string
@@ -306,7 +307,9 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
         throw new Error(responseData.error || 'Erreur lors de la mise à jour')
       }
 
-      setMessage({ type: 'success', text: 'Profil mis à jour avec succès !' })
+      const successMessage = 'Profil mis à jour avec succès !'
+      setMessage({ type: 'success', text: successMessage })
+      toast.success(successMessage)
       setProfileImage(null) // Réinitialiser le fichier après l'upload réussi
       setImageDeleted(false) // Réinitialiser le flag de suppression
       setCoverImage(null) // Réinitialiser le fichier de couverture
@@ -317,7 +320,9 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
 
       router.refresh()
     } catch (error) {
-      setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Erreur lors de la mise à jour du profil' })
+      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la mise à jour du profil'
+      setMessage({ type: 'error', text: errorMessage })
+      toast.error(errorMessage)
       // Remonter en haut de la page pour voir le message d'erreur
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } finally {
@@ -384,6 +389,8 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
                   width={128}
                   height={128}
                   className="object-cover w-full h-full"
+                  placeholder={imagePreview.startsWith('data:') || imagePreview.startsWith('blob:') ? undefined : 'blur'}
+                  blurDataURL={imagePreview.startsWith('data:') || imagePreview.startsWith('blob:') ? undefined : imagePreview}
                 />
               </div>
             ) : (
@@ -448,6 +455,8 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
                   width={1200}
                   height={400}
                   className="object-cover w-full h-full"
+                  placeholder={coverImagePreview.startsWith('data:') || coverImagePreview.startsWith('blob:') ? undefined : 'blur'}
+                  blurDataURL={coverImagePreview.startsWith('data:') || coverImagePreview.startsWith('blob:') ? undefined : coverImagePreview}
                 />
                 <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <button
@@ -1121,8 +1130,14 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
         <button
           type="submit"
           disabled={loading}
-          className="px-6 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-lg transition disabled:opacity-50"
+          className="px-6 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
         >
+          {loading && (
+            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          )}
           {loading ? 'Enregistrement...' : 'Enregistrer'}
         </button>
       </div>

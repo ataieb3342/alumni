@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { urlFor } from '@/sanity/lib/image'
+import { getImageProps, urlFor } from '@/sanity/lib/image'
 
 interface Author {
   _id: string

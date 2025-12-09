@@ -4,7 +4,7 @@ import { redirect, notFound } from 'next/navigation'
 import { client } from '@/sanity/lib/client'
 import { announcementQuery } from '@/sanity/lib/queries'
 import { PortableText } from '@portabletext/react'
-import { urlFor } from '@/sanity/lib/image'
+import { getImageProps } from '@/sanity/lib/image'
 import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/app/components/Header'
@@ -94,14 +94,14 @@ export default async function AnnouncementDetailPage({
   const typeInfo = typeLabels[announcement.type] || typeLabels.other
   const authorInitials = `${announcement.author.firstName[0]}${announcement.author.lastName[0]}`
 
-  let authorImage: string | null = null
+  let authorImageProps = null
   try {
     if (announcement.author.profileImage?.asset?.url) {
-      authorImage = urlFor(announcement.author.profileImage.asset.url).width(80).height(80).url()
+      authorImageProps = getImageProps(announcement.author.profileImage.asset.url, 80, 80)
     }
   } catch (error) {
     logger.error('Error generating author image URL:', error)
-    authorImage = null
+    authorImageProps = null
   }
 
   // Extraire les infos du poste actuel de l'auteur
@@ -217,9 +217,9 @@ export default async function AnnouncementDetailPage({
             {/* Auteur */}
             <div className="pt-6 border-t border-gray-200">
               <div className="flex items-center gap-3">
-                {authorImage ? (
+                {authorImageProps ? (
                   <Image
-                    src={authorImage}
+                    {...authorImageProps}
                     alt={`${announcement.author.firstName} ${announcement.author.lastName}`}
                     width={48}
                     height={48}

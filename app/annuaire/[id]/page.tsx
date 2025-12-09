@@ -2,7 +2,7 @@ import { auth } from '@/lib/auth'
 import { redirect, notFound } from 'next/navigation'
 import { client } from '@/sanity/lib/client'
 import { userByIdQuery } from '@/sanity/lib/queries'
-import { urlFor } from '@/sanity/lib/image'
+import { getImageProps } from '@/sanity/lib/image'
 import { getMostRecentActivity } from '@/lib/userUtils'
 import Header from '@/app/components/Header'
 import Footer from '@/app/components/Footer'
@@ -55,7 +55,7 @@ export default async function MemberDetailPage({
         {user.coverImage ? (
           <div className="w-full h-56 md:h-72 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 relative">
             <Image
-              src={urlFor(user.coverImage).width(1920).height(580).fit('crop').crop('center').url()}
+              {...getImageProps(user.coverImage, 1920, 580)}
               alt="Photo de couverture"
               width={1920}
               height={580}
@@ -95,7 +95,7 @@ export default async function MemberDetailPage({
                   {user.profileImage ? (
                     <div className="w-32 h-32 mx-auto rounded-2xl overflow-hidden ring-4 ring-white shadow-xl mb-4">
                       <Image
-                        src={urlFor(user.profileImage).width(400).height(400).fit('crop').crop('center').url()}
+                        {...getImageProps(user.profileImage, 400, 400)}
                         alt={`${user.firstName} ${user.lastName}`}
                         width={128}
                         height={128}

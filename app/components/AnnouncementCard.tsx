@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { urlFor } from '@/sanity/lib/image'
+import { getImageProps } from '@/sanity/lib/image'
 
 interface Author {
   _id: string
@@ -72,13 +72,13 @@ export default function AnnouncementCard({ announcement }: AnnouncementCardProps
 
   const authorInitials = `${announcement.author.firstName[0]}${announcement.author.lastName[0]}`
 
-  let authorImage: string | null = null
+  let authorImageProps = null
   try {
     if (announcement.author.profileImage?.asset?.url) {
-      authorImage = urlFor(announcement.author.profileImage.asset.url).width(40).height(40).url()
+      authorImageProps = getImageProps(announcement.author.profileImage.asset.url, 40, 40)
     }
   } catch (error) {
-    authorImage = null
+    authorImageProps = null
   }
 
   return (
@@ -135,9 +135,9 @@ export default function AnnouncementCard({ announcement }: AnnouncementCardProps
           <div className="mt-auto pt-4 border-t border-gray-100">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                {authorImage ? (
+                {authorImageProps ? (
                   <Image
-                    src={authorImage}
+                    {...authorImageProps}
                     alt={`${announcement.author.firstName} ${announcement.author.lastName}`}
                     width={40}
                     height={40}

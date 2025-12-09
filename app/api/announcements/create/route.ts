@@ -5,6 +5,7 @@ import { generateSlug } from '@/lib/utils'
 import { logger } from '@/lib/logger'
 import { createAnnouncementSchema } from '@/lib/validations'
 import { rateLimit, RateLimitPresets } from '@/lib/rate-limit'
+import { notifySubscribers } from '@/lib/notifications'
 
 export async function POST(request: NextRequest) {
   // Rate limiting
@@ -119,8 +120,11 @@ export async function POST(request: NextRequest) {
       status: 'published',
     })
 
-    // TODO: Envoyer les notifications par email aux abonnés
-    // await notifySubscribers(newAnnouncement)
+    // Envoyer les notifications par email aux abonnés (de manière asynchrone)
+    // On n'attend pas le résultat pour ne pas ralentir la création de l'annonce
+    notifySubscribers(newAnnouncement).catch((error) => {
+      logger.error('Erreur lors de la notification des abonnés', error)
+    })
 
     return NextResponse.json({
       success: true,

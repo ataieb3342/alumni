@@ -1,6 +1,6 @@
 import { client } from '@/sanity/lib/client'
 import { postQuery } from '@/sanity/lib/queries'
-import { urlFor } from '@/sanity/lib/image'
+import { urlFor, getImageProps } from '@/sanity/lib/image'
 import { PortableText } from '@portabletext/react'
 import { PortableTextBlock } from '@portabletext/types'
 import Header from '@/app/components/Header'
@@ -202,7 +202,7 @@ export default async function ArticlePage({
               <div className="relative w-full px-6 sm:px-10 md:px-16 mt-8 mb-10">
                 <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-gray-100">
                   <Image
-                    src={urlFor(post.mainImage).width(1600).quality(90).url()}
+                    {...getImageProps(post.mainImage, 1600, 900)}
                     alt={post.mainImage.alt || post.title}
                     width={1600}
                     height={900}

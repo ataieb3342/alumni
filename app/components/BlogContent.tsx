@@ -5,7 +5,7 @@ import BlogFilters from './BlogFilters'
 import Pagination from './Pagination'
 import Link from 'next/link'
 import Image from 'next/image'
-import { urlFor } from '@/sanity/lib/image'
+import { getImageProps } from '@/sanity/lib/image'
 
 interface Post {
   _id: string
@@ -149,7 +149,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
                   {post.mainImage ? (
                     <div className="relative h-56 w-full overflow-hidden">
                       <Image
-                        src={urlFor(post.mainImage).width(800).height(400).url()}
+                        {...getImageProps(post.mainImage, 800, 400)}
                         alt={post.mainImage.alt || post.title}
                         fill
                         className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"

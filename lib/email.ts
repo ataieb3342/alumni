@@ -147,6 +147,159 @@ export async function sendAdminNotificationEmail(userData: NewUserNotification) 
   }
 }
 
+export async function sendAnnouncementNotificationEmail(
+  subscriberEmail: string,
+  subscriberName: string,
+  announcement: {
+    title: string
+    type: string
+    company?: string
+    location?: string
+    slug: string
+  }
+) {
+  const announcementUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/annonces/${announcement.slug}`
+
+  const typeLabels: Record<string, string> = {
+    job: 'Offre d\'emploi',
+    internship: 'Stage',
+    event: 'Événement',
+    other: 'Autre',
+  }
+
+  const mailOptions = {
+    from: `"Association VH Besançon" <${process.env.EMAIL_USER}>`,
+    to: subscriberEmail,
+    subject: `Nouvelle annonce : ${announcement.title}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+            }
+            .container {
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .header {
+              background-color: #1e3a8a;
+              color: white;
+              padding: 20px;
+              text-align: center;
+              border-radius: 5px 5px 0 0;
+            }
+            .content {
+              background-color: #f9fafb;
+              padding: 30px;
+              border: 1px solid #e5e7eb;
+            }
+            .announcement-box {
+              background-color: white;
+              padding: 20px;
+              border-left: 4px solid #1e3a8a;
+              margin: 20px 0;
+            }
+            .badge {
+              display: inline-block;
+              padding: 4px 12px;
+              background-color: #dbeafe;
+              color: #1e3a8a;
+              border-radius: 12px;
+              font-size: 12px;
+              font-weight: bold;
+              margin: 5px 0;
+            }
+            .button {
+              display: inline-block;
+              padding: 12px 24px;
+              background-color: #1e3a8a;
+              color: white;
+              text-decoration: none;
+              border-radius: 5px;
+              margin: 20px 0;
+            }
+            .footer {
+              text-align: center;
+              padding: 20px;
+              font-size: 12px;
+              color: #6b7280;
+            }
+            .unsubscribe {
+              color: #6b7280;
+              text-decoration: underline;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>📢 Nouvelle annonce publiée</h1>
+            </div>
+            <div class="content">
+              <p>Bonjour ${subscriberName},</p>
+              <p>Une nouvelle annonce vient d'être publiée sur le site de l'association :</p>
+
+              <div class="announcement-box">
+                <h2 style="margin-top: 0; color: #1e3a8a;">${announcement.title}</h2>
+                <span class="badge">${typeLabels[announcement.type] || announcement.type}</span>
+                ${announcement.company ? `<p><strong>Entreprise :</strong> ${announcement.company}</p>` : ''}
+                ${announcement.location ? `<p><strong>Lieu :</strong> ${announcement.location}</p>` : ''}
+              </div>
+
+              <div style="text-align: center;">
+                <a href="${announcementUrl}" class="button" style="display: inline-block; padding: 12px 24px; background-color: #1e3a8a; color: #ffffff !important; text-decoration: none; border-radius: 5px; margin: 20px 0;">Voir l'annonce complète</a>
+              </div>
+
+              <p style="font-size: 14px; color: #6b7280;">
+                Vous recevez cet email car vous êtes abonné(e) aux notifications d'annonces.
+                Vous pouvez gérer vos préférences de notification dans votre profil.
+              </p>
+            </div>
+            <div class="footer">
+              <p>Association VH Besançon</p>
+              <p>
+                <a href="${process.env.NEXT_PUBLIC_BASE_URL}/parametres" class="unsubscribe">Gérer mes préférences</a>
+              </p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+    text: `
+      Nouvelle annonce publiée
+
+      Bonjour ${subscriberName},
+
+      Une nouvelle annonce vient d'être publiée sur le site :
+
+      ${announcement.title}
+      Type : ${typeLabels[announcement.type] || announcement.type}
+      ${announcement.company ? `Entreprise : ${announcement.company}` : ''}
+      ${announcement.location ? `Lieu : ${announcement.location}` : ''}
+
+      Voir l'annonce : ${announcementUrl}
+
+      ---
+      Vous recevez cet email car vous êtes abonné(e) aux notifications d'annonces.
+      Gérer vos préférences : ${process.env.NEXT_PUBLIC_BASE_URL}/parametres
+    `,
+  }
+
+  try {
+    await transporter.sendMail(mailOptions)
+    return { success: true }
+  } catch (error) {
+    logger.error('Erreur lors de l\'envoi de l\'email de notification d\'annonce', error)
+    return { success: false, error }
+  }
+}
+
 export async function sendPasswordResetEmail(email: string, token: string) {
   const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/reinitialiser-mot-de-passe?token=${token}`
 
