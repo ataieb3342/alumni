@@ -329,6 +329,14 @@ export const userType = defineType({
       description: 'État du compte utilisateur',
     }),
     defineField({
+      name: 'validationEmailSentAt',
+      title: 'Email de validation envoyé',
+      type: 'datetime',
+      description: 'Date à laquelle l\'email de validation a été envoyé (automatique)',
+      hidden: true,
+      readOnly: true,
+    }),
+    defineField({
       name: 'createdAt',
       title: 'Date d\'inscription',
       type: 'datetime',

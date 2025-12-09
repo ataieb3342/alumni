@@ -83,7 +83,7 @@ export async function POST(request: Request) {
     const payload = JSON.parse(body)
 
     // Sanity envoie un objet avec _type, _id, et les champs mis à jour
-    const { _type, accountStatus, firstName, lastName, email, _id } = payload
+    const { _type, accountStatus, firstName, lastName, email, _id, validationEmailSentAt } = payload
 
     // Vérifier que c'est bien un document user
     if (_type !== 'user') {
@@ -105,84 +105,14 @@ export async function POST(request: Request) {
       )
     }
 
-    // Vérifier l'historique des révisions pour savoir si le statut vient de changer
-    try {
-      // Récupérer l'historique des révisions du document
-      const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production'
-      const history = await serverClient.request({
-        url: `/data/history/${dataset}/documents/${_id}`,
-        method: 'GET',
+    // Vérifier si l'email de validation a déjà été envoyé
+    if (validationEmailSentAt) {
+      logger.debug('[Webhook] Email de validation déjà envoyé', {
+        sentAt: validationEmailSentAt
       })
-
-      logger.debug('[Webhook] Historique récupéré - Structure complète:', {
-        hasTransactions: !!history?.transactions,
-        transactionsCount: history?.transactions?.length || 0,
-        historyKeys: history ? Object.keys(history) : [],
-        firstTransactionKeys: history?.transactions?.[0] ? Object.keys(history.transactions[0]) : [],
-      })
-
-      // Log des 2 premières transactions pour debug
-      if (history?.transactions && history.transactions.length >= 1) {
-        logger.debug('[Webhook] Transaction 0 (latest)', {
-          transaction: JSON.stringify(history.transactions[0], null, 2)
-        })
-      }
-      if (history?.transactions && history.transactions.length >= 2) {
-        logger.debug('[Webhook] Transaction 1 (previous)', {
-          transaction: JSON.stringify(history.transactions[1], null, 2)
-        })
-      }
-
-      // Comparer les 2 dernières révisions
-      if (history?.transactions && history.transactions.length >= 2) {
-        const latestTransaction = history.transactions[0]
-        const previousTransaction = history.transactions[1]
-
-        const currentStatus = latestTransaction?.document?.accountStatus
-        const previousStatus = previousTransaction?.document?.accountStatus
-
-        logger.debug('[Webhook] Comparaison des statuts', {
-          currentStatus,
-          previousStatus,
-          hasCurrentStatus: !!currentStatus,
-          hasPreviousStatus: !!previousStatus,
-        })
-
-        // Si le statut n'a pas changé, ne pas envoyer l'email
-        if (currentStatus === previousStatus && currentStatus === 'active') {
-          logger.debug('[Webhook] Le statut n\'a pas changé (déjà active), aucun email envoyé')
-          return NextResponse.json(
-            { message: 'Le statut n\'a pas changé, aucun email envoyé' },
-            { status: 200 }
-          )
-        }
-
-        // Si le statut précédent n'était pas 'active' et le nouveau est 'active', c'est une validation
-        if (previousStatus !== 'active' && currentStatus === 'active') {
-          logger.debug('[Webhook] Changement de statut détecté : validation du compte')
-          // On continue pour envoyer l'email
-        } else {
-          // Cas où on ne peut pas déterminer le changement
-          logger.warn('[Webhook] Impossible de déterminer si le statut a changé, on bloque l\'envoi par sécurité', {
-            currentStatus,
-            previousStatus
-          })
-          return NextResponse.json(
-            { message: 'Impossible de vérifier le changement de statut' },
-            { status: 200 }
-          )
-        }
-      } else {
-        logger.warn('[Webhook] Pas assez de transactions dans l\'historique', {
-          count: history?.transactions?.length || 0
-        })
-      }
-    } catch (error) {
-      logger.error('[Webhook] Erreur lors de la vérification de l\'historique', error)
-      // Bloquer l'envoi en cas d'erreur pour éviter les doublons
       return NextResponse.json(
-        { error: 'Erreur lors de la vérification de l\'historique' },
-        { status: 500 }
+        { message: 'Email de validation déjà envoyé' },
+        { status: 200 }
       )
     }
 
@@ -209,6 +139,18 @@ export async function POST(request: Request) {
         { error: 'Erreur lors de l\'envoi de l\'email' },
         { status: 500 }
       )
+    }
+
+    // Mettre à jour le champ validationEmailSentAt pour éviter les doublons
+    try {
+      await serverClient
+        .patch(_id)
+        .set({ validationEmailSentAt: new Date().toISOString() })
+        .commit()
+      logger.debug('[Webhook] Champ validationEmailSentAt mis à jour', { _id })
+    } catch (error) {
+      logger.error('[Webhook] Erreur lors de la mise à jour du champ validationEmailSentAt', error)
+      // On ne bloque pas le webhook même si cette mise à jour échoue
     }
 
     logger.debug('[Webhook] Email envoyé avec succès', { email })
