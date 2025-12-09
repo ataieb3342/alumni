@@ -18,11 +18,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-
-  // Activer l'instrumentation pour Sentry
-  experimental: {
-    instrumentationHook: true,
-  },
 };
 
 // Configuration Sentry

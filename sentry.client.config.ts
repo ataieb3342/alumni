@@ -43,12 +43,12 @@ Sentry.init({
     return event;
   },
 
+  // Trace propagation configuration (moved to top level in newer Sentry versions)
+  tracePropagationTargets: ["localhost", /^\//],
+
   // Performance monitoring
   integrations: [
-    Sentry.browserTracingIntegration({
-      // Tracer les navigations
-      tracePropagationTargets: ["localhost", /^\//],
-    }),
+    Sentry.browserTracingIntegration(),
     Sentry.replayIntegration({
       // Ne capturer les replays que pour les erreurs
       maskAllText: true,

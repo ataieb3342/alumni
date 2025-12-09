@@ -34,9 +34,7 @@ Sentry.init({
 
   // Intégrations serveur
   integrations: [
-    // Tracer les requêtes HTTP
-    Sentry.httpIntegration({
-      tracing: true,
-    }),
+    // Tracer les requêtes HTTP (tracing is enabled automatically with tracesSampleRate)
+    Sentry.httpIntegration(),
   ],
 });

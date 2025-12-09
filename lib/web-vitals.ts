@@ -82,9 +82,9 @@ export function reportWebVitals() {
   if (typeof window === 'undefined') return;
 
   // Importer dynamiquement web-vitals pour réduire le bundle
-  import('web-vitals').then(({ onCLS, onFID, onFCP, onLCP, onTTFB, onINP }) => {
+  // Note: FID a été déprécié en faveur de INP dans web-vitals v3+
+  import('web-vitals').then(({ onCLS, onFCP, onLCP, onTTFB, onINP }) => {
     onCLS(sendToAnalytics);
-    onFID(sendToAnalytics);
     onFCP(sendToAnalytics);
     onLCP(sendToAnalytics);
     onTTFB(sendToAnalytics);
