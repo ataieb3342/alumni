@@ -108,8 +108,9 @@ export async function POST(request: Request) {
     // Vérifier l'historique des révisions pour savoir si le statut vient de changer
     try {
       // Récupérer l'historique des révisions du document
+      const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production'
       const history = await serverClient.request({
-        url: `/data/history/production/documents/${_id}?excludeContent=false`,
+        url: `/data/history/${dataset}/documents/${_id}?excludeContent=false`,
         method: 'GET',
       })
 
