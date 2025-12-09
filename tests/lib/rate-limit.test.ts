@@ -269,6 +269,39 @@ describe('Rate Limiting Middleware', () => {
     })
   })
 
-  // Note: Le nettoyage automatique est testé indirectement par les autres tests
-  // qui vérifient que les anciennes tentatives sont filtrées après la fenêtre de temps
+  describe('Automatic cleanup', () => {
+    // Note: The setInterval cleanup runs in the background and is tested
+    // indirectly through the window-based filtering in the rateLimit function.
+    // The test "devrait réinitialiser après la fenêtre de temps" already validates
+    // that old requests are not counted after the time window expires.
+
+    it('should update store with recent timestamps during cleanup', () => {
+      vi.useFakeTimers()
+
+      const request = createMockRequest('192.168.1.103')
+      const config = { maxRequests: 10, windowMs: 60000 }
+
+      // Make multiple requests
+      for (let i = 0; i < 5; i++) {
+        rateLimit(request, config)
+      }
+
+      // Advance time by 23 hours (within 24 hour window)
+      vi.advanceTimersByTime(23 * 60 * 60 * 1000)
+
+      // Make more requests
+      for (let i = 0; i < 3; i++) {
+        rateLimit(request, config)
+      }
+
+      // Trigger cleanup
+      vi.advanceTimersByTime(61 * 1000)
+
+      // Should still have the recent 3 attempts
+      const stats = getRateLimitStats('192.168.1.103')
+      expect(stats.attempts).toBe(3)
+
+      vi.useRealTimers()
+    })
+  })
 })

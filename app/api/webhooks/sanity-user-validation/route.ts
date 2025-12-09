@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
 import { sendUserAccountValidated } from '@/lib/emails'
 import crypto from 'crypto'
+import { serverClient } from '@/sanity/lib/server-client'
 
 // Fonction pour vérifier la signature du webhook (sécurité)
 function verifyWebhookSignature(body: string, signatureHeader: string | null): boolean {
@@ -102,6 +103,51 @@ export async function POST(request: Request) {
         { message: 'Statut non actif, aucun email envoyé' },
         { status: 200 }
       )
+    }
+
+    // Vérifier l'historique des révisions pour savoir si le statut vient de changer
+    try {
+      // Récupérer l'historique des révisions du document
+      const history = await serverClient.request({
+        url: `/data/history/production/documents/${_id}?excludeContent=false`,
+        method: 'GET',
+      })
+
+      logger.debug('[Webhook] Historique récupéré', {
+        transactionsCount: history?.transactions?.length || 0
+      })
+
+      // Comparer les 2 dernières révisions
+      if (history?.transactions && history.transactions.length >= 2) {
+        const latestTransaction = history.transactions[0]
+        const previousTransaction = history.transactions[1]
+
+        const currentStatus = latestTransaction?.document?.accountStatus
+        const previousStatus = previousTransaction?.document?.accountStatus
+
+        logger.debug('[Webhook] Comparaison des statuts', {
+          currentStatus,
+          previousStatus
+        })
+
+        // Si le statut n'a pas changé, ne pas envoyer l'email
+        if (currentStatus === previousStatus && currentStatus === 'active') {
+          logger.debug('[Webhook] Le statut n\'a pas changé (déjà active), aucun email envoyé')
+          return NextResponse.json(
+            { message: 'Le statut n\'a pas changé, aucun email envoyé' },
+            { status: 200 }
+          )
+        }
+
+        // Si le statut précédent n'était pas 'active' et le nouveau est 'active', c'est une validation
+        if (previousStatus !== 'active' && currentStatus === 'active') {
+          logger.debug('[Webhook] Changement de statut détecté : validation du compte')
+          // On continue pour envoyer l'email
+        }
+      }
+    } catch (error) {
+      logger.error('[Webhook] Erreur lors de la vérification de l\'historique', error)
+      // En cas d'erreur, on continue quand même pour ne pas bloquer l'envoi
     }
 
     // Vérifier que toutes les données nécessaires sont présentes

@@ -1,10 +1,17 @@
 import { auth } from "@/lib/auth"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+import { randomUUID } from "crypto"
 
 export default auth((req: NextRequest & { auth: any }) => {
   const { pathname } = req.nextUrl
   const session = req.auth
+
+  // Générer un correlation ID pour tracer la requête
+  const correlationId = req.headers.get('x-correlation-id') || randomUUID()
+
+  // Démarrer le timer pour mesurer le temps de réponse
+  const startTime = Date.now()
 
   // Routes publiques (accessibles sans connexion)
   const publicRoutes = [
@@ -48,7 +55,22 @@ export default auth((req: NextRequest & { auth: any }) => {
     return NextResponse.redirect(new URL('/connexion', req.url))
   }
 
-  return NextResponse.next()
+  // Créer la réponse avec les headers de correlation
+  const response = NextResponse.next()
+
+  // Ajouter le correlation ID aux headers de réponse
+  response.headers.set('x-correlation-id', correlationId)
+
+  // Ajouter les informations de timing
+  const duration = Date.now() - startTime
+  response.headers.set('x-response-time', `${duration}ms`)
+
+  // Ajouter le contexte utilisateur si disponible (pour les logs)
+  if (session?.user) {
+    response.headers.set('x-user-id', session.user.id)
+  }
+
+  return response
 })
 
 export const config = {

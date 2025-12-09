@@ -98,4 +98,173 @@ describe('POST /api/profile/update', () => {
     expect(response.status).toBe(403)
     expect(data.error).toBe('Utilisateur non trouvé ou non autorisé')
   })
+
+  it('returns validation error with field path on invalid data', async () => {
+    const request = new Request('http://localhost:3000/api/profile/update', {
+      method: 'POST',
+      body: JSON.stringify({
+        ...validUpdateData,
+        firstName: '', // Invalid: empty firstName
+      }),
+    })
+
+    const response = await POST(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(data.error).toBeDefined()
+    expect(data.field).toBe('firstName')
+  })
+
+  it('updates profile with education data', async () => {
+    const request = new Request('http://localhost:3000/api/profile/update', {
+      method: 'POST',
+      body: JSON.stringify({
+        ...validUpdateData,
+        education: [
+          {
+            school: 'Université de Paris',
+            degree: 'Master',
+            field: 'Informatique',
+            startYear: 2018,
+            endYear: 2020,
+          },
+        ],
+      }),
+    })
+
+    const response = await POST(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.message).toBe('Profil mis à jour avec succès')
+  })
+
+  it('updates profile with experience data', async () => {
+    const request = new Request('http://localhost:3000/api/profile/update', {
+      method: 'POST',
+      body: JSON.stringify({
+        ...validUpdateData,
+        experience: [
+          {
+            company: 'Tech Corp',
+            position: 'Développeur',
+            startDate: '2020-01-01',
+            current: true,
+          },
+        ],
+      }),
+    })
+
+    const response = await POST(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.message).toBe('Profil mis à jour avec succès')
+  })
+
+  it('updates profile with profile image asset ID', async () => {
+    const request = new Request('http://localhost:3000/api/profile/update', {
+      method: 'POST',
+      body: JSON.stringify({
+        ...validUpdateData,
+        profileImageAssetId: 'image-asset-123',
+      }),
+    })
+
+    const response = await POST(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.message).toBe('Profil mis à jour avec succès')
+  })
+
+  it('updates profile with cover image asset ID', async () => {
+    const request = new Request('http://localhost:3000/api/profile/update', {
+      method: 'POST',
+      body: JSON.stringify({
+        ...validUpdateData,
+        coverImageAssetId: 'cover-asset-456',
+      }),
+    })
+
+    const response = await POST(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.message).toBe('Profil mis à jour avec succès')
+  })
+
+  it('deletes profile image when deleteProfileImage is true', async () => {
+    const mockUnset = vi.fn(() => ({
+      commit: vi.fn().mockResolvedValue({}),
+    }))
+    const mockSet = vi.fn(() => ({
+      unset: mockUnset,
+      commit: vi.fn().mockResolvedValue({}),
+    }))
+    mockSanityClient.patch.mockReturnValue({
+      set: mockSet,
+    })
+
+    const request = new Request('http://localhost:3000/api/profile/update', {
+      method: 'POST',
+      body: JSON.stringify({
+        ...validUpdateData,
+        deleteProfileImage: true,
+      }),
+    })
+
+    const response = await POST(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.message).toBe('Profil mis à jour avec succès')
+    expect(mockUnset).toHaveBeenCalledWith(['profileImage'])
+  })
+
+  it('deletes cover image when deleteCoverImage is true', async () => {
+    const mockUnset = vi.fn(() => ({
+      commit: vi.fn().mockResolvedValue({}),
+    }))
+    const mockSet = vi.fn(() => ({
+      unset: mockUnset,
+      commit: vi.fn().mockResolvedValue({}),
+    }))
+    mockSanityClient.patch.mockReturnValue({
+      set: mockSet,
+    })
+
+    const request = new Request('http://localhost:3000/api/profile/update', {
+      method: 'POST',
+      body: JSON.stringify({
+        ...validUpdateData,
+        deleteCoverImage: true,
+      }),
+    })
+
+    const response = await POST(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.message).toBe('Profil mis à jour avec succès')
+    expect(mockUnset).toHaveBeenCalledWith(['coverImage'])
+  })
+
+  it('handles server errors gracefully', async () => {
+    mockSanityClient.patch.mockImplementation(() => {
+      throw new Error('Database error')
+    })
+
+    const request = new Request('http://localhost:3000/api/profile/update', {
+      method: 'POST',
+      body: JSON.stringify(validUpdateData),
+    })
+
+    const response = await POST(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(500)
+    expect(data.error).toBe('Erreur lors de la mise à jour du profil')
+  })
 })

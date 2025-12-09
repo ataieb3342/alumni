@@ -307,5 +307,55 @@ describe('getMostRecentActivity', () => {
         isEducation: false,
       })
     })
+
+    it('handles education with same endYear, sorts by startYear', () => {
+      const user = {
+        education: [
+          {
+            school: 'School A',
+            degree: 'Degree A',
+            field: 'Field A',
+            startYear: 2015,
+            endYear: 2020,
+          },
+          {
+            school: 'School B',
+            degree: 'Degree B',
+            field: 'Field B',
+            startYear: 2018,
+            endYear: 2020,
+          },
+        ],
+      }
+
+      const result = getMostRecentActivity(user)
+
+      // Should return School B because it has a more recent startYear
+      expect(result.company).toBe('School B')
+      expect(result.isEducation).toBe(true)
+    })
+
+    it('handles education without startYear', () => {
+      const user = {
+        education: [
+          {
+            school: 'School',
+            degree: 'Degree',
+            field: 'Field',
+            startYear: 0,
+            endYear: 2020,
+          },
+        ],
+      }
+
+      const result = getMostRecentActivity(user)
+
+      expect(result).toEqual({
+        currentJob: 'Degree',
+        company: 'School',
+        currentCity: 'Field',
+        isEducation: true,
+      })
+    })
   })
 })
