@@ -14,6 +14,9 @@ function createMockRequest(pathname: string, session?: any) {
     },
     url: `http://localhost:3000${pathname}`,
     auth: session,
+    headers: {
+      get: vi.fn(() => null), // Mock headers.get pour correlation ID
+    },
   } as any
 
   return request

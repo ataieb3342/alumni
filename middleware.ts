@@ -1,14 +1,22 @@
 import { auth } from "@/lib/auth"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { randomUUID } from "crypto"
+
+// Helper pour générer un UUID (compatible edge runtime)
+function generateUUID(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 export default auth((req: NextRequest & { auth: any }) => {
   const { pathname } = req.nextUrl
   const session = req.auth
 
   // Générer un correlation ID pour tracer la requête
-  const correlationId = req.headers.get('x-correlation-id') || randomUUID()
+  const correlationId = req.headers.get('x-correlation-id') || generateUUID()
 
   // Démarrer le timer pour mesurer le temps de réponse
   const startTime = Date.now()

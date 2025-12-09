@@ -99,24 +99,20 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(existingImageUrl)
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(existingCoverImageUrl)
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const router = useRouter()
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      // Effacer les messages précédents
-      setMessage(null)
-
       // Vérifier le type de fichier
       if (!file.type.startsWith('image/')) {
-        setMessage({ type: 'error', text: 'Veuillez sélectionner une image valide (JPG, PNG, WEBP)' })
+        toast.error('Veuillez sélectionner une image valide (JPG, PNG, WEBP)')
         return
       }
 
       // Vérifier la taille (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        setMessage({ type: 'error', text: 'L\'image ne doit pas dépasser 5 MB' })
+        toast.error('L\'image ne doit pas dépasser 5 MB')
         return
       }
 
@@ -141,18 +137,15 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
   const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      // Effacer les messages précédents
-      setMessage(null)
-
       // Vérifier le type de fichier
       if (!file.type.startsWith('image/')) {
-        setMessage({ type: 'error', text: 'Veuillez sélectionner une image valide (JPG, PNG, WEBP)' })
+        toast.error('Veuillez sélectionner une image valide (JPG, PNG, WEBP)')
         return
       }
 
       // Vérifier la taille (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        setMessage({ type: 'error', text: 'L\'image ne doit pas dépasser 5 MB' })
+        toast.error('L\'image ne doit pas dépasser 5 MB')
         return
       }
 
@@ -222,7 +215,6 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setMessage(null)
 
     try {
       let imageAssetId = null
@@ -308,23 +300,16 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
       }
 
       const successMessage = 'Profil mis à jour avec succès !'
-      setMessage({ type: 'success', text: successMessage })
       toast.success(successMessage)
       setProfileImage(null) // Réinitialiser le fichier après l'upload réussi
       setImageDeleted(false) // Réinitialiser le flag de suppression
       setCoverImage(null) // Réinitialiser le fichier de couverture
       setCoverImageDeleted(false) // Réinitialiser le flag de suppression de couverture
 
-      // Remonter en haut de la page pour voir le message de succès
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-
       router.refresh()
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la mise à jour du profil'
-      setMessage({ type: 'error', text: errorMessage })
       toast.error(errorMessage)
-      // Remonter en haut de la page pour voir le message d'erreur
-      window.scrollTo({ top: 0, behavior: 'smooth' })
     } finally {
       setLoading(false)
     }
@@ -336,16 +321,6 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {message && (
-        <div className={`p-4 rounded-lg ${
-          message.type === 'success'
-            ? 'bg-green-50 text-green-800 border border-green-200'
-            : 'bg-red-50 text-red-800 border border-red-200'
-        }`}>
-          {message.text}
-        </div>
-      )}
-
       {/* Type d'utilisateur */}
       <div className="bg-white rounded-lg shadow-sm border p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Type de profil</h2>

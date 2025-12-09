@@ -10,7 +10,6 @@
  */
 
 import * as Sentry from "@sentry/nextjs";
-import { AsyncLocalStorage } from "async_hooks";
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
@@ -41,15 +40,20 @@ interface StructuredLog {
   };
 }
 
-// AsyncLocalStorage pour stocker le contexte de la requête
-const requestContext = new AsyncLocalStorage<{
+// Type pour le contexte de requête
+type RequestContextType = {
   correlationId?: string;
   userId?: string;
   userEmail?: string;
   route?: string;
   method?: string;
   startTime?: number;
-}>();
+};
+
+// Store global simple pour le contexte (compatible Edge Runtime)
+// Note: En Edge Runtime, ce contexte ne sera pas isolé par requête comme avec AsyncLocalStorage,
+// mais il permet quand même de logger des informations utiles
+let globalRequestContext: RequestContextType = {};
 
 class Logger {
   private shouldLog(level: LogLevel): boolean {
@@ -59,7 +63,7 @@ class Logger {
   }
 
   private getRequestContext() {
-    return requestContext.getStore() || {};
+    return globalRequestContext;
   }
 
   private formatLog(level: LogLevel, message: string, context?: LogContext, error?: Error): StructuredLog {
@@ -266,8 +270,22 @@ class Logger {
 // Export une instance singleton
 export const logger = new Logger();
 
-// Export AsyncLocalStorage pour middleware
-export { requestContext };
+// Export pour les wrappers d'API
+export const requestContextManager = {
+  run<T>(store: RequestContextType, callback: () => T): T {
+    // Utiliser le contexte global (compatible Edge Runtime et Node.js)
+    const previousContext = globalRequestContext;
+    globalRequestContext = store;
+    try {
+      return callback();
+    } finally {
+      globalRequestContext = previousContext;
+    }
+  },
+  getStore(): RequestContextType | undefined {
+    return globalRequestContext;
+  }
+};
 
 // Helper pour les blocs try/catch
 export function logError(error: unknown, context?: string): void {

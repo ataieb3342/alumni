@@ -10,7 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { logger, requestContext } from "./logger";
+import { logger, requestContextManager } from "./logger";
 import * as Sentry from "@sentry/nextjs";
 
 interface ApiHandlerOptions {
@@ -96,7 +96,7 @@ export function withApiHandler(
 
     // Exécuter le handler dans le contexte AsyncLocalStorage
     try {
-      const response = await requestContext.run(reqContext, async () => {
+      const executeHandler = async () => {
         // Créer un span Sentry pour la transaction
         return await Sentry.startSpan(
           {
@@ -111,7 +111,10 @@ export function withApiHandler(
             return await handler(req, context);
           }
         );
-      });
+      };
+
+      // Utiliser le requestContextManager pour gérer le contexte
+      const response = await requestContextManager.run(reqContext, executeHandler);
 
       const duration = Math.round(performance.now() - startTime);
       const statusCode = response.status;
@@ -213,5 +216,6 @@ export async function withRequestContext<T>(
     startTime: performance.now(),
   };
 
-  return await requestContext.run(reqContext, fn);
+  // Utiliser le requestContextManager pour gérer le contexte
+  return await requestContextManager.run(reqContext, fn);
 }

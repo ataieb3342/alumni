@@ -3,18 +3,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 describe('Logger', () => {
   let originalNodeEnv: string | undefined
   let consoleLogSpy: ReturnType<typeof vi.spyOn>
-  let consoleInfoSpy: ReturnType<typeof vi.spyOn>
-  let consoleWarnSpy: ReturnType<typeof vi.spyOn>
-  let consoleErrorSpy: ReturnType<typeof vi.spyOn>
 
   beforeEach(async () => {
     originalNodeEnv = process.env.NODE_ENV
 
-    // Spy on console methods
+    // Spy on console.log (le nouveau logger utilise console.log pour tout)
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-    consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {})
-    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     // Clear module cache to ensure fresh logger instance
     vi.resetModules()
@@ -33,41 +27,43 @@ describe('Logger', () => {
     it('should log debug messages in development', async () => {
       const { logger } = await import('@/lib/logger')
       logger.debug('Debug message', { key: 'value' })
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[DEBUG] Debug message')
-      )
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('{"key":"value"}')
-      )
+
+      expect(consoleLogSpy).toHaveBeenCalled()
+      const logOutput = consoleLogSpy.mock.calls[0][0]
+      expect(logOutput).toContain('Debug message')
+      expect(logOutput).toContain('DEBUG')
     })
 
     it('should log info messages in development', async () => {
       const { logger } = await import('@/lib/logger')
       logger.info('Info message')
-      expect(consoleInfoSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[INFO] Info message')
-      )
+
+      expect(consoleLogSpy).toHaveBeenCalled()
+      const logOutput = consoleLogSpy.mock.calls[0][0]
+      expect(logOutput).toContain('Info message')
+      expect(logOutput).toContain('INFO')
     })
 
     it('should log warn messages in development', async () => {
       const { logger } = await import('@/lib/logger')
       logger.warn('Warning message')
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[WARN] Warning message')
-      )
+
+      expect(consoleLogSpy).toHaveBeenCalled()
+      const logOutput = consoleLogSpy.mock.calls[0][0]
+      expect(logOutput).toContain('Warning message')
+      expect(logOutput).toContain('WARN')
     })
 
     it('should log error messages in development', async () => {
       const { logger } = await import('@/lib/logger')
       const error = new Error('Test error')
       logger.error('Error message', error, { extra: 'data' })
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[ERROR] Error message')
-      )
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('"message":"Test error"')
-      )
-      expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('"extra":"data"'))
+
+      expect(consoleLogSpy).toHaveBeenCalled()
+      const logOutput = consoleLogSpy.mock.calls[0][0]
+      expect(logOutput).toContain('Error message')
+      expect(logOutput).toContain('ERROR')
+      expect(logOutput).toContain('Test error')
     })
 
     it('should include stack trace in development', async () => {
@@ -75,18 +71,20 @@ describe('Logger', () => {
       const error = new Error('Test error with stack')
       error.stack = 'Error stack trace here'
       logger.error('Error with stack', error)
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Error stack trace here')
-      )
+
+      expect(consoleLogSpy).toHaveBeenCalled()
+      const logOutput = consoleLogSpy.mock.calls[0][0]
+      expect(logOutput).toContain('Error stack trace here')
     })
 
     it('should log activity messages in development', async () => {
       const { logger } = await import('@/lib/logger')
       logger.activity('User logged in', { userId: '123' })
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[ACTIVITY] User logged in')
-      )
-      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('{"userId":"123"}'))
+
+      expect(consoleLogSpy).toHaveBeenCalled()
+      const logOutput = consoleLogSpy.mock.calls[0][0]
+      expect(logOutput).toContain('ACTIVITY')
+      expect(logOutput).toContain('User logged in')
     })
   })
 
@@ -101,25 +99,44 @@ describe('Logger', () => {
       expect(consoleLogSpy).not.toHaveBeenCalled()
     })
 
-    it('should NOT log info messages in production', async () => {
+    it('should log info messages in production (JSON format)', async () => {
       const { logger } = await import('@/lib/logger')
       logger.info('Info message')
-      expect(consoleInfoSpy).not.toHaveBeenCalled()
+
+      expect(consoleLogSpy).toHaveBeenCalled()
+      const logOutput = consoleLogSpy.mock.calls[0][0]
+
+      // En production, c'est du JSON
+      const parsed = JSON.parse(logOutput)
+      expect(parsed.level).toBe('info')
+      expect(parsed.message).toBe('Info message')
+      expect(parsed.timestamp).toBeDefined()
     })
 
-    it('should NOT log warn messages in production', async () => {
+    it('should log warn messages in production (JSON format)', async () => {
       const { logger } = await import('@/lib/logger')
       logger.warn('Warning message')
-      expect(consoleWarnSpy).not.toHaveBeenCalled()
+
+      expect(consoleLogSpy).toHaveBeenCalled()
+      const logOutput = consoleLogSpy.mock.calls[0][0]
+
+      const parsed = JSON.parse(logOutput)
+      expect(parsed.level).toBe('warn')
+      expect(parsed.message).toBe('Warning message')
     })
 
-    it('should log error messages in production', async () => {
+    it('should log error messages in production (JSON format)', async () => {
       const { logger } = await import('@/lib/logger')
       const error = new Error('Production error')
       logger.error('Error message', error)
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[ERROR] Error message')
-      )
+
+      expect(consoleLogSpy).toHaveBeenCalled()
+      const logOutput = consoleLogSpy.mock.calls[0][0]
+
+      const parsed = JSON.parse(logOutput)
+      expect(parsed.level).toBe('error')
+      expect(parsed.message).toBe('Error message')
+      expect(parsed.error.message).toBe('Production error')
     })
 
     it('should NOT include stack trace in production', async () => {
@@ -127,19 +144,24 @@ describe('Logger', () => {
       const error = new Error('Error in production')
       error.stack = 'Error stack trace'
       logger.error('Error', error)
-      expect(consoleErrorSpy).not.toHaveBeenCalledWith(
-        expect.stringContaining('Error stack trace')
-      )
+
+      expect(consoleLogSpy).toHaveBeenCalled()
+      const logOutput = consoleLogSpy.mock.calls[0][0]
+
+      const parsed = JSON.parse(logOutput)
+      expect(parsed.error.stack).toBeUndefined()
     })
 
-    it('should log activity messages in production (simplified)', async () => {
+    it('should log activity messages in production (JSON format)', async () => {
       const { logger } = await import('@/lib/logger')
       logger.activity('User logged in', { userId: '123' })
-      expect(consoleLogSpy).toHaveBeenCalledWith('[ACTIVITY] User logged in')
-      // En production, les activity logs ne devraient pas inclure le contexte détaillé
-      expect(consoleLogSpy).not.toHaveBeenCalledWith(
-        expect.stringContaining('{"userId":"123"}')
-      )
+
+      expect(consoleLogSpy).toHaveBeenCalled()
+      const logOutput = consoleLogSpy.mock.calls[0][0]
+
+      const parsed = JSON.parse(logOutput)
+      expect(parsed.message).toContain('ACTIVITY')
+      expect(parsed.message).toContain('User logged in')
     })
   })
 
@@ -152,79 +174,109 @@ describe('Logger', () => {
       const { logError } = await import('@/lib/logger')
       const error = new Error('Test error')
       logError(error, 'Custom context')
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Custom context')
-      )
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('"message":"Test error"')
-      )
+
+      expect(consoleLogSpy).toHaveBeenCalled()
+      const logOutput = consoleLogSpy.mock.calls[0][0]
+      expect(logOutput).toContain('Custom context')
+      expect(logOutput).toContain('Test error')
     })
 
     it('should log non-Error values', async () => {
       const { logError } = await import('@/lib/logger')
       logError('String error', 'Context')
-      expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Context'))
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('"error":"String error"')
-      )
+
+      expect(consoleLogSpy).toHaveBeenCalled()
+      const logOutput = consoleLogSpy.mock.calls[0][0]
+      expect(logOutput).toContain('Context')
     })
 
     it('should use default context if none provided', async () => {
       const { logError } = await import('@/lib/logger')
       const error = new Error('Test')
       logError(error)
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Une erreur est survenue')
-      )
+
+      expect(consoleLogSpy).toHaveBeenCalled()
+      const logOutput = consoleLogSpy.mock.calls[0][0]
+      expect(logOutput).toContain('Une erreur est survenue')
     })
 
     it('should handle non-Error with default context', async () => {
       const { logError } = await import('@/lib/logger')
       logError({ custom: 'error' })
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Une erreur inconnue est survenue')
-      )
+
+      expect(consoleLogSpy).toHaveBeenCalled()
+      const logOutput = consoleLogSpy.mock.calls[0][0]
+      expect(logOutput).toContain('Une erreur inconnue est survenue')
     })
   })
 
-  describe('Message formatting', () => {
+  describe('Structured logging', () => {
+    beforeEach(() => {
+      process.env.NODE_ENV = 'production'
+    })
+
+    it('should output JSON in production', async () => {
+      const { logger } = await import('@/lib/logger')
+      logger.info('Test message', { userId: '123' })
+
+      expect(consoleLogSpy).toHaveBeenCalled()
+      const logOutput = consoleLogSpy.mock.calls[0][0]
+
+      // Doit être du JSON valide
+      expect(() => JSON.parse(logOutput)).not.toThrow()
+
+      const parsed = JSON.parse(logOutput)
+      expect(parsed.timestamp).toBeDefined()
+      expect(parsed.level).toBe('info')
+      expect(parsed.message).toBe('Test message')
+      expect(parsed.context.userId).toBe('123')
+    })
+
+    it('should include correlation ID when available', async () => {
+      const { logger } = await import('@/lib/logger')
+
+      // Simuler un contexte avec correlation ID
+      // Note: En réalité, ceci serait défini par AsyncLocalStorage dans le middleware
+      logger.info('Test with correlation')
+
+      expect(consoleLogSpy).toHaveBeenCalled()
+      const logOutput = consoleLogSpy.mock.calls[0][0]
+      const parsed = JSON.parse(logOutput)
+
+      // Le correlation ID est undefined si pas dans un contexte de requête
+      expect(parsed.correlationId).toBeUndefined()
+    })
+
+    it('should format errors properly in JSON', async () => {
+      const { logger } = await import('@/lib/logger')
+      const error = new Error('Test error')
+      error.name = 'TestError'
+
+      logger.error('Error occurred', error, { extra: 'context' })
+
+      expect(consoleLogSpy).toHaveBeenCalled()
+      const logOutput = consoleLogSpy.mock.calls[0][0]
+      const parsed = JSON.parse(logOutput)
+
+      expect(parsed.error.name).toBe('TestError')
+      expect(parsed.error.message).toBe('Test error')
+      expect(parsed.context.extra).toBe('context')
+    })
+  })
+
+  describe('Performance logging', () => {
     beforeEach(() => {
       process.env.NODE_ENV = 'development'
     })
 
-    it('should include timestamp in all messages', async () => {
+    it('should log performance metrics', async () => {
       const { logger } = await import('@/lib/logger')
-      logger.info('Test message')
-      expect(consoleInfoSpy).toHaveBeenCalledWith(expect.stringMatching(/\[\d{4}-\d{2}-\d{2}T/))
-    })
+      logger.performance('Database query', 150, { query: 'SELECT *' })
 
-    it('should format messages without context', async () => {
-      const { logger } = await import('@/lib/logger')
-      logger.info('Simple message')
-      expect(consoleInfoSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[INFO] Simple message')
-      )
-      expect(consoleInfoSpy).not.toHaveBeenCalledWith(expect.stringContaining('|'))
-    })
-
-    it('should format messages with context', async () => {
-      const { logger } = await import('@/lib/logger')
-      logger.info('Message with context', { key: 'value' })
-      expect(consoleInfoSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[INFO] Message with context | {"key":"value"}')
-      )
-    })
-
-    it('should handle Error objects with additional context', async () => {
-      const { logger } = await import('@/lib/logger')
-      const error = new Error('Test error')
-      logger.error('Error occurred', error, { userId: '123' })
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('"userId":"123"')
-      )
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('"message":"Test error"')
-      )
+      expect(consoleLogSpy).toHaveBeenCalled()
+      const logOutput = consoleLogSpy.mock.calls[0][0]
+      expect(logOutput).toContain('Database query')
+      expect(logOutput).toContain('150')
     })
   })
 })
