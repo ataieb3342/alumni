@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
 import { serverClient } from '@/sanity/lib/server-client'
 import { auth } from '@/lib/auth'
+import { updateProfileSchema } from '@/lib/validations'
 
 export async function POST(request: Request) {
   try {
@@ -14,6 +16,17 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
+
+    // Valider les données avec Zod
+    const validation = updateProfileSchema.safeParse(body)
+    if (!validation.success) {
+      const firstError = validation.error.issues[0]
+      return NextResponse.json(
+        { error: firstError.message, field: firstError.path[0] },
+        { status: 400 }
+      )
+    }
+
     const {
       userId,
       firstName,
@@ -29,7 +42,7 @@ export async function POST(request: Request) {
       deleteProfileImage,
       coverImageAssetId,
       deleteCoverImage
-    } = body
+    } = validation.data
 
     // Vérifier que l'utilisateur modifie bien son propre profil
     const user = await serverClient.fetch(
@@ -48,7 +61,7 @@ export async function POST(request: Request) {
     const updateData: Record<string, unknown> = {
       firstName,
       lastName,
-      promotionYear: promotionYear && promotionYear !== '' ? (typeof promotionYear === 'number' ? promotionYear : parseInt(promotionYear, 10)) : undefined,
+      promotionYear, // Déjà validé et transformé par Zod
       currentStudies,
       linkedIn,
       bio,
@@ -106,7 +119,7 @@ export async function POST(request: Request) {
       { status: 200 }
     )
   } catch (error) {
-    console.error('Erreur lors de la mise à jour du profil:', error)
+    logger.error('Erreur lors de la mise à jour du profil:', error)
     return NextResponse.json(
       { error: 'Erreur lors de la mise à jour du profil' },
       { status: 500 }

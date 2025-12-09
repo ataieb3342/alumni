@@ -1,21 +1,32 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { serverClient } from '@/sanity/lib/server-client'
 import { sendUserPasswordReset } from '@/lib/emails'
 import crypto from 'crypto'
+import { logger } from '@/lib/logger'
+import { rateLimit, RateLimitPresets } from '@/lib/rate-limit'
+import { forgotPasswordSchema } from '@/lib/validations'
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  // Rate limiting
+  const rateLimitResult = rateLimit(request, RateLimitPresets.email)
+  if (!rateLimitResult.success) {
+    return rateLimitResult.response
+  }
   try {
-    const { email } = await request.json()
+    const body = await request.json()
 
-    if (!email) {
+    // Valider les données avec Zod
+    const validation = forgotPasswordSchema.safeParse(body)
+    if (!validation.success) {
+      const firstError = validation.error.issues[0]
       return NextResponse.json(
-        { error: 'Email requis' },
+        { error: firstError.message },
         { status: 400 }
       )
     }
 
-    // Normaliser l'email en minuscules pour la comparaison
-    const normalizedEmail = email.toLowerCase()
+    const { email } = validation.data
+    const normalizedEmail = email
 
     // Vérifier si l'utilisateur existe
     const user = await serverClient.fetch(
@@ -71,7 +82,7 @@ export async function POST(request: Request) {
       { status: 200 }
     )
   } catch (error) {
-    console.error('Erreur lors de la demande de réinitialisation:', error)
+    logger.error('Erreur lors de la demande de réinitialisation:', error)
     return NextResponse.json(
       { error: 'Une erreur est survenue' },
       { status: 500 }

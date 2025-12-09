@@ -1,4 +1,5 @@
 import { serverClient } from '@/sanity/lib/server-client'
+import { logger } from './logger'
 
 interface ActivityLogData {
   userId?: string
@@ -32,7 +33,7 @@ export async function logActivity(data: ActivityLogData) {
     await serverClient.create(logEntry)
     return { success: true }
   } catch (error) {
-    console.error('Erreur lors de l\'enregistrement du log:', error)
+    logger.error('Erreur lors de l\'enregistrement du log d\'activité', error)
     return { success: false, error }
   }
 }

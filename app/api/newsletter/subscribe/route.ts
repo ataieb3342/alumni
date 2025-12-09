@@ -1,8 +1,15 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
 import { serverClient } from '@/sanity/lib/server-client'
 import { auth } from '@/lib/auth'
+import { rateLimit, RateLimitPresets } from '@/lib/rate-limit'
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  // Rate limiting
+  const rateLimitResult = rateLimit(request, RateLimitPresets.general)
+  if (!rateLimitResult.success) {
+    return rateLimitResult.response
+  }
   try {
     const session = await auth()
     if (!session?.user?.id) {
@@ -56,7 +63,7 @@ export async function POST(request: Request) {
       }, { status: 201 })
     }
   } catch (error) {
-    console.error('Erreur lors de l\'abonnement:', error)
+    logger.error('Erreur lors de l\'abonnement:', error)
     return NextResponse.json(
       { error: 'Erreur lors de l\'abonnement' },
       { status: 500 }
@@ -89,7 +96,7 @@ export async function GET() {
 
     return NextResponse.json(subscription)
   } catch (error) {
-    console.error('Erreur lors de la récupération de l\'abonnement:', error)
+    logger.error('Erreur lors de la récupération de l\'abonnement:', error)
     return NextResponse.json(
       { error: 'Erreur lors de la récupération' },
       { status: 500 }

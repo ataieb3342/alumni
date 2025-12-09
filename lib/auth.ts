@@ -6,6 +6,7 @@ import LinkedInProvider from "next-auth/providers/linkedin"
 import { serverClient } from "@/sanity/lib/server-client"
 import bcrypt from "bcryptjs"
 import { logActivity } from "./activity-logger"
+import { logger } from "./logger"
 
 // Types pour les profils OAuth
 interface LinkedInProfile {
@@ -107,7 +108,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             userType: user.userType,
           }
         } catch (error) {
-          console.error("Auth error:", error)
+          logger.error("Erreur d'authentification credentials", error)
           return null
         }
       }
@@ -191,9 +192,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           user.id = 'temp-' + account.providerAccountId // ID temporaire
           user.isNewUser = true
 
-          return true
+          // Rediriger vers la page de sélection du type
+          return '/choisir-type'
         } catch (error) {
-          console.error("OAuth sign in error:", error)
+          logger.error("Erreur lors de la connexion OAuth", error)
           return false
         }
       }
@@ -248,7 +250,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // Si c'est un ID temporaire, chercher l'utilisateur par email
         if (token.id?.startsWith('temp-')) {
           const email = token.email
-          console.log('🔄 JWT Update: ID temporaire détecté, email:', email)
+          logger.debug('JWT Update: ID temporaire détecté', { email })
           if (email) {
             const newUser = await serverClient.fetch(
               `*[_type == "user" && email == $email][0]{
@@ -262,11 +264,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               { email }
             )
 
-            console.log('🔄 JWT Update: Utilisateur trouvé?', !!newUser, newUser?._id)
-
             if (newUser) {
               // Remplacer l'ID temporaire par le vrai ID Sanity
-              console.log('✅ JWT Update: Remplacement du token temporaire par', newUser._id)
+              logger.debug('JWT Update: Remplacement du token temporaire', { userId: newUser._id })
               token.id = newUser._id
               token.userType = newUser.userType
               token.accountStatus = newUser.accountStatus
@@ -275,7 +275,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               token.isNewUser = false
               token.needsTypeSelection = false
             } else {
-              console.log('❌ JWT Update: Utilisateur non trouvé pour email:', email)
+              logger.warn('JWT Update: Utilisateur non trouvé', { email })
             }
           }
         } else if (token.id) {

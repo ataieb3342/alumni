@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
 import { auth } from '@/lib/auth'
 import { serverClient } from '@/sanity/lib/server-client'
 
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
       message: 'Préférences mises à jour',
     })
   } catch (error) {
-    console.error('Erreur lors de la mise à jour des préférences:', error)
+    logger.error('Erreur lors de la mise à jour des préférences:', error)
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500 }

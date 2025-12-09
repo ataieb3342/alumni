@@ -1,14 +1,16 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { serverClient } from '@/sanity/lib/server-client'
 import bcrypt from 'bcryptjs'
-import { z } from 'zod'
+import { logger } from '@/lib/logger'
+import { resetPasswordSchema } from '@/lib/validations'
+import { rateLimit, RateLimitPresets } from '@/lib/rate-limit'
 
-const resetPasswordSchema = z.object({
-  token: z.string().min(1, 'Token requis'),
-  password: z.string().min(12, 'Le mot de passe doit contenir au moins 12 caractères').regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, 'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*?&)'),
-})
-
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  // Rate limiting
+  const rateLimitResult = rateLimit(request, RateLimitPresets.sensitive)
+  if (!rateLimitResult.success) {
+    return rateLimitResult.response
+  }
   try {
     const body = await request.json()
 
@@ -87,7 +89,7 @@ export async function POST(request: Request) {
       { status: 200 }
     )
   } catch (error) {
-    console.error('Erreur lors de la réinitialisation:', error)
+    logger.error('Erreur lors de la réinitialisation:', error)
     return NextResponse.json(
       { error: 'Une erreur est survenue' },
       { status: 500 }

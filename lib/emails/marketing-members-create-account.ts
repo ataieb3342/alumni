@@ -1,4 +1,5 @@
 import { transporter } from './config'
+import { logger } from '@/lib/logger'
 
 interface MemberCreateAccountData {
   email: string
@@ -191,7 +192,7 @@ export async function sendMarketingMembersCreateAccount(data: MemberCreateAccoun
     await transporter.sendMail(mailOptions)
     return { success: true }
   } catch (error) {
-    console.error('Erreur lors de l\'envoi de l\'email de création de compte adhérent:', error)
+    logger.error('Erreur lors de l\'envoi de l\'email de création de compte adhérent:', error)
     return { success: false, error }
   }
 }

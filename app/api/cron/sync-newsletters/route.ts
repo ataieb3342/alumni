@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serverClient } from '@/sanity/lib/server-client'
 import { getGoogleDriveClient } from '@/lib/google-drive'
+import { logger } from '@/lib/logger'
 
 export async function GET(request: NextRequest) {
   try {
@@ -126,7 +127,7 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
-    console.error('Erreur lors de la synchronisation cron:', error)
+    logger.error('Erreur lors de la synchronisation cron:', error)
     return NextResponse.json(
       {
         error: 'Erreur lors de la synchronisation',

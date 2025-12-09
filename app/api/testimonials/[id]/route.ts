@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { client } from '@/sanity/lib/client'
+import { logger } from '@/lib/logger'
 
 // DELETE - Supprimer un témoignage
 export async function DELETE(
@@ -46,7 +47,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Erreur lors de la suppression:', error)
+    logger.error('Erreur lors de la suppression:', error)
     return NextResponse.json(
       { error: 'Erreur lors de la suppression du témoignage' },
       { status: 500 }
@@ -102,7 +103,7 @@ export async function PATCH(
 
     return NextResponse.json(updatedTestimonial)
   } catch (error) {
-    console.error('Erreur lors de la mise à jour:', error)
+    logger.error('Erreur lors de la mise à jour:', error)
     return NextResponse.json(
       { error: 'Erreur lors de la mise à jour du témoignage' },
       { status: 500 }

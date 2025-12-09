@@ -1,4 +1,5 @@
 import { transporter } from './config'
+import { logger } from '@/lib/logger'
 
 interface NewUserNotification {
   firstName: string
@@ -130,7 +131,7 @@ export async function sendAdminNewUserNotification(userData: NewUserNotification
     await transporter.sendMail(mailOptions)
     return { success: true }
   } catch (error) {
-    console.error('Erreur lors de l\'envoi de l\'email admin:', error)
+    logger.error('Erreur lors de l\'envoi de l\'email admin:', error)
     return { success: false, error }
   }
 }

@@ -1,6 +1,28 @@
 import { DefaultSession, DefaultUser } from "next-auth"
 import { JWT, DefaultJWT } from "next-auth/jwt"
 
+// Type pour les images Sanity
+interface SanityImage {
+  _type: 'image'
+  asset: {
+    _ref: string
+    _type: 'reference'
+  }
+  alt?: string
+  hotspot?: {
+    x: number
+    y: number
+    height: number
+    width: number
+  }
+  crop?: {
+    top: number
+    bottom: number
+    left: number
+    right: number
+  }
+}
+
 declare module "next-auth" {
   interface Session {
     user: {
@@ -13,7 +35,13 @@ declare module "next-auth" {
       accountStatus?: string
       needsTypeSelection?: boolean
       linkedInUrl?: string
-      profileImage?: any // Sanity image object
+      profileImage?: {
+        asset?: {
+          _ref?: string
+          _type?: string
+          url?: string
+        }
+      }
     } & DefaultSession["user"]
   }
 

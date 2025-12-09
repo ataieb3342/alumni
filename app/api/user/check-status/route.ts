@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
 import { serverClient } from '@/sanity/lib/server-client'
 
 export async function POST(request: Request) {
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ accountStatus: user.accountStatus })
   } catch (error) {
-    console.error('Erreur lors de la vérification du statut:', error)
+    logger.error('Erreur lors de la vérification du statut:', error)
     return NextResponse.json(
       { error: 'Erreur lors de la vérification' },
       { status: 500 }

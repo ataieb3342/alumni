@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
 import { auth } from '@/lib/auth'
 import { client } from '@/sanity/lib/client'
 
@@ -46,7 +47,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Erreur lors de la suppression:', error)
+    logger.error('Erreur lors de la suppression:', error)
     return NextResponse.json(
       { error: 'Erreur lors de la suppression de l\'annonce' },
       { status: 500 }
@@ -102,7 +103,7 @@ export async function PATCH(
 
     return NextResponse.json(updatedAnnouncement)
   } catch (error) {
-    console.error('Erreur lors de la mise à jour:', error)
+    logger.error('Erreur lors de la mise à jour:', error)
     return NextResponse.json(
       { error: 'Erreur lors de la mise à jour de l\'annonce' },
       { status: 500 }

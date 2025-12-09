@@ -1,4 +1,5 @@
 import { transporter } from './config'
+import { logger } from '@/lib/logger'
 
 interface MigratedUserData {
   email: string
@@ -189,7 +190,7 @@ export async function sendMarketingMigratedUsersWelcome(data: MigratedUserData) 
     await transporter.sendMail(mailOptions)
     return { success: true }
   } catch (error) {
-    console.error('Erreur lors de l\'envoi de l\'email de migration utilisateur:', error)
+    logger.error('Erreur lors de l\'envoi de l\'email de migration utilisateur:', error)
     return { success: false, error }
   }
 }

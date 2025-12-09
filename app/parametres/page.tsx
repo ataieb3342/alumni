@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { logger } from '@/lib/logger'
 import { auth } from '@/lib/auth'
 import { client } from '@/sanity/lib/client'
 import { newsletterSubscriptionQuery } from '@/sanity/lib/queries'
@@ -37,7 +38,7 @@ export default async function ParametresPage() {
       }
     }
   } catch (error) {
-    console.error('Erreur lors de la récupération des préférences:', error)
+    logger.error('Erreur lors de la récupération des préférences:', error)
     // Continuer avec les valeurs par défaut
   }
 

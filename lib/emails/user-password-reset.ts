@@ -1,4 +1,5 @@
 import { transporter } from './config'
+import { logger } from '@/lib/logger'
 
 export async function sendUserPasswordReset(email: string, token: string) {
   const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/reinitialiser-mot-de-passe?token=${token}`
@@ -95,7 +96,7 @@ export async function sendUserPasswordReset(email: string, token: string) {
     await transporter.sendMail(mailOptions)
     return { success: true }
   } catch (error) {
-    console.error('Erreur lors de l\'envoi de l\'email:', error)
+    logger.error('Erreur lors de l\'envoi de l\'email:', error)
     return { success: false, error }
   }
 }

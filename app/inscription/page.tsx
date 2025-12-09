@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { logger } from '@/lib/logger'
 import { useRouter } from 'next/navigation'
 import PublicHeader from '../components/PublicHeader'
 import Footer from '../components/Footer'
@@ -61,7 +62,7 @@ export default function RegisterPage() {
       // Rediriger vers la page de validation en cours
       router.push('/validation-en-cours')
     } catch (err) {
-      console.error(err)
+      logger.error('Une erreur est survenue', err)
       setError('Une erreur est survenue lors de l\'inscription')
     } finally {
       setLoading(false)

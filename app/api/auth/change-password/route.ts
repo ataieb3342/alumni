@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { serverClient } from '@/sanity/lib/server-client'
 import bcrypt from 'bcryptjs'
+import { logger } from '@/lib/logger'
 
 export async function POST(request: Request) {
   try {
@@ -77,7 +78,7 @@ export async function POST(request: Request) {
       { status: 200 }
     )
   } catch (error) {
-    console.error('Erreur lors du changement de mot de passe:', error)
+    logger.error('Erreur lors du changement de mot de passe:', error)
     return NextResponse.json(
       { error: 'Une erreur est survenue' },
       { status: 500 }

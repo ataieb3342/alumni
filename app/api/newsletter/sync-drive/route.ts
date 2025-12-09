@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
 import { serverClient } from '@/sanity/lib/server-client'
 import { getGoogleDriveClient } from '@/lib/google-drive'
 
@@ -136,7 +137,7 @@ export async function POST() {
       fileName: fileName,
     })
   } catch (error) {
-    console.error('Erreur lors de la synchronisation:', error)
+    logger.error('Erreur lors de la synchronisation:', error)
     return NextResponse.json(
       { error: 'Erreur lors de la synchronisation avec Google Drive', details: error instanceof Error ? error.message : 'Erreur inconnue' },
       { status: 500 }

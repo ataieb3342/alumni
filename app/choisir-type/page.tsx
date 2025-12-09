@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { logger } from '@/lib/logger'
 import { useRouter } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
 import PublicHeader from '../components/PublicHeader'
@@ -87,7 +88,7 @@ export default function ChooseTypePage() {
       // Rediriger vers la page de validation en cours
       router.push('/validation-en-cours')
     } catch (err) {
-      console.error(err)
+      logger.error('Une erreur est survenue', err)
       setError('Une erreur est survenue')
     } finally {
       setLoading(false)

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
 import { auth } from '@/lib/auth'
 import { logActivity, getClientIp, getUserAgent } from '@/lib/activity-logger'
 
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
       )
     }
   } catch (error) {
-    console.error('Erreur dans l\'API de logging:', error)
+    logger.error('Erreur dans l\'API de logging:', error)
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500 }

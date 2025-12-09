@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serverClient } from '@/sanity/lib/server-client'
 import { sendMarketingAlumniWelcome } from '@/lib/emails'
+import { logger } from '@/lib/logger'
 
 interface HelloAssoMember {
   firstName: string
@@ -143,13 +144,13 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    console.log('🔐 Authentification HelloAsso...')
+    logger.debug('🔐 Authentification HelloAsso...')
     const accessToken = await getHelloAssoAccessToken()
 
-    console.log('📋 Récupération des adhérents HelloAsso...')
+    logger.debug('📋 Récupération des adhérents HelloAsso...')
     const helloAssoMembers = await getRecentHelloAssoMembers(accessToken)
 
-    console.log('👥 Récupération des utilisateurs du site...')
+    logger.debug('👥 Récupération des utilisateurs du site...')
     const sanityUsers = await serverClient.fetch<SanityUser[]>(
       `*[_type == "user"]{ _id, email, firstName, lastName }`
     )
@@ -182,7 +183,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log(`📊 ${missingMembers.length} adhérents à contacter`)
+    logger.debug(`📊 ${missingMembers.length} adhérents à contacter`)
 
     // Envoyer les emails
     let emailsSent = 0
@@ -199,17 +200,17 @@ export async function GET(request: NextRequest) {
         if (result.success) {
           await logEmailSent(member)
           emailsSent++
-          console.log(`✅ Email envoyé à ${member.email}`)
+          logger.debug(`✅ Email envoyé à ${member.email}`)
         } else {
           emailsFailed++
-          console.log(`❌ Échec de l'envoi à ${member.email}`)
+          logger.debug(`❌ Échec de l'envoi à ${member.email}`)
         }
 
         // Délai pour éviter de surcharger le serveur email
         await new Promise(resolve => setTimeout(resolve, 1000))
       } catch (error) {
         emailsFailed++
-        console.error(`❌ Erreur pour ${member.email}:`, error)
+        logger.error('❌ Erreur pour ${member.email}:', error)
       }
     }
 
@@ -226,7 +227,7 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
-    console.error('Erreur lors de la vérification des adhérents:', error)
+    logger.error('Erreur lors de la vérification des adhérents:', error)
     return NextResponse.json(
       {
         error: 'Erreur lors de la vérification des adhérents',

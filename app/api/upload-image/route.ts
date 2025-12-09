@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { serverClient } from '@/sanity/lib/server-client'
+import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
       url: asset.url,
     })
   } catch (error) {
-    console.error('Erreur lors de l\'upload:', error)
+    logger.error('Erreur lors de l\'upload:', error)
     return NextResponse.json(
       { error: 'Erreur lors de l\'upload de l\'image' },
       { status: 500 }

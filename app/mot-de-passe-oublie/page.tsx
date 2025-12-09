@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { logger } from '@/lib/logger'
 import PublicHeader from '../components/PublicHeader'
 import Footer from '../components/Footer'
 import Link from 'next/link'
@@ -32,7 +33,7 @@ export default function ForgotPasswordPage() {
 
       setSubmitted(true)
     } catch (err) {
-      console.error(err)
+      logger.error('Une erreur est survenue', err)
       setError('Une erreur est survenue. Veuillez réessayer.')
     } finally {
       setLoading(false)

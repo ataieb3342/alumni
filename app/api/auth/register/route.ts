@@ -1,18 +1,17 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { serverClient } from '@/sanity/lib/server-client'
 import bcrypt from 'bcryptjs'
 import { sendAdminNewUserNotification } from '@/lib/emails'
-import { z } from 'zod'
+import { logger } from '@/lib/logger'
+import { registerSchema } from '@/lib/validations'
+import { rateLimit, RateLimitPresets } from '@/lib/rate-limit'
 
-const registerSchema = z.object({
-  firstName: z.string().min(2, 'Le prénom doit contenir au moins 2 caractères').max(50, 'Le prénom est trop long').regex(/^[a-zA-ZÀ-ÿ\s\-']+$/, 'Le prénom contient des caractères invalides'),
-  lastName: z.string().min(2, 'Le nom doit contenir au moins 2 caractères').max(50, 'Le nom est trop long').regex(/^[a-zA-ZÀ-ÿ\s\-']+$/, 'Le nom contient des caractères invalides'),
-  email: z.string().email('Email invalide').toLowerCase(),
-  password: z.string().min(12, 'Le mot de passe doit contenir au moins 12 caractères').regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, 'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*?&)'),
-  userType: z.enum(['lyceen', 'bts', 'prepa', 'alumni', 'staff'], { message: 'Type d\'utilisateur invalide' }),
-})
-
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  // Rate limiting
+  const rateLimitResult = rateLimit(request, RateLimitPresets.auth)
+  if (!rateLimitResult.success) {
+    return rateLimitResult.response
+  }
   try {
     const body = await request.json()
 
@@ -77,7 +76,7 @@ export async function POST(request: Request) {
         userId: newUser._id,
       })
     } catch (emailError) {
-      console.error('Erreur lors de l\'envoi de l\'email:', emailError)
+      logger.error('Erreur lors de l\'envoi de l\'email de notification admin', emailError)
       // On continue même si l'email échoue
     }
 
@@ -89,7 +88,7 @@ export async function POST(request: Request) {
       { status: 201 }
     )
   } catch (error) {
-    console.error('Erreur lors de l\'inscription:', error)
+    logger.error('Erreur lors de l\'inscription', error)
     return NextResponse.json(
       { error: 'Erreur lors de l\'inscription' },
       { status: 500 }

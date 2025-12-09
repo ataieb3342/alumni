@@ -1,4 +1,5 @@
 import fs from 'fs'
+import { logger } from '@/lib/logger'
 import path from 'path'
 
 /**
@@ -29,7 +30,7 @@ export function getRandomImage(): string {
 
     return `/images/${selectedImage}`
   } catch (error) {
-    console.error('Erreur lors de la lecture du dossier images:', error)
+    logger.error('Erreur lors de la lecture du dossier images:', error)
     // Retourner une image par défaut en cas d'erreur
     return '/images/lycee-victor-hugo.jpg'
   }

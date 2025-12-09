@@ -1,4 +1,5 @@
 import { transporter } from './config'
+import { logger } from '@/lib/logger'
 
 interface AccountValidatedNotification {
   firstName: string
@@ -139,7 +140,7 @@ export async function sendUserAccountValidated(userData: AccountValidatedNotific
     await transporter.sendMail(mailOptions)
     return { success: true }
   } catch (error) {
-    console.error('Erreur lors de l\'envoi de l\'email de validation:', error)
+    logger.error('Erreur lors de l\'envoi de l\'email de validation:', error)
     return { success: false, error }
   }
 }

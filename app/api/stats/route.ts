@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
 import { serverClient } from '@/sanity/lib/server-client'
 import { auth } from '@/lib/auth'
 
@@ -49,7 +50,7 @@ export async function GET(request: Request) {
       newsletterSubscriptions: stats.newsletterSubscriptions,
     })
   } catch (error) {
-    console.error('Erreur lors de la récupération des stats:', error)
+    logger.error('Erreur lors de la récupération des stats:', error)
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des statistiques' },
       { status: 500 }

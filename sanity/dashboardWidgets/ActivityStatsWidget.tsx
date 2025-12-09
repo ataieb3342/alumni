@@ -1,4 +1,5 @@
 import { Card, Stack, Text, Box, Flex, Heading } from '@sanity/ui'
+import { logger } from '@/lib/logger'
 import { useEffect, useState } from 'react'
 import { useClient } from 'sanity'
 
@@ -172,7 +173,7 @@ export default function ActivityStatsWidget() {
         averageVisitsPerUser,
       })
     } catch (error) {
-      console.error('Erreur lors du chargement des stats:', error)
+      logger.error('Erreur lors du chargement des stats:', error)
     } finally {
       setLoading(false)
     }

@@ -1,21 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { serverClient } from '@/sanity/lib/server-client'
-
-// Fonction pour générer un slug à partir du titre
-function generateSlug(title: string): string {
-  return title
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // Retirer les accents
-    .replace(/[^a-z0-9\s-]/g, '') // Garder seulement lettres, chiffres, espaces et tirets
-    .trim()
-    .replace(/\s+/g, '-') // Remplacer espaces par tirets
-    .replace(/-+/g, '-') // Remplacer tirets multiples par un seul
-    .substring(0, 96) // Limiter à 96 caractères
-}
+import { logger } from '@/lib/logger'
+import { createTestimonialSchema } from '@/lib/validations'
+import { generateSlug } from '@/lib/utils'
+import { rateLimit, RateLimitPresets } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const rateLimitResult = rateLimit(request, RateLimitPresets.contentCreation)
+  if (!rateLimitResult.success) {
+    return rateLimitResult.response
+  }
+
   try {
     // Vérifier l'authentification
     const session = await auth()
@@ -26,12 +23,18 @@ export async function POST(request: NextRequest) {
 
     // Récupérer les données du formulaire
     const data = await request.json()
-    const { title, type, excerpt, rating, tags, ...typeSpecificFields } = data
 
-    // Validation basique
-    if (!title || !type || !excerpt) {
-      return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 })
+    // Valider les données avec Zod
+    const validation = createTestimonialSchema.safeParse(data)
+    if (!validation.success) {
+      const firstError = validation.error.issues[0]
+      return NextResponse.json(
+        { error: firstError.message, field: firstError.path[0] },
+        { status: 400 }
+      )
     }
+
+    const { title, type, excerpt, rating, tags, ...typeSpecificFields } = validation.data
 
     // Générer un slug unique
     const baseSlug = generateSlug(title)
@@ -56,7 +59,7 @@ export async function POST(request: NextRequest) {
       },
       type,
       excerpt,
-      rating: rating ? parseInt(rating as string, 10) : undefined,
+      rating, // Déjà validé et transformé par Zod
       tags: tagsArray.length > 0 ? tagsArray : undefined,
       author: {
         _type: 'reference',
@@ -69,9 +72,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Ajouter les champs spécifiques au type
-    Object.keys(typeSpecificFields).forEach((key) => {
-      if (typeSpecificFields[key]) {
-        testimonialData[key] = typeSpecificFields[key]
+    Object.entries(typeSpecificFields).forEach(([key, value]) => {
+      if (value !== undefined && value !== '') {
+        testimonialData[key] = value
       }
     })
 
@@ -87,7 +90,7 @@ export async function POST(request: NextRequest) {
       slug: slug,
     })
   } catch (error) {
-    console.error('Erreur lors de la création du témoignage:', error)
+    logger.error('Erreur lors de la création du témoignage:', error)
     return NextResponse.json(
       { error: 'Erreur serveur lors de la création du témoignage' },
       { status: 500 }

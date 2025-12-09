@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
+import { logger } from '@/lib/logger'
 import { useRouter, useSearchParams } from 'next/navigation'
 import PublicHeader from '../components/PublicHeader'
 import Footer from '../components/Footer'
@@ -68,7 +69,7 @@ function ResetPasswordForm() {
         router.push('/connexion?passwordReset=true')
       }, 3000)
     } catch (err) {
-      console.error(err)
+      logger.error('Une erreur est survenue', err)
       setError('Une erreur est survenue. Veuillez réessayer.')
     } finally {
       setLoading(false)

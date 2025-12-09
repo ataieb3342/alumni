@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { serverClient } from '@/sanity/lib/server-client'
 import { sendAdminNewUserNotification } from '@/lib/emails'
 import { z } from 'zod'
+import { logger } from '@/lib/logger'
 
 const updateTypeSchema = z.object({
   userType: z.enum(['lyceen', 'bts', 'prepa', 'alumni', 'staff'], { message: 'Type d\'utilisateur invalide' }),
@@ -87,7 +88,7 @@ export async function POST(request: Request) {
           userId: newUser._id,
         })
       } catch (emailError) {
-        console.error('Erreur lors de l\'envoi de l\'email admin:', emailError)
+        logger.error('Erreur lors de l\'envoi de l\'email admin:', emailError)
       }
 
       return NextResponse.json(
@@ -137,7 +138,7 @@ export async function POST(request: Request) {
       { status: 200 }
     )
   } catch (error) {
-    console.error('Erreur lors de la mise à jour du type:', error)
+    logger.error('Erreur lors de la mise à jour du type:', error)
     return NextResponse.json(
       { error: 'Erreur lors de la mise à jour' },
       { status: 500 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
 import { serverClient } from '@/sanity/lib/server-client'
 import { auth } from '@/lib/auth'
 
@@ -87,7 +88,7 @@ export async function GET() {
       },
     })
   } catch (error) {
-    console.error('Erreur lors de l\'export:', error)
+    logger.error('Erreur lors de l\'export:', error)
     return NextResponse.json(
       { error: 'Erreur lors de l\'export' },
       { status: 500 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
 import { auth } from '@/lib/auth'
 import { serverClient } from '@/sanity/lib/server-client'
 
@@ -35,7 +36,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Suppression complète en cascade de toutes les données de l'utilisateur
-    console.log(`Début de la suppression en cascade pour l'utilisateur ${userId}`)
+    logger.debug(`Début de la suppression en cascade pour l'utilisateur ${userId}`)
 
     // 1. Supprimer les annonces de l'utilisateur
     const userAnnouncements = await serverClient.fetch(
@@ -43,7 +44,7 @@ export async function DELETE(request: NextRequest) {
       { userId }
     )
 
-    console.log(`Suppression de ${userAnnouncements.length} annonce(s)`)
+    logger.debug(`Suppression de ${userAnnouncements.length} annonce(s)`)
     for (const announcementId of userAnnouncements) {
       await serverClient.delete(announcementId)
     }
@@ -55,12 +56,12 @@ export async function DELETE(request: NextRequest) {
     )
 
     if (newsletterSub) {
-      console.log('Suppression des préférences newsletter')
+      logger.debug('Suppression des préférences newsletter')
       await serverClient.delete(newsletterSub)
     }
 
     // 3. Supprimer le compte utilisateur
-    console.log('Suppression du compte utilisateur')
+    logger.debug('Suppression du compte utilisateur')
     await serverClient.delete(userId)
 
     return NextResponse.json({
@@ -68,7 +69,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Compte supprimé avec succès',
     })
   } catch (error) {
-    console.error('Erreur lors de la suppression du compte:', error)
+    logger.error('Erreur lors de la suppression du compte:', error)
     return NextResponse.json(
       { error: 'Erreur serveur lors de la suppression' },
       { status: 500 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { sendAdminNewUserNotification } from '@/lib/emails'
 import { client } from '@/sanity/lib/client'
+import { logger } from '@/lib/logger'
 
 // Force cette route à utiliser le Node.js runtime (pas edge)
 export const runtime = 'nodejs'
@@ -52,7 +53,7 @@ export async function POST(_request: NextRequest) {
       message: 'Notification admin envoyée'
     })
   } catch (error) {
-    console.error('Erreur lors de l\'envoi de la notification admin:', error)
+    logger.error('Erreur lors de l\'envoi de la notification admin:', error)
     return NextResponse.json(
       { error: 'Erreur lors de l\'envoi de la notification' },
       { status: 500 }

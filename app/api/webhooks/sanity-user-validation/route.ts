@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
 import { sendUserAccountValidated } from '@/lib/emails'
 import crypto from 'crypto'
 
 // Fonction pour vérifier la signature du webhook (sécurité)
 function verifyWebhookSignature(body: string, signatureHeader: string | null): boolean {
   if (!signatureHeader) {
-    console.log('[Webhook] Pas de signature fournie')
+    logger.debug('[Webhook] Pas de signature fournie')
     return false
   }
 
   if (!process.env.SANITY_WEBHOOK_SECRET) {
-    console.warn('[Webhook] SANITY_WEBHOOK_SECRET non configuré, vérification de signature désactivée')
+    logger.warn('[Webhook] SANITY_WEBHOOK_SECRET non configuré, vérification de signature désactivée')
     return true // En développement, on peut continuer sans signature
   }
 
@@ -26,7 +27,7 @@ function verifyWebhookSignature(body: string, signatureHeader: string | null): b
   }
 
   if (!signature || !timestamp) {
-    console.error('[Webhook] Format de signature invalide:', signatureHeader)
+    logger.error('[Webhook] Format de signature invalide', undefined, { signatureHeader })
     return false
   }
 
@@ -38,10 +39,10 @@ function verifyWebhookSignature(body: string, signatureHeader: string | null): b
     .digest('base64url')
 
   // Logs de debug
-  console.log('[Webhook] Timestamp:', timestamp)
-  console.log('[Webhook] Signature reçue:', signature.substring(0, 20) + '...')
-  console.log('[Webhook] Signature calculée:', hash.substring(0, 20) + '...')
-  console.log('[Webhook] Signatures égales:', hash === signature)
+  logger.debug('[Webhook] Timestamp', { timestamp })
+  logger.debug('[Webhook] Signature reçue', { signature: signature.substring(0, 20) + '...' })
+  logger.debug('[Webhook] Signature calculée', { hash: hash.substring(0, 20) + '...' })
+  logger.debug('[Webhook] Signatures égales', { match: hash === signature })
 
   return hash === signature
 }
@@ -52,30 +53,30 @@ export async function POST(request: Request) {
     const body = await request.text()
 
     // Logs détaillés des headers
-    console.log('[Webhook] Requête reçue')
-    console.log('[Webhook] Headers disponibles:')
+    logger.debug('[Webhook] Requête reçue')
+    logger.debug('[Webhook] Headers disponibles:')
     request.headers.forEach((value, key) => {
       if (key.toLowerCase().includes('sanity') || key.toLowerCase().includes('signature')) {
-        console.log(`  ${key}: ${value.substring(0, 30)}...`)
+        logger.debug(`  ${key}: ${value.substring(0, 30)}...`)
       }
     })
 
     const signature = request.headers.get('sanity-webhook-signature')
-    console.log('[Webhook] Signature header (sanity-webhook-signature):', signature ? 'Présent' : 'Absent')
-    console.log('[Webhook] Body length:', body.length)
-    console.log('[Webhook] Body preview:', body.substring(0, 100) + '...')
+    logger.debug('[Webhook] Signature header', { present: signature ? 'Oui' : 'Non' })
+    logger.debug('[Webhook] Body length', { length: body.length })
+    logger.debug('[Webhook] Body preview', { preview: body.substring(0, 100) + '...' })
 
     // Vérifier la signature du webhook
     if (!verifyWebhookSignature(body, signature)) {
-      console.error('[Webhook] Signature du webhook invalide')
-      console.error('[Webhook] Secret configuré:', process.env.SANITY_WEBHOOK_SECRET ? 'Oui' : 'Non')
+      logger.error('[Webhook] Signature du webhook invalide')
+      logger.error('[Webhook] Secret configuré', undefined, { configured: process.env.SANITY_WEBHOOK_SECRET ? 'Oui' : 'Non' })
       return NextResponse.json(
         { error: 'Signature invalide' },
         { status: 401 }
       )
     }
 
-    console.log('[Webhook] Signature valide')
+    logger.debug('[Webhook] Signature valide')
 
     // Parser le body JSON
     const payload = JSON.parse(body)
@@ -85,18 +86,18 @@ export async function POST(request: Request) {
 
     // Vérifier que c'est bien un document user
     if (_type !== 'user') {
-      console.log('[Webhook] Type de document non concerné:', _type)
+      logger.debug('[Webhook] Type de document non concerné', { _type })
       return NextResponse.json(
         { message: 'Type de document non concerné' },
         { status: 200 }
       )
     }
 
-    console.log('[Webhook] Document user détecté:', { firstName, lastName, accountStatus })
+    logger.debug('[Webhook] Document user détecté', { firstName, lastName, accountStatus })
 
     // Vérifier que le statut est "active"
     if (accountStatus !== 'active') {
-      console.log('[Webhook] Statut non actif:', accountStatus)
+      logger.debug('[Webhook] Statut non actif', { accountStatus })
       return NextResponse.json(
         { message: 'Statut non actif, aucun email envoyé' },
         { status: 200 }
@@ -105,7 +106,7 @@ export async function POST(request: Request) {
 
     // Vérifier que toutes les données nécessaires sont présentes
     if (!firstName || !lastName || !email) {
-      console.error('Données utilisateur incomplètes:', { firstName, lastName, email })
+      logger.error('Données utilisateur incomplètes', undefined, { firstName, lastName, email })
       return NextResponse.json(
         { error: 'Données utilisateur incomplètes' },
         { status: 400 }
@@ -113,7 +114,7 @@ export async function POST(request: Request) {
     }
 
     // Envoyer l'email de validation à l'utilisateur
-    console.log(`[Webhook] Envoi de l'email de validation à ${email} (${firstName} ${lastName})`)
+    logger.debug(`[Webhook] Envoi de l'email de validation à ${email} (${firstName} ${lastName})`)
     const emailResult = await sendUserAccountValidated({
       firstName,
       lastName,
@@ -121,14 +122,14 @@ export async function POST(request: Request) {
     })
 
     if (!emailResult.success) {
-      console.error('[Webhook] Erreur lors de l\'envoi de l\'email:', emailResult.error)
+      logger.error('[Webhook] Erreur lors de l\'envoi de l\'email', emailResult.error)
       return NextResponse.json(
         { error: 'Erreur lors de l\'envoi de l\'email' },
         { status: 500 }
       )
     }
 
-    console.log('[Webhook] Email envoyé avec succès à', email)
+    logger.debug('[Webhook] Email envoyé avec succès', { email })
     return NextResponse.json(
       {
         success: true,
@@ -137,7 +138,7 @@ export async function POST(request: Request) {
       { status: 200 }
     )
   } catch (error) {
-    console.error('Erreur dans le webhook:', error)
+    logger.error('Erreur dans le webhook', error)
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500 }

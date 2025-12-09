@@ -1,4 +1,5 @@
 import { transporter } from './config'
+import { logger } from '@/lib/logger'
 
 interface StudentInvitationData {
   email: string
@@ -178,7 +179,7 @@ export async function sendMarketingCommunityInvitationStudents(data: StudentInvi
     await transporter.sendMail(mailOptions)
     return { success: true }
   } catch (error) {
-    console.error('Erreur lors de l\'envoi de l\'email de recrutement étudiant:', error)
+    logger.error('Erreur lors de l\'envoi de l\'email de recrutement étudiant:', error)
     return { success: false, error }
   }
 }

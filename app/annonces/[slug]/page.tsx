@@ -1,4 +1,5 @@
 import { auth } from '@/lib/auth'
+import { logger } from '@/lib/logger'
 import { redirect, notFound } from 'next/navigation'
 import { client } from '@/sanity/lib/client'
 import { announcementQuery } from '@/sanity/lib/queries'
@@ -99,7 +100,7 @@ export default async function AnnouncementDetailPage({
       authorImage = urlFor(announcement.author.profileImage.asset.url).width(80).height(80).url()
     }
   } catch (error) {
-    console.error('Error generating author image URL:', error)
+    logger.error('Error generating author image URL:', error)
     authorImage = null
   }
 
