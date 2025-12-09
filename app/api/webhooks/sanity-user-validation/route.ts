@@ -110,7 +110,7 @@ export async function POST(request: Request) {
       // Récupérer l'historique des révisions du document
       const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production'
       const history = await serverClient.request({
-        url: `/data/history/${dataset}/documents/${_id}?excludeContent=false`,
+        url: `/data/history/${dataset}/documents/${_id}`,
         method: 'GET',
       })
 
