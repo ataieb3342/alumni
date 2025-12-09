@@ -39,7 +39,7 @@
     "googleapis": "^165.0.0",
     "lucide-react": "^0.552.0",
     "next": "^16.0.7",
-    "next-auth": "^5.0.0-beta.29",
+    "next-auth": "^5.0.0-beta.30",
     "next-sanity": "^11.6.10",
     "nodemailer": "^7.0.10",
     "react": "^19.2.1",
