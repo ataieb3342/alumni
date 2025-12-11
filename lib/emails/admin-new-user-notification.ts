@@ -11,7 +11,7 @@ interface NewUserNotification {
 
 export async function sendAdminNewUserNotification(userData: NewUserNotification) {
   const { firstName, lastName, email, userType, userId } = userData
-  const sanityUrl = `https://www.vh-besancon-alumni.fr/studio}/structure/user;${userId}`
+  const sanityUrl = `https://www.vh-besancon-alumni.fr/studio/structure/user;${userId}`
 
   const userTypeLabels: Record<string, string> = {
     lyceen: 'Lycéen',
