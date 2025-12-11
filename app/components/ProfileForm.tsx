@@ -38,6 +38,8 @@ interface ProfileFormProps {
     linkedIn?: string
     bio?: string
     isVisibleInDirectory?: boolean
+    staffCategory?: string
+    staffDetails?: string
     education?: Education[]
     experience?: Experience[]
     profileImage?: {
@@ -64,6 +66,8 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
     linkedIn: string
     bio: string
     isVisibleInDirectory: boolean
+    staffCategory: string
+    staffDetails: string
   }>({
     firstName: userData.firstName || '',
     lastName: userData.lastName || '',
@@ -72,6 +76,8 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
     linkedIn: userData.linkedIn || '',
     bio: userData.bio || '',
     isVisibleInDirectory: userData.isVisibleInDirectory ?? true,
+    staffCategory: userData.staffCategory || '',
+    staffDetails: userData.staffDetails || '',
   })
   const [education, setEducation] = useState<Education[]>(userData.education || [])
   const [experience, setExperience] = useState<Experience[]>(userData.experience || [])
@@ -458,7 +464,7 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
           {/* Contrôles d'upload */}
           <div>
             <p className="text-sm text-gray-600 mb-3">
-              Formats acceptés : JPG, PNG, WEBP • Taille max : 5 MB • Recommandé : 1200x400px
+              Formats acceptés : JPG, PNG, WEBP • Taille max : 5 MB • Recommandé : 1920x580px
             </p>
             <div className="flex gap-3">
               <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
@@ -588,6 +594,78 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
           )}
         </div>
       </div>
+
+      {/* Section Personnel - Fonction au lycée */}
+      {userData.userType === 'staff' && (
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Fonction au Lycée Victor Hugo</h2>
+
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Catégorie *
+              </label>
+              <select
+                value={formData.staffCategory}
+                onChange={(e) => setFormData({...formData, staffCategory: e.target.value})}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900"
+                required
+              >
+                <option value="">Sélectionnez une catégorie</option>
+                <option value="direction">Direction</option>
+                <option value="enseignant">Enseignant</option>
+                <option value="vie_scolaire">Vie scolaire</option>
+                <option value="administratif">Administratif</option>
+                <option value="autre">Autre</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Détails du poste *
+              </label>
+              <input
+                type="text"
+                value={formData.staffDetails}
+                onChange={(e) => setFormData({...formData, staffDetails: e.target.value})}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
+                placeholder="ex: Professeur de Mathématiques, Proviseur, CPE..."
+                required
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Précisez votre fonction au sein du lycée
+              </p>
+            </div>
+
+            {/* Champs pré-remplis et non modifiables */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Établissement
+                </label>
+                <input
+                  type="text"
+                  value="Lycée Victor Hugo"
+                  disabled
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ville
+                </label>
+                <input
+                  type="text"
+                  value="Besançon"
+                  disabled
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Contact */}
       <div className="bg-white rounded-lg shadow-sm border p-6">

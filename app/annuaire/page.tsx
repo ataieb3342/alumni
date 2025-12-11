@@ -17,6 +17,8 @@ interface User {
   linkedIn?: string
   bio?: string
   description?: string
+  staffCategory?: string
+  staffDetails?: string
   education?: Array<{
     school: string
     degree: string
@@ -35,7 +37,6 @@ interface User {
     description?: string
   }>
   roleAssociation?: string[]
-  personnelMetier?: string[]
   profileImage?: {
     asset: {
       _id: string

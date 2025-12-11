@@ -18,6 +18,8 @@ async function getUserData(email: string) {
       linkedIn,
       bio,
       isVisibleInDirectory,
+      staffCategory,
+      staffDetails,
       education,
       experience,
       "profileImage": profileImage.asset->{

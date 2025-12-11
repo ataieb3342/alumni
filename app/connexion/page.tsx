@@ -50,6 +50,24 @@ function LoginForm() {
     setLoading(true)
 
     try {
+      // Vérifier d'abord les credentials pour avoir un message d'erreur précis
+      const checkResponse = await fetch('/api/auth/check-credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const checkData = await checkResponse.json()
+
+      // Si les credentials ne sont pas valides, afficher l'erreur spécifique
+      if (!checkData.valid) {
+        setError(checkData.error)
+        toast.error(checkData.error)
+        setLoading(false)
+        return
+      }
+
+      // Si les credentials sont valides, procéder à la connexion
       const result = await signIn('credentials', {
         email,
         password,
@@ -57,23 +75,9 @@ function LoginForm() {
       })
 
       if (result?.error) {
-        // Vérifier si l'utilisateur existe mais n'est pas validé
-        const checkUser = await fetch('/api/user/check-status', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        })
-        const userData = await checkUser.json()
-
-        if (userData.accountStatus === 'pending') {
-          const errorMessage = 'Votre compte est en attente de validation par un administrateur. Vous recevrez un email une fois votre compte validé.'
-          setError(errorMessage)
-          toast.error(errorMessage)
-        } else {
-          const errorMessage = 'Email ou mot de passe incorrect'
-          setError(errorMessage)
-          toast.error(errorMessage)
-        }
+        const errorMessage = 'Une erreur est survenue lors de la connexion'
+        setError(errorMessage)
+        toast.error(errorMessage)
       } else {
         toast.success('Connexion réussie !')
         router.push('/accueil')

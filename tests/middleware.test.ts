@@ -77,7 +77,7 @@ describe('Middleware', () => {
   })
 
   describe('Temporary OAuth Users', () => {
-    it('redirects temp user trying to access protected route to signout', async () => {
+    it('redirects temp user trying to access protected route to /choisir-type', async () => {
       const { default: middleware } = await import('@/middleware')
       const session = {
         user: {
@@ -91,8 +91,7 @@ describe('Middleware', () => {
 
       expect(response.status).toBe(307)
       const location = response.headers.get('location')
-      expect(location).toContain('/api/auth/signout')
-      expect(location).toContain('callbackUrl=/connexion')
+      expect(location).toContain('/choisir-type')
     })
 
     it('allows temp user to access /choisir-type', async () => {

@@ -192,8 +192,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           user.id = 'temp-' + account.providerAccountId // ID temporaire
           user.isNewUser = true
 
-          // Rediriger vers la page de sélection du type
-          return '/choisir-type'
+          logger.debug('Nouvel utilisateur OAuth détecté', {
+            email: normalizedEmail,
+            provider: account.provider,
+            tempId: user.id
+          })
+
+          // Le middleware se chargera de rediriger vers /choisir-type
+          return true
         } catch (error) {
           logger.error("Erreur lors de la connexion OAuth", error)
           return false
@@ -340,11 +346,35 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session
     },
     async redirect({ url, baseUrl }) {
-      // Si l'URL contient déjà une destination, l'utiliser
-      if (url.startsWith("/")) return `${baseUrl}${url}`
-      if (url.startsWith(baseUrl)) return url
+      logger.debug('Redirect callback appelé', { url, baseUrl })
 
-      // Sinon rediriger vers la page d'accueil par défaut
+      // Si l'URL est déjà une URL complète avec le baseUrl, l'utiliser telle quelle
+      if (url.startsWith(baseUrl)) {
+        logger.debug('Redirection vers URL complète', { url })
+        return url
+      }
+
+      // Si l'URL commence par "/", c'est un chemin relatif, l'ajouter au baseUrl
+      if (url.startsWith("/")) {
+        const finalUrl = `${baseUrl}${url}`
+        logger.debug('Redirection vers chemin relatif', { url, finalUrl })
+        return finalUrl
+      }
+
+      // Si l'URL est une URL externe, vérifier qu'elle provient du même domaine
+      try {
+        const urlObj = new URL(url)
+        const baseUrlObj = new URL(baseUrl)
+        if (urlObj.origin === baseUrlObj.origin) {
+          logger.debug('Redirection vers URL même domaine', { url })
+          return url
+        }
+      } catch {
+        // URL invalide, ignorer
+      }
+
+      // Par défaut, rediriger vers la page d'accueil
+      logger.debug('Redirection par défaut vers baseUrl', { baseUrl })
       return baseUrl
     }
   },

@@ -88,7 +88,8 @@ export const directoryUsersQuery = groq`*[
   education,
   experience,
   roleAssociation,
-  personnelMetier,
+  staffCategory,
+  staffDetails,
   profileImage {
     asset->{
       _id,
@@ -118,7 +119,8 @@ export const userByIdQuery = groq`*[_type == "user" && _id == $userId][0] {
   education,
   experience,
   roleAssociation,
-  personnelMetier,
+  staffCategory,
+  staffDetails,
   profileImage {
     asset->{
       _id,
@@ -587,6 +589,8 @@ export const recentMembersQuery = groq`*[
   promotionYear,
   linkedIn,
   bio,
+  staffCategory,
+  staffDetails,
   experience,
   education,
   profileImage {

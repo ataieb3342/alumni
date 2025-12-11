@@ -36,6 +36,8 @@ export async function POST(request: Request) {
       linkedIn,
       bio,
       isVisibleInDirectory,
+      staffCategory,
+      staffDetails,
       education,
       experience,
       profileImageAssetId,
@@ -66,6 +68,8 @@ export async function POST(request: Request) {
       linkedIn,
       bio,
       isVisibleInDirectory,
+      staffCategory,
+      staffDetails,
     }
 
     // Ajouter les formations et expériences si fournies (uniquement pour alumni et staff)

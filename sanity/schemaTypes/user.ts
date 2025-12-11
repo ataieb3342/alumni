@@ -297,11 +297,28 @@ export const userType = defineType({
       description: 'Rôles dans l\'association des anciens élèves',
     }),
     defineField({
-      name: 'personnelMetier',
-      title: 'Métier (pour personnel)',
-      type: 'array',
-      of: [{ type: 'string' }],
-      description: 'Métier pour le personnel du lycée',
+      name: 'staffCategory',
+      title: 'Catégorie de personnel',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Direction', value: 'direction' },
+          { title: 'Enseignant', value: 'enseignant' },
+          { title: 'Vie scolaire', value: 'vie_scolaire' },
+          { title: 'Administratif', value: 'administratif' },
+          { title: 'Autre', value: 'autre' },
+        ],
+        layout: 'radio',
+      },
+      description: 'Catégorie de fonction au sein du lycée',
+      hidden: ({ document }) => document?.userType !== 'staff',
+    }),
+    defineField({
+      name: 'staffDetails',
+      title: 'Détails du poste',
+      type: 'string',
+      description: 'Précisez votre fonction (ex: Proviseur, Professeur de Mathématiques, CPE...)',
+      placeholder: 'ex: Proviseur',
       hidden: ({ document }) => document?.userType !== 'staff',
     }),
     defineField({

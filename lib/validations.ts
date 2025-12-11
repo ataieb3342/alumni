@@ -166,6 +166,14 @@ export const updateProfileSchema = z.object({
     .or(z.literal('')),
   isVisibleInDirectory: z.boolean()
     .optional(),
+  staffCategory: z.string()
+    .max(50, 'La catégorie est trop longue')
+    .optional()
+    .or(z.literal('')),
+  staffDetails: z.string()
+    .max(200, 'Les détails du poste sont trop longs')
+    .optional()
+    .or(z.literal('')),
   education: z.array(z.object({
     school: z.string().max(200),
     degree: z.string().max(200),
