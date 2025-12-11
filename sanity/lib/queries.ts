@@ -521,3 +521,85 @@ export const userTestimonialsQuery = groq`*[
   publishedAt,
   createdAt
 }`
+
+// Récupérer les témoignages publiés d'un utilisateur pour affichage public
+export const userPublishedTestimonialsQuery = groq`*[
+  _type == "testimonial" &&
+  author._ref == $userId &&
+  status == "published"
+] | order(publishedAt desc) {
+  _id,
+  title,
+  slug,
+  type,
+  excerpt,
+  rating,
+  likes,
+  tags,
+  publishedAt,
+  featuredImage {
+    asset->{
+      _id,
+      url
+    }
+  },
+  author->{
+    _id,
+    firstName,
+    lastName,
+    userType,
+    promotionYear,
+    profileImage {
+      asset->{
+        _id,
+        url
+      }
+    }
+  }
+}`
+
+// ========================================
+// QUERIES POUR LES NOUVEAUX MEMBRES
+// ========================================
+
+// Récupérer les derniers inscrits avec un profil "présentable" pour la page d'accueil
+// Un profil est considéré comme présentable s'il a au moins :
+// - Une photo de profil OU
+// - Une expérience professionnelle OU
+// - Une formation OU
+// - Une bio
+export const recentMembersQuery = groq`*[
+  _type == "user" &&
+  isVisibleInDirectory == true &&
+  (userType == "alumni" || userType == "bts" || userType == "prepa" || userType == "staff") &&
+  (
+    defined(profileImage.asset) ||
+    count(experience) > 0 ||
+    count(education) > 0 ||
+    defined(bio)
+  )
+] | order(_createdAt desc) [0...6] {
+  _id,
+  firstName,
+  lastName,
+  email,
+  userType,
+  promotionYear,
+  linkedIn,
+  bio,
+  experience,
+  education,
+  profileImage {
+    asset->{
+      _id,
+      url
+    }
+  },
+  coverImage {
+    asset->{
+      _id,
+      url
+    }
+  },
+  _createdAt
+}`
