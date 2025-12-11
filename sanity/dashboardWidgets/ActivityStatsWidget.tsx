@@ -3,8 +3,6 @@ import { logger } from '@/lib/logger'
 import { useEffect, useState } from 'react'
 import { useClient } from 'sanity'
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -20,9 +18,9 @@ interface VisitorData {
 }
 
 interface Stats {
+  totalMembers: number
   totalVisitors: number
   totalPageViews: number
-  avgPerDay: number
   mostActiveDay: { date: string; count: number }
   returnRate: number
 }
@@ -58,6 +56,7 @@ export default function ActivityStatsWidget() {
       const dateFilter = getDateFilter()
 
       const query = `{
+        "totalMembers": count(*[_type == "user" && email != "contact@ataieb-dev.fr"]),
         "connectedVisitors": *[
           _type == "activityLog"
           && action == "page_visit"
@@ -108,9 +107,7 @@ export default function ActivityStatsWidget() {
       ).size
 
       const totalPageViews = result.connectedVisitors.length
-
-      const days = visitorData.length || 1
-      const avgPerDay = totalVisitors / days
+      const totalMembers = result.totalMembers
 
       // Find most active day
       const mostActiveDay = visitorData.reduce(
@@ -122,7 +119,7 @@ export default function ActivityStatsWidget() {
       const returningUsers = Object.values(userDaysMap).filter(days => days.size > 1).length
       const returnRate = totalVisitors > 0 ? (returningUsers / totalVisitors) * 100 : 0
 
-      setStats({ totalVisitors, totalPageViews, avgPerDay, mostActiveDay, returnRate })
+      setStats({ totalMembers, totalVisitors, totalPageViews, mostActiveDay, returnRate })
     } catch (error) {
       logger.error('Error loading stats:', error)
     } finally {
@@ -278,6 +275,15 @@ export default function ActivityStatsWidget() {
           }}>
             <Card padding={3} radius={2} shadow={1} style={{ background: 'white' }}>
               <Stack space={2}>
+                <Text size={0} style={{ color: '#64748b' }}>Membres</Text>
+                <Text size={4} weight="bold" style={{ color: '#667eea' }}>
+                  {stats.totalMembers}
+                </Text>
+              </Stack>
+            </Card>
+
+            <Card padding={3} radius={2} shadow={1} style={{ background: 'white' }}>
+              <Stack space={2}>
                 <Text size={0} style={{ color: '#64748b' }}>Visiteurs uniques</Text>
                 <Text size={4} weight="bold" style={{ color: '#667eea' }}>
                   {stats.totalVisitors}
@@ -290,15 +296,6 @@ export default function ActivityStatsWidget() {
                 <Text size={0} style={{ color: '#64748b' }}>Pages vues</Text>
                 <Text size={4} weight="bold" style={{ color: '#667eea' }}>
                   {stats.totalPageViews}
-                </Text>
-              </Stack>
-            </Card>
-
-            <Card padding={3} radius={2} shadow={1} style={{ background: 'white' }}>
-              <Stack space={2}>
-                <Text size={0} style={{ color: '#64748b' }}>Moyenne / jour</Text>
-                <Text size={4} weight="bold" style={{ color: '#667eea' }}>
-                  {stats.avgPerDay.toFixed(1)}
                 </Text>
               </Stack>
             </Card>
