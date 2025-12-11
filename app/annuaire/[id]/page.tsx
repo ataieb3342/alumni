@@ -1,11 +1,12 @@
 import { auth } from '@/lib/auth'
 import { redirect, notFound } from 'next/navigation'
 import { client } from '@/sanity/lib/client'
-import { userByIdQuery } from '@/sanity/lib/queries'
+import { userByIdQuery, userPublishedTestimonialsQuery } from '@/sanity/lib/queries'
 import { getImageProps } from '@/sanity/lib/image'
 import { getMostRecentActivity } from '@/lib/userUtils'
 import Header from '@/app/components/Header'
 import Footer from '@/app/components/Footer'
+import TestimonialCard from '@/app/components/TestimonialCard'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -26,6 +27,9 @@ export default async function MemberDetailPage({
   if (!user) {
     notFound()
   }
+
+  // Récupérer les témoignages publiés de l'utilisateur
+  const testimonials = await client.fetch(userPublishedTestimonialsQuery, { userId: id })
 
   // Extraire les infos les plus récentes (expérience ou formation)
   const { currentJob, company, currentCity, isEducation } = getMostRecentActivity(user)
@@ -50,33 +54,29 @@ export default async function MemberDetailPage({
     <>
       <Header />
 
-      <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <main className="min-h-screen bg-gray-50">
         {/* Photo de couverture */}
         {user.coverImage ? (
-          <div className="w-full h-56 md:h-72 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 relative">
+          <div className="w-full h-64 overflow-hidden relative">
             <Image
-              {...getImageProps(user.coverImage, 1920, 580)}
+              {...getImageProps(user.coverImage, 1920, 640)}
               alt="Photo de couverture"
               width={1920}
-              height={580}
+              height={640}
               className="object-cover w-full h-full"
               priority
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-white/90"></div>
           </div>
         ) : (
-          <div className="w-full h-56 md:h-72 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 relative">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-400/20 via-transparent to-purple-400/20"></div>
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/90"></div>
-          </div>
+          <div className="w-full h-64 bg-gradient-to-br from-blue-600 to-blue-700"></div>
         )}
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32 relative z-10 pb-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-40 relative z-10 pb-16">
           {/* Breadcrumb */}
           <nav className="mb-6">
             <Link
               href="/annuaire"
-              className="inline-flex items-center gap-2 text-sm text-gray-900 hover:text-gray-700 transition-colors bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200"
+              className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200 hover:border-blue-200"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -89,11 +89,11 @@ export default async function MemberDetailPage({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Colonne gauche - Carte profil */}
             <div className="lg:col-span-4">
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 overflow-hidden sticky top-18">
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden sticky top-20">
                 {/* Photo de profil */}
-                <div className="px-6 pt-6 pb-6 text-center border-b border-gray-100">
+                <div className="px-6 pt-6 pb-5 text-center">
                   {user.profileImage ? (
-                    <div className="w-32 h-32 mx-auto rounded-2xl overflow-hidden ring-4 ring-white shadow-xl mb-4">
+                    <div className="w-32 h-32 mx-auto rounded-full overflow-hidden ring-4 ring-blue-600 shadow-lg mb-4">
                       <Image
                         {...getImageProps(user.profileImage, 400, 400)}
                         alt={`${user.firstName} ${user.lastName}`}
@@ -103,43 +103,45 @@ export default async function MemberDetailPage({
                       />
                     </div>
                   ) : (
-                    <div className="w-32 h-32 mx-auto rounded-2xl bg-gradient-to-br from-slate-700 to-slate-600 flex items-center justify-center ring-4 ring-white shadow-xl mb-4">
-                      <div className="text-4xl font-bold text-white">
+                    <div className="w-32 h-32 mx-auto rounded-full bg-blue-600 flex items-center justify-center ring-4 ring-blue-600/30 shadow-lg mb-4">
+                      <div className="text-3xl font-bold text-white">
                         {user.firstName.charAt(0)}{user.lastName.charAt(0)}
                       </div>
                     </div>
                   )}
 
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                  <h1 className="text-lg font-bold text-gray-900 mb-2">
                     {user.firstName} {user.lastName}
                   </h1>
 
-                  <span className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 text-sm font-medium rounded-lg border border-blue-200">
+                  <span className="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-xs font-semibold rounded-full">
                     {userTypeLabels[user.userType]}
                   </span>
                 </div>
 
+                <div className="border-t border-gray-100"></div>
+
                 {/* Informations rapides */}
-                <div className="px-6 py-5 space-y-4">
+                <div className="px-6 py-4 space-y-3">
                   {user.promotionYear && (
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-sm">
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
                         </svg>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Promotion</p>
+                        <p className="text-xs font-medium text-gray-500">Promotion</p>
                         <p className="text-sm font-semibold text-gray-900">{user.promotionYear}</p>
                       </div>
                     </div>
                   )}
 
                   {currentJob && (
-                    <div className="flex items-start gap-3">
-                      <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center shadow-sm ${isEducation ? 'bg-gradient-to-br from-indigo-500 to-indigo-600' : 'bg-gradient-to-br from-blue-500 to-blue-600'}`}>
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           {isEducation ? (
                             <>
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
@@ -151,7 +153,7 @@ export default async function MemberDetailPage({
                         </svg>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
+                        <p className="text-xs font-medium text-gray-500">
                           {isEducation ? 'Formation actuelle' : 'Poste actuel'}
                         </p>
                         <p className="text-sm font-semibold text-gray-900">{currentJob}</p>
@@ -160,9 +162,9 @@ export default async function MemberDetailPage({
                   )}
 
                   {company && (
-                    <div className="flex items-start gap-3">
-                      <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center shadow-sm ${isEducation ? 'bg-gradient-to-br from-purple-500 to-purple-600' : 'bg-gradient-to-br from-emerald-500 to-emerald-600'}`}>
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           {isEducation ? (
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                           ) : (
@@ -171,7 +173,7 @@ export default async function MemberDetailPage({
                         </svg>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
+                        <p className="text-xs font-medium text-gray-500">
                           {isEducation ? 'École' : 'Entreprise'}
                         </p>
                         <p className="text-sm font-semibold text-gray-900">{company}</p>
@@ -180,15 +182,15 @@ export default async function MemberDetailPage({
                   )}
 
                   {currentCity && (
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-sm">
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
+                        <p className="text-xs font-medium text-gray-500">
                           {isEducation ? 'Domaine' : 'Localisation'}
                         </p>
                         <p className="text-sm font-semibold text-gray-900">{currentCity}</p>
@@ -197,28 +199,28 @@ export default async function MemberDetailPage({
                   )}
 
                   {user.currentStudies && (
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-sm">
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                         </svg>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Études actuelles</p>
+                        <p className="text-xs font-medium text-gray-500">Études actuelles</p>
                         <p className="text-sm font-semibold text-gray-900">{user.currentStudies}</p>
                       </div>
                     </div>
                   )}
 
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center shadow-sm">
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Email</p>
-                      <a href={`mailto:${user.email}`} className="text-sm font-semibold text-blue-600 hover:text-blue-700 break-all">
+                      <p className="text-xs font-medium text-gray-500">Email</p>
+                      <a href={`mailto:${user.email}`} className="text-sm font-semibold text-blue-600 hover:underline break-all">
                         {user.email}
                       </a>
                     </div>
@@ -226,21 +228,24 @@ export default async function MemberDetailPage({
                 </div>
 
                 {/* Actions */}
-                <div className="px-6 pb-6 space-y-3">
-                  {user.linkedIn && (
-                    <a
-                      href={formatLinkedInUrl(user.linkedIn)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 w-full px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-gray-800 hover:to-gray-900 text-white rounded-xl font-medium transition-all shadow-md hover:shadow-lg"
-                    >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-                      </svg>
-                      Voir le profil
-                    </a>
-                  )}
-                </div>
+                {user.linkedIn && (
+                  <>
+                    <div className="border-t border-gray-100"></div>
+                    <div className="px-6 py-5">
+                      <a
+                        href={formatLinkedInUrl(user.linkedIn)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group flex items-center justify-center gap-2 w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all shadow-sm hover:shadow-md transform hover:scale-[1.02]"
+                      >
+                        <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                        </svg>
+                        Voir le profil LinkedIn
+                      </a>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -248,12 +253,12 @@ export default async function MemberDetailPage({
             <div className="lg:col-span-8 space-y-6">
               {/* À propos */}
               {user.bio && (
-                <div className="bg-gradient-to-br from-white via-blue-50/40 to-blue-100/30 rounded-2xl shadow-lg border-2 border-blue-200 p-6 md:p-8">
-                  <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2.5">
-                    <div className="w-1.5 h-6 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full shadow-sm"></div>
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
+                  <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
                     À propos
                   </h2>
-                  <p className="text-gray-700 leading-relaxed text-sm whitespace-pre-line">
+                  <p className="text-gray-700 leading-relaxed whitespace-pre-line">
                     {user.bio}
                   </p>
                 </div>
@@ -261,9 +266,9 @@ export default async function MemberDetailPage({
 
               {/* Expériences professionnelles */}
               {user.experience && user.experience.length > 0 && (
-                <div className="bg-gradient-to-br from-white via-emerald-50/40 to-emerald-100/30 rounded-2xl shadow-lg border-2 border-emerald-200 p-6 md:p-8">
-                  <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2.5">
-                    <div className="w-1.5 h-6 bg-gradient-to-b from-emerald-500 to-teal-600 rounded-full shadow-sm"></div>
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
+                  <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
                     Expérience professionnelle
                   </h2>
                   <div className="space-y-6">
@@ -282,39 +287,30 @@ export default async function MemberDetailPage({
                         current?: boolean
                         description?: string
                       }, index: number, arr: unknown[]) => (
-                        <div key={index} className="relative">
-                          {/* Timeline */}
-                          <div className="absolute left-0 top-0 bottom-0 w-px bg-gray-200">
-                            {index === 0 && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-blue-600"></div>}
-                            {index < arr.length - 1 && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-gray-300"></div>}
+                        <div key={index} className="relative pl-6 border-l-2 border-gray-200">
+                          <div className="absolute left-0 top-0 -translate-x-[9px] w-4 h-4 rounded-full bg-blue-600 border-2 border-white"></div>
+                          <div className="flex items-start justify-between gap-4 mb-1">
+                            <h3 className="text-base font-bold text-gray-900">{exp.position}</h3>
+                            <div className="text-xs text-gray-500 whitespace-nowrap">
+                              {new Date(exp.startDate).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}
+                              {' - '}
+                              {exp.current ? 'Présent' : exp.endDate ? new Date(exp.endDate).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' }) : ''}
+                            </div>
                           </div>
-
-                          <div className="pl-8">
-                            <div className="flex items-start justify-between gap-4 mb-1">
-                              <div className="flex-1 min-w-0">
-                                <h3 className="text-base font-bold text-gray-900">{exp.position}</h3>
-                              </div>
-                              <div className="text-sm text-gray-600 whitespace-nowrap flex-shrink-0">
-                                {new Date(exp.startDate).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}
-                                {' - '}
-                                {exp.current ? 'Présent' : exp.endDate ? new Date(exp.endDate).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' }) : ''}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2 mb-3">
-                              <p className="text-sm text-gray-700 font-medium">{exp.company}</p>
-                              {exp.location && (
-                                <>
-                                  <span className="text-gray-400">•</span>
-                                  <p className="text-sm text-gray-500">{exp.location}</p>
-                                </>
-                              )}
-                            </div>
-                            {exp.description && (
-                              <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
-                                {exp.description}
-                              </p>
+                          <div className="flex items-center gap-2 mb-2">
+                            <p className="text-sm text-gray-700 font-medium">{exp.company}</p>
+                            {exp.location && (
+                              <>
+                                <span className="text-gray-400">•</span>
+                                <p className="text-sm text-gray-500">{exp.location}</p>
+                              </>
                             )}
                           </div>
+                          {exp.description && (
+                            <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
+                              {exp.description}
+                            </p>
+                          )}
                         </div>
                       ))}
                   </div>
@@ -323,9 +319,9 @@ export default async function MemberDetailPage({
 
               {/* Formations */}
               {user.education && user.education.length > 0 && (
-                <div className="bg-gradient-to-br from-white via-purple-50/40 to-purple-100/30 rounded-2xl shadow-lg border-2 border-purple-200 p-6 md:p-8">
-                  <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2.5">
-                    <div className="w-1.5 h-6 bg-gradient-to-b from-purple-500 to-indigo-600 rounded-full shadow-sm"></div>
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
+                  <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
                     Formation
                   </h2>
                   <div className="space-y-6">
@@ -348,37 +344,28 @@ export default async function MemberDetailPage({
                         description?: string
                       }, index: number, arr: unknown[]) => {
                         return (
-                          <div key={index} className="relative">
-                            {/* Timeline */}
-                            <div className="absolute left-0 top-0 bottom-0 w-px bg-gray-200">
-                              {index === 0 && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-blue-600"></div>}
-                              {index < arr.length - 1 && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-gray-300"></div>}
+                          <div key={index} className="relative pl-6 border-l-2 border-gray-200">
+                            <div className="absolute left-0 top-0 -translate-x-[9px] w-4 h-4 rounded-full bg-blue-600 border-2 border-white"></div>
+                            <div className="flex items-start justify-between gap-4 mb-1">
+                              <h3 className="text-base font-bold text-gray-900">{edu.degree}</h3>
+                              <div className="text-xs text-gray-500 whitespace-nowrap">
+                                {edu.startYear} - {edu.endYear || 'En cours'}
+                              </div>
                             </div>
-
-                            <div className="pl-8">
-                              <div className="flex items-start justify-between gap-4 mb-1">
-                                <div className="flex-1 min-w-0">
-                                  <h3 className="text-base font-bold text-gray-900">{edu.degree}</h3>
-                                </div>
-                                <div className="text-sm text-gray-600 whitespace-nowrap flex-shrink-0">
-                                  {edu.startYear} - {edu.endYear || 'En cours'}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2 mb-3">
-                                <p className="text-sm text-gray-700 font-medium">{edu.school}</p>
-                                {edu.field && (
-                                  <>
-                                    <span className="text-gray-400">•</span>
-                                    <p className="text-sm text-gray-500">{edu.field}</p>
-                                  </>
-                                )}
-                              </div>
-                              {edu.description && (
-                                <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
-                                  {edu.description}
-                                </p>
+                            <div className="flex items-center gap-2 mb-2">
+                              <p className="text-sm text-gray-700 font-medium">{edu.school}</p>
+                              {edu.field && (
+                                <>
+                                  <span className="text-gray-400">•</span>
+                                  <p className="text-sm text-gray-500">{edu.field}</p>
+                                </>
                               )}
                             </div>
+                            {edu.description && (
+                              <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
+                                {edu.description}
+                              </p>
+                            )}
                           </div>
                         )
                       })}
@@ -386,6 +373,47 @@ export default async function MemberDetailPage({
                 </div>
               )}
             </div>
+
+            {/* Section Témoignages */}
+            {testimonials && testimonials.length > 0 && (
+              <div className="lg:col-span-12">
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                      <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
+                      Témoignages de {user.firstName}
+                      <span className="ml-2 inline-flex items-center justify-center px-2.5 py-0.5 bg-blue-100 text-blue-700 text-sm font-semibold rounded-full">
+                        {testimonials.length}
+                      </span>
+                    </h2>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {testimonials.map((testimonial: {
+                      _id: string
+                      title: string
+                      slug: { current: string }
+                      type: string
+                      excerpt: string
+                      rating?: number
+                      likes?: number
+                      tags?: string[]
+                      publishedAt: string
+                      featuredImage?: { asset: { _id: string; url: string } }
+                      author: {
+                        _id: string
+                        firstName: string
+                        lastName: string
+                        userType: string
+                        promotionYear?: string
+                        profileImage?: { asset: { _id: string; url: string } }
+                      }
+                    }) => (
+                      <TestimonialCard key={testimonial._id} testimonial={testimonial} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>
