@@ -24,6 +24,9 @@ export default async function MemberDetailPage({
 
   const user = await client.fetch(userByIdQuery, { userId: id })
 
+  // Vérifier si l'utilisateur connecté regarde son propre profil
+  const isOwnProfile = session.user.email === user?.email
+
   if (!user) {
     notFound()
   }
@@ -234,21 +237,34 @@ export default async function MemberDetailPage({
                 </div>
 
                 {/* Actions */}
-                {user.linkedIn && (
+                {(isOwnProfile || user.linkedIn) && (
                   <>
                     <div className="border-t border-gray-100"></div>
-                    <div className="px-6 py-5">
-                      <a
-                        href={formatLinkedInUrl(user.linkedIn)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group flex items-center justify-center gap-2 w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all shadow-sm hover:shadow-md transform hover:scale-[1.02]"
-                      >
-                        <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-                        </svg>
-                        Voir le profil LinkedIn
-                      </a>
+                    <div className="px-6 py-5 space-y-3">
+                      {isOwnProfile && (
+                        <Link
+                          href="/profil"
+                          className="group flex items-center justify-center gap-2 w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all shadow-sm hover:shadow-md transform hover:scale-[1.02]"
+                        >
+                          <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Modifier mon profil
+                        </Link>
+                      )}
+                      {user.linkedIn && (
+                        <a
+                          href={formatLinkedInUrl(user.linkedIn)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group flex items-center justify-center gap-2 w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all shadow-sm hover:shadow-md transform hover:scale-[1.02]"
+                        >
+                          <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                          </svg>
+                          Voir le profil LinkedIn
+                        </a>
+                      )}
                     </div>
                   </>
                 )}
@@ -271,12 +287,12 @@ export default async function MemberDetailPage({
               )}
 
               {/* Expériences professionnelles */}
-              {user.experience && user.experience.length > 0 && (
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
-                  <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                    <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
-                    Expérience professionnelle
-                  </h2>
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
+                <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                  <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
+                  Expérience professionnelle
+                </h2>
+                {user.experience && user.experience.length > 0 ? (
                   <div className="space-y-6">
                     {[...user.experience]
                       .sort((a, b) => {
@@ -320,16 +336,36 @@ export default async function MemberDetailPage({
                         </div>
                       ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-500 mb-4">Aucune expérience professionnelle pour le moment</p>
+                    {isOwnProfile && (
+                      <Link
+                        href="/profil"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        Ajouter une expérience
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {/* Formations */}
-              {user.education && user.education.length > 0 && (
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
-                  <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                    <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
-                    Formation
-                  </h2>
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
+                <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                  <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
+                  Formation
+                </h2>
+                {user.education && user.education.length > 0 ? (
                   <div className="space-y-6">
                     {[...user.education]
                       .sort((a, b) => {
@@ -376,23 +412,46 @@ export default async function MemberDetailPage({
                         )
                       })}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-500 mb-4">Aucune formation pour le moment</p>
+                    {isOwnProfile && (
+                      <Link
+                        href="/profil"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        Ajouter une formation
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Section Témoignages */}
-            {testimonials && testimonials.length > 0 && (
-              <div className="lg:col-span-12">
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                      <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
-                      Témoignages de {user.firstName}
+            <div className="lg:col-span-12">
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
+                    Témoignages de {user.firstName}
+                    {testimonials && testimonials.length > 0 && (
                       <span className="ml-2 inline-flex items-center justify-center px-2.5 py-0.5 bg-blue-100 text-blue-700 text-sm font-semibold rounded-full">
                         {testimonials.length}
                       </span>
-                    </h2>
-                  </div>
+                    )}
+                  </h2>
+                </div>
+                {testimonials && testimonials.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {testimonials.map((testimonial: {
                       _id: string
@@ -417,9 +476,29 @@ export default async function MemberDetailPage({
                       <TestimonialCard key={testimonial._id} testimonial={testimonial} />
                     ))}
                   </div>
-                </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-500 mb-4">Aucun témoignage pour le moment</p>
+                    {isOwnProfile && (
+                      <Link
+                        href="/temoignages/nouveau"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        Ajouter un témoignage
+                      </Link>
+                    )}
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </main>

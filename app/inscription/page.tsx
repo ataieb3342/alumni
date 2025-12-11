@@ -150,17 +150,29 @@ export default function RegisterPage() {
                 </select>
               </div>
               
-              <div className="grid md:grid-cols-2 gap-6">
+              <div>
                 <PasswordInput
                   id="password"
                   value={formData.password}
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
                   label="Mot de passe *"
-                  placeholder="12 caractères min, avec majuscule, minuscule, chiffre et @$!%*?&"
+                  placeholder="Entrez votre mot de passe"
                   required
                   minLength={12}
                 />
+                <div className="mt-2 text-sm text-gray-600 bg-blue-50 p-3 rounded border border-blue-200">
+                  <p className="font-medium text-blue-900 mb-1">Le mot de passe doit contenir :</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>Au moins 12 caractères</li>
+                    <li>Au moins une majuscule (A-Z)</li>
+                    <li>Au moins une minuscule (a-z)</li>
+                    <li>Au moins un chiffre (0-9)</li>
+                    <li>Au moins un caractère spécial (@$!%*?&)</li>
+                  </ul>
+                </div>
+              </div>
 
+              <div>
                 <PasswordInput
                   id="confirmPassword"
                   value={formData.confirmPassword}
