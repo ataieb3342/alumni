@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
 import { sendUserAccountValidated } from '@/lib/emails'
 import crypto from 'crypto'
-import { serverClient } from '@/sanity/lib/server-client'
 
 // Fonction pour vérifier la signature du webhook (sécurité)
 function verifyWebhookSignature(body: string, signatureHeader: string | null): boolean {
@@ -83,7 +82,7 @@ export async function POST(request: Request) {
     const payload = JSON.parse(body)
 
     // Sanity envoie un objet avec _type, _id, et les champs mis à jour
-    const { _type, accountStatus, firstName, lastName, email, _id, validationEmailSentAt } = payload
+    const { _type, accountStatus, firstName, lastName, email, _id, previousAccountStatus } = payload
 
     // Vérifier que c'est bien un document user
     if (_type !== 'user') {
@@ -94,24 +93,25 @@ export async function POST(request: Request) {
       )
     }
 
-    logger.debug('[Webhook] Document user détecté', { firstName, lastName, accountStatus })
+    logger.debug('[Webhook] Document user détecté', { firstName, lastName, accountStatus, previousAccountStatus })
 
-    // Vérifier que le statut est "active"
-    if (accountStatus !== 'active') {
-      logger.debug('[Webhook] Statut non actif', { accountStatus })
+    // Vérifier que le statut a changé
+    if (accountStatus === previousAccountStatus) {
+      logger.debug('[Webhook] Le statut n\'a pas changé, aucun email envoyé', {
+        accountStatus,
+        previousAccountStatus
+      })
       return NextResponse.json(
-        { message: 'Statut non actif, aucun email envoyé' },
+        { message: 'Le statut n\'a pas changé, aucun email envoyé' },
         { status: 200 }
       )
     }
 
-    // Vérifier si l'email de validation a déjà été envoyé
-    if (validationEmailSentAt) {
-      logger.debug('[Webhook] Email de validation déjà envoyé', {
-        sentAt: validationEmailSentAt
-      })
+    // Vérifier que le nouveau statut est "active"
+    if (accountStatus !== 'active') {
+      logger.debug('[Webhook] Statut non actif', { accountStatus })
       return NextResponse.json(
-        { message: 'Email de validation déjà envoyé' },
+        { message: 'Statut non actif, aucun email envoyé' },
         { status: 200 }
       )
     }
@@ -126,7 +126,9 @@ export async function POST(request: Request) {
     }
 
     // Envoyer l'email de validation à l'utilisateur
+    logger.debug(`[Webhook] Changement de statut détecté: ${previousAccountStatus} → ${accountStatus}`)
     logger.debug(`[Webhook] Envoi de l'email de validation à ${email} (${firstName} ${lastName})`)
+
     const emailResult = await sendUserAccountValidated({
       firstName,
       lastName,
@@ -139,18 +141,6 @@ export async function POST(request: Request) {
         { error: 'Erreur lors de l\'envoi de l\'email' },
         { status: 500 }
       )
-    }
-
-    // Mettre à jour le champ validationEmailSentAt pour éviter les doublons
-    try {
-      await serverClient
-        .patch(_id)
-        .set({ validationEmailSentAt: new Date().toISOString() })
-        .commit()
-      logger.debug('[Webhook] Champ validationEmailSentAt mis à jour', { _id })
-    } catch (error) {
-      logger.error('[Webhook] Erreur lors de la mise à jour du champ validationEmailSentAt', error)
-      // On ne bloque pas le webhook même si cette mise à jour échoue
     }
 
     logger.debug('[Webhook] Email envoyé avec succès', { email })
