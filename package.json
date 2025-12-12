@@ -13,7 +13,7 @@
     "test:coverage": "vitest --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "ci:test": "npm run test -- --run && npx playwright install --with-deps chromium && npm run test:e2e",
+    "ci:test": "npm run test -- --run && npx playwright install chromium && npm run test:e2e",
     "test:migration": "tsx scripts/test-extraction.ts",
     "migrate:users": "tsx scripts/migrate-users.ts",
     "send:reset-emails": "tsx scripts/send-reset-emails.ts",
