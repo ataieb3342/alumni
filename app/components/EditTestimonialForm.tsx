@@ -25,6 +25,7 @@ export default function EditTestimonialForm({ testimonial }: EditTestimonialForm
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   const [formData, setFormData] = useState({
     title: testimonial.title,
@@ -39,11 +40,20 @@ export default function EditTestimonialForm({ testimonial }: EditTestimonialForm
   ) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+    // Nettoyer l'erreur du champ quand l'utilisateur commence à le modifier
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev }
+        delete newErrors[name]
+        return newErrors
+      })
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setFieldErrors({})
     setIsSubmitting(true)
 
     try {
@@ -68,7 +78,23 @@ export default function EditTestimonialForm({ testimonial }: EditTestimonialForm
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || 'Erreur lors de la mise à jour du témoignage')
+
+        // Si c'est une erreur de validation avec un champ spécifique
+        if (data.field && data.error) {
+          setFieldErrors({ [data.field]: data.error })
+          // Scroll vers le champ en erreur
+          const fieldElement = document.getElementById(data.field)
+          if (fieldElement) {
+            fieldElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            fieldElement.focus()
+          }
+        } else {
+          // Erreur générique (serveur, auth, etc.)
+          setError(data.error || 'Erreur lors de la mise à jour du témoignage')
+        }
+
+        setIsSubmitting(false)
+        return
       }
 
       toast.success('Témoignage mis à jour avec succès !')
@@ -77,7 +103,6 @@ export default function EditTestimonialForm({ testimonial }: EditTestimonialForm
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Une erreur est survenue'
       setError(errorMessage)
-      toast.error(errorMessage)
       setIsSubmitting(false)
     }
   }
@@ -132,10 +157,16 @@ export default function EditTestimonialForm({ testimonial }: EditTestimonialForm
           maxLength={120}
           value={formData.title}
           onChange={handleChange}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
+          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400 ${
+            fieldErrors.title ? 'border-red-500' : 'border-gray-300'
+          }`}
           placeholder="Ex: Mon stage chez Google, Ma vie à Tokyo..."
         />
-        <p className="mt-1 text-sm text-gray-500">{formData.title.length}/120 caractères</p>
+        {fieldErrors.title ? (
+          <p className="mt-1 text-sm text-red-600">{fieldErrors.title}</p>
+        ) : (
+          <p className="mt-1 text-sm text-gray-500">{formData.title.length}/120 caractères</p>
+        )}
       </div>
 
       {/* Résumé */}
@@ -151,10 +182,16 @@ export default function EditTestimonialForm({ testimonial }: EditTestimonialForm
           maxLength={300}
           value={formData.excerpt}
           onChange={handleChange}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
+          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400 ${
+            fieldErrors.excerpt ? 'border-red-500' : 'border-gray-300'
+          }`}
           placeholder="Un court résumé qui donnera envie de lire votre témoignage..."
         />
-        <p className="mt-1 text-sm text-gray-500">{formData.excerpt.length}/300 caractères</p>
+        {fieldErrors.excerpt ? (
+          <p className="mt-1 text-sm text-red-600">{fieldErrors.excerpt}</p>
+        ) : (
+          <p className="mt-1 text-sm text-gray-500">{formData.excerpt.length}/300 caractères</p>
+        )}
       </div>
 
       {/* Rating et Tags */}
@@ -168,7 +205,9 @@ export default function EditTestimonialForm({ testimonial }: EditTestimonialForm
             name="rating"
             value={formData.rating}
             onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 ${
+              fieldErrors.rating ? 'border-red-500' : 'border-gray-300'
+            }`}
           >
             <option value="">Pas de note</option>
             <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
@@ -177,6 +216,9 @@ export default function EditTestimonialForm({ testimonial }: EditTestimonialForm
             <option value="2">⭐⭐ (2/5)</option>
             <option value="1">⭐ (1/5)</option>
           </select>
+          {fieldErrors.rating && (
+            <p className="mt-1 text-sm text-red-600">{fieldErrors.rating}</p>
+          )}
         </div>
 
         <div>
@@ -189,9 +231,14 @@ export default function EditTestimonialForm({ testimonial }: EditTestimonialForm
             name="tags"
             value={formData.tags}
             onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
+            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400 ${
+              fieldErrors.tags ? 'border-red-500' : 'border-gray-300'
+            }`}
             placeholder="startup, tech, expatriation..."
           />
+          {fieldErrors.tags && (
+            <p className="mt-1 text-sm text-red-600">{fieldErrors.tags}</p>
+          )}
         </div>
       </div>
 

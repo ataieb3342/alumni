@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { client } from '@/sanity/lib/client'
 import { logger } from '@/lib/logger'
+import { updateTestimonialSchema } from '@/lib/validations'
 
 // DELETE - Supprimer un témoignage
 export async function DELETE(
@@ -72,6 +73,16 @@ export async function PATCH(
     const { id } = await params
     const body = await req.json()
 
+    // Valider les données avec Zod
+    const validation = updateTestimonialSchema.safeParse({ ...body, id })
+    if (!validation.success) {
+      const firstError = validation.error.issues[0]
+      return NextResponse.json(
+        { error: firstError.message, field: firstError.path[0] },
+        { status: 400 }
+      )
+    }
+
     // Vérifier que le témoignage appartient à l'utilisateur
     const testimonial = await client.fetch(
       `*[_type == "testimonial" && _id == $id][0] {
@@ -95,10 +106,13 @@ export async function PATCH(
       )
     }
 
+    // Préparer les données à mettre à jour (sans l'id)
+    const { id: _, ...updateData } = validation.data
+
     // Mettre à jour le témoignage
     const updatedTestimonial = await client
       .patch(id)
-      .set(body)
+      .set(updateData)
       .commit()
 
     return NextResponse.json(updatedTestimonial)

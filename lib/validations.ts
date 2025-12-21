@@ -86,23 +86,24 @@ export const updateAnnouncementSchema = createAnnouncementSchema.partial().exten
 // ========================================
 
 const TESTIMONIAL_TYPES = [
-  'school',
-  'university',
+  'studies',
   'company',
-  'internship',
-  'other'
+  'career',
+  'international',
+  'mentoring',
+  'project'
 ] as const
 
 export const createTestimonialSchema = z.object({
   title: z.string()
-    .min(3, 'Le titre doit contenir au moins 3 caractères')
-    .max(200, 'Le titre est trop long (max 200 caractères)'),
+    .min(10, 'Le titre doit contenir au moins 10 caractères')
+    .max(120, 'Le titre est trop long (max 120 caractères)'),
   type: z.enum(TESTIMONIAL_TYPES, {
     message: 'Type de témoignage invalide'
   }),
   excerpt: z.string()
-    .min(10, 'L\'extrait doit contenir au moins 10 caractères')
-    .max(500, 'L\'extrait est trop long (max 500 caractères)'),
+    .min(50, 'Le résumé doit contenir au moins 50 caractères')
+    .max(300, 'Le résumé est trop long (max 300 caractères)'),
   rating: z.coerce.number()
     .int('La note doit être un nombre entier')
     .min(1, 'La note minimale est 1')
@@ -112,15 +113,46 @@ export const createTestimonialSchema = z.object({
     .max(500, 'Tags trop longs')
     .optional()
     .or(z.literal('')),
-  // Champs spécifiques selon le type (on les ajoute dynamiquement)
-  schoolName: z.string().max(200).optional(),
-  universityName: z.string().max(200).optional(),
-  companyName: z.string().max(200).optional(),
-  program: z.string().max(200).optional(),
-  position: z.string().max(200).optional(),
-  duration: z.string().max(100).optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
+  // Champs spécifiques pour "Études & Formation"
+  studies_school: z.string().max(200).optional().or(z.literal('')),
+  studies_program: z.string().max(200).optional().or(z.literal('')),
+  studies_year: z.string().max(100).optional().or(z.literal('')),
+  studies_why: z.string().max(2000).optional().or(z.literal('')),
+  studies_strengths: z.string().max(2000).optional().or(z.literal('')),
+  studies_challenges: z.string().max(2000).optional().or(z.literal('')),
+  studies_advice: z.string().max(2000).optional().or(z.literal('')),
+  // Champs spécifiques pour "Entreprise & Stage"
+  company_name: z.string().max(200).optional().or(z.literal('')),
+  company_position: z.string().max(200).optional().or(z.literal('')),
+  company_duration: z.string().max(100).optional().or(z.literal('')),
+  company_context: z.string().max(200).optional().or(z.literal('')),
+  company_missions: z.string().max(2000).optional().or(z.literal('')),
+  company_learnings: z.string().max(2000).optional().or(z.literal('')),
+  company_how: z.string().max(2000).optional().or(z.literal('')),
+  // Champs spécifiques pour "Parcours Professionnel"
+  career_journey: z.string().max(2000).optional().or(z.literal('')),
+  career_transition: z.string().max(2000).optional().or(z.literal('')),
+  career_turning_point: z.string().max(2000).optional().or(z.literal('')),
+  career_advice: z.string().max(2000).optional().or(z.literal('')),
+  // Champs spécifiques pour "Vie à l'international"
+  international_location: z.string().max(200).optional().or(z.literal('')),
+  international_duration: z.string().max(100).optional().or(z.literal('')),
+  international_why: z.string().max(2000).optional().or(z.literal('')),
+  international_daily_life: z.string().max(2000).optional().or(z.literal('')),
+  international_best_memory: z.string().max(2000).optional().or(z.literal('')),
+  international_challenges: z.string().max(2000).optional().or(z.literal('')),
+  // Champs spécifiques pour "Conseil & Mentorat"
+  mentoring_topic: z.string().max(200).optional().or(z.literal('')),
+  mentoring_context: z.string().max(2000).optional().or(z.literal('')),
+  mentoring_advice: z.string().max(3000).optional().or(z.literal('')),
+  mentoring_mistakes: z.string().max(2000).optional().or(z.literal('')),
+  // Champs spécifiques pour "Projet & Réalisation"
+  project_name: z.string().max(200).optional().or(z.literal('')),
+  project_description: z.string().max(2000).optional().or(z.literal('')),
+  project_role: z.string().max(1000).optional().or(z.literal('')),
+  project_challenges: z.string().max(2000).optional().or(z.literal('')),
+  project_outcome: z.string().max(2000).optional().or(z.literal('')),
+  project_learnings: z.string().max(2000).optional().or(z.literal('')),
 })
 
 export const updateTestimonialSchema = createTestimonialSchema.partial().extend({
