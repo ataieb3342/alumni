@@ -250,11 +250,11 @@ describe('Validation Schemas', () => {
   describe('createTestimonialSchema', () => {
     it('devrait valider un témoignage valide', () => {
       const validTestimonial = {
-        title: 'Mon expérience à l\'université',
-        type: 'university',
-        excerpt: 'Une excellente expérience qui m\'a beaucoup apporté',
+        title: 'Mon expérience en études supérieures',
+        type: 'studies',
+        excerpt: 'Une excellente expérience qui m\'a beaucoup apporté dans ma formation',
         rating: 5,
-        universityName: 'Université de Paris',
+        studies_school: 'Université de Paris',
       }
 
       const result = createTestimonialSchema.safeParse(validTestimonial)
@@ -264,7 +264,7 @@ describe('Validation Schemas', () => {
     it('devrait rejeter une note supérieure à 5', () => {
       const invalidTestimonial = {
         title: 'Mon expérience',
-        type: 'school',
+        type: 'studies',
         excerpt: 'Une bonne expérience globalement',
         rating: 6,
       }
@@ -276,7 +276,7 @@ describe('Validation Schemas', () => {
     it('devrait rejeter une note inférieure à 1', () => {
       const invalidTestimonial = {
         title: 'Mon expérience',
-        type: 'school',
+        type: 'studies',
         excerpt: 'Une bonne expérience globalement',
         rating: 0,
       }
@@ -288,7 +288,7 @@ describe('Validation Schemas', () => {
     it('devrait convertir une string en number pour le rating', () => {
       const testimonial = {
         title: 'Mon expérience',
-        type: 'school',
+        type: 'studies',
         excerpt: 'Une bonne expérience globalement',
         rating: '4',
       }
@@ -303,7 +303,7 @@ describe('Validation Schemas', () => {
     it('devrait rejeter un extrait trop court', () => {
       const invalidTestimonial = {
         title: 'Mon expérience',
-        type: 'school',
+        type: 'studies',
         excerpt: 'Court',
       }
 
