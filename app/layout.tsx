@@ -5,6 +5,7 @@ import SessionProvider from "./components/SessionProvider";
 import PageVisitTracker from "./components/PageVisitTracker";
 import WebVitalsTracker from "./components/WebVitalsTracker";
 import { Toaster } from "sonner";
+import { tenant } from "@/lib/tenant/config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VH Besançon Alumni",
-  description: "Réseau des anciens élèves de VH Besançon",
+  title: tenant.name,
+  description: tenant.tagline,
   icons: {
     icon: '/icon.png',
     apple: '/icon.png',

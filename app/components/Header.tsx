@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth'
 import UserMenu from './UserMenu'
 import MobileMenu from './MobileMenu'
 import { Home, BookOpen, Users, Megaphone, MessageSquare } from 'lucide-react'
+import { tenant } from '@/lib/tenant/config'
 
 export default async function Header() {
   const session = await auth()
@@ -16,8 +17,8 @@ export default async function Header() {
           <Link href="/" className="flex items-center space-x-3 flex-shrink-0 group">
             <div className="relative w-12 h-12 rounded-lg overflow-hidden ring-2 ring-slate-700 group-hover:ring-cyan-400 transition-all duration-300">
               <Image
-                src="/logo.png"
-                alt="VH Besançon Alumni Logo"
+                src={tenant.logo.src}
+                alt={tenant.logo.alt}
                 width={48}
                 height={48}
                 className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
@@ -25,9 +26,9 @@ export default async function Header() {
             </div>
             <div>
               <h1 className="text-sm sm:text-xl lg:text-2xl font-bold text-white group-hover:text-cyan-400 transition-colors">
-                VH Besançon Alumni
+                {tenant.name}
               </h1>
-              <p className="hidden sm:block text-xs text-slate-400 group-hover:text-cyan-400 -mt-1 transition-colors">Réseau des anciens</p>
+              <p className="hidden sm:block text-xs text-slate-400 group-hover:text-cyan-400 -mt-1 transition-colors">{tenant.tagline}</p>
             </div>
           </Link>
 
