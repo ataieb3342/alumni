@@ -26,10 +26,12 @@
     "get-refresh-token": "tsx scripts/get-google-refresh-token.ts",
     "check-alumni": "tsx scripts/check-alumni-members.ts",
     "check-alumni:dry-run": "tsx scripts/check-alumni-members.ts --dry-run",
-    "migrate-email-log": "tsx scripts/migrate-email-log-to-sanity.ts"
+    "migrate-email-log": "tsx scripts/migrate-email-log-to-sanity.ts",
+    "export:members": "tsx scripts/export-members.ts"
   },
   "dependencies": {
     "@portabletext/react": "^4.0.3",
+    "@sanity/client": "^7.13.1",
     "@sanity/dashboard": "^5.0.0",
     "@sanity/image-url": "^1.2.0",
     "@sanity/vision": "^4.10.2",
