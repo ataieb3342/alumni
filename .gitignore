@@ -36,8 +36,6 @@ yarn-error.log*
 /scripts/
 *.csv
 
-# Email log files
-.alumni-emails-sent.json
 
 # vercel
 .vercel

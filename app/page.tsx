@@ -25,56 +25,19 @@ export default async function Home() {
           <h2 className="text-5xl font-bold mb-6 text-gray-900 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             Rejoignez la communauté
           </h2>
-          <p className="text-gray-600">L&apos;adhésion est <strong className="text-green-600">100% gratuite</strong> • 2 étapes simples</p>
+          <p className="text-gray-600">L&apos;adhésion est <strong className="text-green-600">100% gratuite</strong> • en 2 minutes</p>
         </div>
 
         <div className="relative">
-          {/* Ligne de connection */}
-          <div className="hidden md:block absolute top-20 left-1/2 w-24 h-0.5 bg-gradient-to-r from-blue-500 to-green-500 -translate-x-1/2 z-0"></div>
 
-          <div className="grid md:grid-cols-2 gap-5 max-w-5xl mx-auto relative z-10">
-            {/* Étape 1 */}
-            <div className="group relative bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-xl p-6 text-white hover:shadow-2xl hover:scale-105 transition-all duration-300 overflow-hidden">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20"></div>
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/10 rounded-full -ml-16 -mb-16"></div>
-
-              <div className="relative">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-xl font-bold shadow-lg">
-                    1
-                  </div>
-                  <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold">Gratuit</span>
-                </div>
-
-                <h3 className="text-2xl font-bold mb-2">Adhérer sur HelloAsso</h3>
-                <p className="text-blue-100 text-sm mb-4 leading-relaxed">
-                  Devenez membre officiel de l&apos;association (loi 1901) en 2 minutes. Gratuit et sécurisé.
-                </p>
-
-                <a
-                  href="https://www.helloasso.com/associations/vh-besancon-alumni"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-white text-blue-600 px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:bg-blue-50 group-hover:gap-3"
-                >
-                  Adhérer maintenant
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </a>
-              </div>
-            </div>
-
+          <div className="max-w-2xl mx-auto relative z-10">
             {/* Étape 2 */}
             <div className="group relative bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-xl p-6 text-white hover:shadow-2xl hover:scale-105 transition-all duration-300 overflow-hidden">
               <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20"></div>
               <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/10 rounded-full -ml-16 -mb-16"></div>
 
               <div className="relative">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-xl font-bold shadow-lg">
-                    2
-                  </div>
+                <div className="flex items-center justify-end mb-4">
                   <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold">Accès complet</span>
                 </div>
 
@@ -203,7 +166,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Appel aux dons - Design compact */}
+      {/* Appel à l'adhésion - Design compact */}
       <section className="max-w-7xl mx-auto px-6 py-8">
         <div className="bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-500 rounded-3xl shadow-2xl p-8 md:p-10 relative overflow-hidden">
           {/* Effets décoratifs */}
@@ -218,39 +181,14 @@ export default async function Home() {
                 </svg>
               </div>
               <h2 className="text-3xl font-bold mb-2 text-white">
-                Soutenez VH Besançon Alumni
+                Rejoignez VH Besançon Alumni
               </h2>
               <p className="text-pink-100 max-w-2xl mx-auto">
-                Association gérée bénévolement • Chaque contribution compte
+                Association gérée bénévolement • Adhésion libre et gratuite
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-5 max-w-4xl mx-auto">
-              <div className="bg-white rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-pink-600 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900">Faire un don</h3>
-                </div>
-                <p className="text-gray-600 text-sm mb-5">
-                  Financez les outils, l&apos;hébergement et les événements. Votre générosité fait vivre notre communauté !
-                </p>
-                <a
-                  href="https://www.helloasso.com/associations/vh-besancon-alumni"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-600 to-pink-700 hover:from-pink-700 hover:to-pink-800 text-white px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
-                >
-                  Donner sur HelloAsso
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </a>
-              </div>
-
+            <div className="max-w-md mx-auto">
               <div className="bg-white rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
@@ -266,17 +204,15 @@ export default async function Home() {
                 <p className="text-gray-600 text-sm mb-5">
                   Accès complet : annuaire, annonces, newsletters et tous les services de la plateforme.
                 </p>
-                <a
-                  href="https://www.helloasso.com/associations/vh-besancon-alumni"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  href="/inscription"
                   className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
                 >
                   Adhérer gratuitement
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
-                </a>
+                </Link>
               </div>
             </div>
           </div>

@@ -1,24 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect } from 'react'
 
 export default function QRCodeContent() {
-  useEffect(() => {
-    // Écouter les messages du widget HelloAsso
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data.height) {
-        const haWidgetElement = document.getElementById('haWidget') as HTMLIFrameElement
-        if (haWidgetElement) {
-          haWidgetElement.style.height = event.data.height + 'px'
-        }
-      }
-    }
-
-    window.addEventListener('message', handleMessage)
-    return () => window.removeEventListener('message', handleMessage)
-  }, [])
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 relative overflow-hidden">
       {/* Animations de fond */}
@@ -128,20 +112,10 @@ export default function QRCodeContent() {
               </div>
             </div>
 
-            {/* Widget HelloAsso */}
-            <div className="mb-8">
-              <iframe
-                id="haWidget"
-                allowTransparency={true}
-                src="https://www.helloasso.com/associations/vh-besancon-alumni/adhesions/formulaire-d-adhesion-1/widget"
-                style={{ width: '100%', border: 'none', minHeight: '600px' }}
-              />
-            </div>
-
-            {/* Après adhésion */}
-            <div className="text-center pt-6 border-t border-gray-200 space-y-4">
+            {/* Appel à l'inscription */}
+            <div className="text-center space-y-4">
               <div>
-                <p className="text-gray-600 mb-4 font-medium">Tu viens d&apos;adhérer ? Crée ton compte maintenant !</p>
+                <p className="text-gray-600 mb-4 font-medium">Prêt à nous rejoindre ? Crée ton compte maintenant !</p>
                 <Link
                   href="/inscription"
                   className="group inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105"

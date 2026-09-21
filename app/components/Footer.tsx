@@ -35,27 +35,17 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="font-bold text-lg mb-4">Nous soutenir</h4>
+            <h4 className="font-bold text-lg mb-4">Nous rejoindre</h4>
             <p className="text-gray-400 text-sm mb-3">
-              L&apos;association fonctionne grâce à vos dons et adhésions
+              L&apos;association vit grâce à ses membres
             </p>
             <div className="space-y-2">
-              <a
-                href="https://www.helloasso.com/associations/vh-besancon-alumni"
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href="/inscription"
                 className="block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded transition-colors text-center"
               >
-                💝 Faire un don
-              </a>
-              <a
-                href="https://www.helloasso.com/associations/vh-besancon-alumni"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium rounded transition-colors text-center"
-              >
                 Adhérer (gratuit)
-              </a>
+              </Link>
             </div>
           </div>
 

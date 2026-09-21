@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { client } from '@/sanity/lib/client'
 import { getMostRecentActivity } from '@/lib/userUtils'
@@ -357,7 +358,7 @@ export default async function AProposPage() {
                 </div>
                 <h2 className="text-3xl font-bold text-gray-900">Ce que nous proposons</h2>
               </div>
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="max-w-xl">
                 <div className="group bg-gradient-to-br from-blue-50 to-white rounded-xl shadow-md p-6 border border-blue-100 hover:shadow-lg hover:border-blue-300 transition-all duration-300">
                   <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -422,48 +423,28 @@ export default async function AProposPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
                 </div>
-                <h2 className="text-3xl font-bold text-gray-900">Comment nous soutenir</h2>
+                <h2 className="text-3xl font-bold text-gray-900">Comment nous rejoindre</h2>
               </div>
               <p className="text-gray-700 mb-6 text-lg">
-                VH Besançon Alumni est une association qui fonctionne <strong className="text-pink-600">grâce à vos dons et adhésions</strong>. 💝
-                Toutes les contributions nous permettent de maintenir et développer la plateforme pour la communauté.
+                VH Besançon Alumni est une association qui vit <strong className="text-pink-600">grâce à ses membres</strong>. ✨
+                L&apos;adhésion est libre et gratuite, et nous permet de faire grandir la communauté.
               </p>
 
               <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl p-6 shadow-md border border-blue-100 hover:shadow-lg transition-shadow duration-300">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">💝 Faire un don</h3>
-                  <p className="text-gray-600 mb-4">
-                    Votre don nous aide à financer les outils, l&apos;hébergement et les événements de l&apos;association.
-                  </p>
-                  <a
-                    href="https://www.helloasso.com/associations/vh-besancon-alumni"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                  >
-                    Faire un don sur HelloAsso
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                  </a>
-                </div>
-
                 <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl p-6 shadow-md border border-blue-100 hover:shadow-lg transition-shadow duration-300">
                   <h3 className="text-xl font-semibold text-gray-900 mb-3">✨ Adhérer (gratuit)</h3>
                   <p className="text-gray-600 mb-4">
                     L&apos;adhésion est gratuite et vous donne accès à toutes les fonctionnalités : annuaire, forum d&apos;annonces, newsletters...
                   </p>
-                  <a
-                    href="https://www.helloasso.com/associations/vh-besancon-alumni"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <Link
+                    href="/inscription"
                     className="inline-flex items-center gap-2 px-6 py-3 bg-gray-700 text-white font-semibold rounded-xl hover:bg-gray-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                   >
-                    Adhérer sur HelloAsso
+                    Adhérer gratuitement
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                     </svg>
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>

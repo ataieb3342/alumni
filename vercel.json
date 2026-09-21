@@ -4,10 +4,6 @@
     {
       "path": "/api/cron/sync-newsletters",
       "schedule": "0 2 * * *"
-    },
-    {
-      "path": "/api/cron/check-alumni",
-      "schedule": "0 9 * * 1"
     }
   ]
 }
