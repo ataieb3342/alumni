@@ -81,6 +81,76 @@ export const updateAnnouncementSchema = createAnnouncementSchema.partial().exten
   id: z.string().min(1, 'ID de l\'annonce requis'),
 })
 
+// Bloc Portable Text tel que produit par le formulaire d'édition et par la
+// route de création (voir app/api/announcements/create/route.ts).
+const portableTextSpanSchema = z.object({
+  _type: z.literal('span'),
+  _key: z.string().optional(),
+  text: z.string(),
+  marks: z.array(z.string()).optional(),
+})
+
+const portableTextBlockSchema = z.object({
+  _type: z.literal('block'),
+  _key: z.string().optional(),
+  style: z.enum(['normal', 'h3', 'h4']).optional(),
+  listItem: z.enum(['bullet', 'number']).optional(),
+  level: z.number().int().min(1).max(10).optional(),
+  children: z.array(portableTextSpanSchema)
+    .min(1, 'La description ne peut pas être vide'),
+  markDefs: z.array(z.object({ _type: z.string(), _key: z.string() }).loose()).optional(),
+})
+
+/**
+ * Liste blanche des champs modifiables via PATCH /api/announcements/[id].
+ *
+ * Zod retire les clés non déclarées : `author`, `status`, `slug`, `publishedAt`
+ * et `_type` ne peuvent donc pas être écrasés par le client.
+ *
+ * Les champs optionnels acceptent `null` car le formulaire d'édition envoie
+ * `formData.champ || null` pour les valeurs vides.
+ */
+export const patchAnnouncementSchema = z.object({
+  title: z.string()
+    .min(3, 'Le titre doit contenir au moins 3 caractères')
+    .max(200, 'Le titre est trop long (max 200 caractères)')
+    .optional(),
+  type: z.enum(ANNOUNCEMENT_TYPES, {
+    message: 'Type d\'annonce invalide'
+  }).optional(),
+  description: z.array(portableTextBlockSchema)
+    .min(1, 'La description est requise')
+    .optional(),
+  company: z.string()
+    .max(100, 'Le nom de l\'entreprise est trop long')
+    .nullish(),
+  location: z.string()
+    .max(200, 'La localisation est trop longue')
+    .nullish(),
+  contactEmail: z.union([
+    z.string().email('Email de contact invalide'),
+    z.literal(''),
+    z.null(),
+  ]).optional(),
+  contactPhone: z.union([
+    z.string()
+      .regex(/^[\d\s\-\+\(\)]+$/, 'Numéro de téléphone invalide')
+      .max(20, 'Numéro de téléphone trop long'),
+    z.literal(''),
+    z.null(),
+  ]).optional(),
+  externalLink: z.union([
+    z.string().url('URL invalide').max(500, 'URL trop longue'),
+    z.literal(''),
+    z.null(),
+  ]).optional(),
+  expiresAt: z.union([
+    z.string().datetime('Date d\'expiration invalide'),
+    z.literal(''),
+    z.null(),
+  ]).optional(),
+})
+
 // ========================================
 // Schémas de validation pour les témoignages
 // ========================================

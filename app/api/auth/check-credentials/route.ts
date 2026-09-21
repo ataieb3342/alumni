@@ -1,9 +1,26 @@
 // app/api/auth/check-credentials/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { serverClient } from '@/sanity/lib/server-client'
+import { rateLimit, RateLimitPresets } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
 import bcrypt from 'bcryptjs'
 
+// Message unique pour « compte inexistant » et « mot de passe incorrect ».
+// Les distinguer transformerait cette route en oracle d'énumération de comptes.
+const INVALID_CREDENTIALS = {
+  valid: false,
+  error: 'Email ou mot de passe incorrect',
+  errorType: 'invalid_credentials',
+} as const
+
 export async function POST(request: NextRequest) {
+  // Rate limiting : cette route contourne celui de NextAuth et déclenche un
+  // bcrypt.compare à chaque appel (coût CPU).
+  const rateLimitResult = rateLimit(request, RateLimitPresets.auth)
+  if (!rateLimitResult.success) {
+    return rateLimitResult.response
+  }
+
   try {
     const { email, password } = await request.json()
 
@@ -30,14 +47,7 @@ export async function POST(request: NextRequest) {
 
     // Si l'utilisateur n'existe pas
     if (!user) {
-      return NextResponse.json(
-        {
-          valid: false,
-          error: 'Aucun compte n\'existe avec cet email',
-          errorType: 'user_not_found'
-        },
-        { status: 200 }
-      )
+      return NextResponse.json(INVALID_CREDENTIALS, { status: 200 })
     }
 
     // Si l'utilisateur n'a pas de mot de passe (compte OAuth uniquement)
@@ -56,17 +66,11 @@ export async function POST(request: NextRequest) {
     const isPasswordValid = await bcrypt.compare(password, user.password)
 
     if (!isPasswordValid) {
-      return NextResponse.json(
-        {
-          valid: false,
-          error: 'Mot de passe incorrect',
-          errorType: 'invalid_password'
-        },
-        { status: 200 }
-      )
+      return NextResponse.json(INVALID_CREDENTIALS, { status: 200 })
     }
 
     // Vérifier le statut du compte
+    // (mot de passe déjà validé ici : aucune fuite d'information)
     if (user.accountStatus !== 'active') {
       return NextResponse.json(
         {
@@ -89,7 +93,7 @@ export async function POST(request: NextRequest) {
     )
 
   } catch (error) {
-    console.error('Erreur lors de la vérification des credentials:', error)
+    logger.error('Erreur lors de la vérification des credentials:', error)
     return NextResponse.json(
       { error: 'Erreur serveur lors de la vérification' },
       { status: 500 }

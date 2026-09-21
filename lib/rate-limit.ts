@@ -78,10 +78,21 @@ function getClientIp(request: NextRequest): string {
  * }
  * ```
  */
+/**
+ * Résultat d'une vérification de rate limit.
+ *
+ * Union discriminée : lorsque `success` vaut `false`, `response` est garantie
+ * présente. Sans cela, `return rateLimitResult.response` propage un
+ * `| undefined` dans le type de retour de toutes les routes appelantes.
+ */
+export type RateLimitResult =
+  | { success: true; response?: undefined }
+  | { success: false; response: NextResponse }
+
 export function rateLimit(
   request: NextRequest,
   config: RateLimitConfig
-): { success: boolean; response?: NextResponse } {
+): RateLimitResult {
   const ip = getClientIp(request)
   const now = Date.now()
   const windowStart = now - config.windowMs

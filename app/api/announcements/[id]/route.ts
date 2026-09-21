@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
 import { auth } from '@/lib/auth'
+import { patchAnnouncementSchema } from '@/lib/validations'
 import { client } from '@/sanity/lib/client'
 
 // DELETE - Supprimer une annonce
@@ -72,6 +73,17 @@ export async function PATCH(
     const { id } = await params
     const body = await req.json()
 
+    // Valider et filtrer les champs modifiables (empêche l'écrasement de
+    // `author`, `status`, `slug`, etc. via le corps de la requête)
+    const validation = patchAnnouncementSchema.safeParse(body)
+    if (!validation.success) {
+      const firstError = validation.error.issues[0]
+      return NextResponse.json(
+        { error: firstError.message, field: firstError.path[0] },
+        { status: 400 }
+      )
+    }
+
     // Vérifier que l'annonce appartient à l'utilisateur
     const announcement = await client.fetch(
       `*[_type == "announcement" && _id == $id][0] {
@@ -98,7 +110,7 @@ export async function PATCH(
     // Mettre à jour l'annonce
     const updatedAnnouncement = await client
       .patch(id)
-      .set(body)
+      .set(validation.data)
       .commit()
 
     return NextResponse.json(updatedAnnouncement)

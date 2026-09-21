@@ -1,8 +1,16 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
+import { rateLimit, RateLimitPresets } from '@/lib/rate-limit'
 import { serverClient } from '@/sanity/lib/server-client'
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  // Route publique qui révèle l'existence d'un compte : sans limite, elle permet
+  // d'énumérer les emails membres.
+  const rateLimitResult = rateLimit(request, RateLimitPresets.auth)
+  if (!rateLimitResult.success) {
+    return rateLimitResult.response
+  }
+
   try {
     const body = await request.json()
     const { email } = body
