@@ -47,11 +47,11 @@ test.describe('Complete User Journey', () => {
     await page.click('button[type="submit"]')
 
     // Step 7: Verify successful login
-    await expect(page).toHaveURL('/tableau-de-bord')
+    await expect(page).toHaveURL('/accueil')
 
     // Step 8: Navigate to create announcement
-    await page.goto('/annonces/creer')
-    await expect(page).toHaveURL('/annonces/creer')
+    await page.goto('/annonces/nouvelle')
+    await expect(page).toHaveURL('/annonces/nouvelle')
 
     // Step 9: Fill out announcement form
     await page.fill('input[name="title"]', 'Recherche Développeur Full-Stack')
@@ -73,7 +73,7 @@ test.describe('Complete User Journey', () => {
 
   test('Unauthenticated user is redirected to login', async ({ page }) => {
     // Try to access protected page without auth
-    await page.goto('/annonces/creer')
+    await page.goto('/annonces/nouvelle')
 
     // Should be redirected to login
     await expect(page).toHaveURL('/connexion')

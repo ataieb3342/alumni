@@ -56,42 +56,16 @@ jobs:
           flags: unittests
         continue-on-error: true
 
-  e2e-tests:
-    name: E2E Tests
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Run E2E tests
-        run: npm run test:e2e
-        env:
-          CI: true
-
-      - name: Upload Playwright Report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 30
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-results
-          path: test-results/
-          retention-days: 30
+  # Job E2E retire : il echouait a chaque execution depuis sa creation.
+  # Le serveur lance par playwright.config.ts (`npm run dev`) ne demarre pas
+  # sans les variables Sanity, et Playwright abandonne apres 120 s :
+  #   [WebServer] Error: Configuration must contain `projectId`
+  #
+  # Pour le retablir :
+  #   1. Definir NEXT_PUBLIC_SANITY_PROJECT_ID, NEXT_PUBLIC_SANITY_DATASET,
+  #      NEXT_PUBLIC_SANITY_API_VERSION et NEXTAUTH_SECRET dans les secrets
+  #      du depot (Settings > Secrets and variables > Actions).
+  #   2. Restaurer le job depuis l'historique git (`git show efc6f8b:.github/workflows/tests.yml`)
+  #      en lui ajoutant un bloc `env:` qui injecte ces secrets.
+  #   3. Etoffer tests/e2e/user-journey.spec.ts : le parcours complet y est
+  #      encore en `test.skip`, seuls deux tests de navigation s'executent.
