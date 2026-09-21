@@ -59,10 +59,7 @@ describe('POST /api/auth/register', () => {
         accountStatus: 'pending',
       })
 
-      const request = new Request('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(validUserData),
-      })
+      const request = createTestPostRequest('http://localhost:3000/api/auth/register', validUserData)
 
       const response = await POST(request)
       const data = await response.json()
@@ -89,10 +86,7 @@ describe('POST /api/auth/register', () => {
         _id: 'user-new-123',
       })
 
-      const request = new Request('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(validUserData),
-      })
+      const request = createTestPostRequest('http://localhost:3000/api/auth/register', validUserData)
 
       await POST(request)
 
@@ -111,10 +105,7 @@ describe('POST /api/auth/register', () => {
       })
 
       const lyceanData = { ...validUserData, userType: 'lyceen' as const }
-      const request = new Request('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(lyceanData),
-      })
+      const request = createTestPostRequest('http://localhost:3000/api/auth/register', lyceanData)
 
       await POST(request)
 
@@ -131,10 +122,7 @@ describe('POST /api/auth/register', () => {
       })
 
       const upperCaseEmailData = { ...validUserData, email: 'JEAN.DUPONT@EXAMPLE.COM' }
-      const request = new Request('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(upperCaseEmailData),
-      })
+      const request = createTestPostRequest('http://localhost:3000/api/auth/register', upperCaseEmailData)
 
       await POST(request)
 
@@ -148,10 +136,7 @@ describe('POST /api/auth/register', () => {
 
   describe('Validation Errors', () => {
     it('rejects registration with short firstName', async () => {
-      const request = new Request('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({ ...validUserData, firstName: 'J' }),
-      })
+      const request = createTestPostRequest('http://localhost:3000/api/auth/register', { ...validUserData, firstName: 'J' })
 
       const response = await POST(request)
       const data = await response.json()
@@ -161,10 +146,7 @@ describe('POST /api/auth/register', () => {
     })
 
     it('rejects registration with invalid email', async () => {
-      const request = new Request('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({ ...validUserData, email: 'invalid-email' }),
-      })
+      const request = createTestPostRequest('http://localhost:3000/api/auth/register', { ...validUserData, email: 'invalid-email' })
 
       const response = await POST(request)
       const data = await response.json()
@@ -174,10 +156,7 @@ describe('POST /api/auth/register', () => {
     })
 
     it('rejects registration with weak password (too short)', async () => {
-      const request = new Request('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({ ...validUserData, password: 'Short1!' }),
-      })
+      const request = createTestPostRequest('http://localhost:3000/api/auth/register', { ...validUserData, password: 'Short1!' })
 
       const response = await POST(request)
       const data = await response.json()
@@ -187,10 +166,7 @@ describe('POST /api/auth/register', () => {
     })
 
     it('rejects registration with password missing uppercase', async () => {
-      const request = new Request('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({ ...validUserData, password: 'weakpassword1!' }),
-      })
+      const request = createTestPostRequest('http://localhost:3000/api/auth/register', { ...validUserData, password: 'weakpassword1!' })
 
       const response = await POST(request)
       const data = await response.json()
@@ -200,10 +176,7 @@ describe('POST /api/auth/register', () => {
     })
 
     it('rejects registration with invalid userType', async () => {
-      const request = new Request('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({ ...validUserData, userType: 'invalid' }),
-      })
+      const request = createTestPostRequest('http://localhost:3000/api/auth/register', { ...validUserData, userType: 'invalid' })
 
       const response = await POST(request)
       const data = await response.json()
@@ -213,10 +186,7 @@ describe('POST /api/auth/register', () => {
     })
 
     it('rejects firstName with invalid characters', async () => {
-      const request = new Request('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({ ...validUserData, firstName: 'Jean123' }),
-      })
+      const request = createTestPostRequest('http://localhost:3000/api/auth/register', { ...validUserData, firstName: 'Jean123' })
 
       const response = await POST(request)
       const data = await response.json()
@@ -233,10 +203,7 @@ describe('POST /api/auth/register', () => {
         accountStatus: 'active',
       })
 
-      const request = new Request('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(validUserData),
-      })
+      const request = createTestPostRequest('http://localhost:3000/api/auth/register', validUserData)
 
       const response = await POST(request)
       const data = await response.json()
@@ -252,10 +219,7 @@ describe('POST /api/auth/register', () => {
         accountStatus: 'pending',
       })
 
-      const request = new Request('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(validUserData),
-      })
+      const request = createTestPostRequest('http://localhost:3000/api/auth/register', validUserData)
 
       const response = await POST(request)
       const data = await response.json()
@@ -273,10 +237,7 @@ describe('POST /api/auth/register', () => {
       })
       mockSendAdminNewUserNotification.mockRejectedValue(new Error('Email failed'))
 
-      const request = new Request('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(validUserData),
-      })
+      const request = createTestPostRequest('http://localhost:3000/api/auth/register', validUserData)
 
       const response = await POST(request)
 
@@ -286,10 +247,7 @@ describe('POST /api/auth/register', () => {
     it('handles database errors gracefully', async () => {
       mockSanityClient.create.mockRejectedValue(new Error('Database error'))
 
-      const request = new Request('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(validUserData),
-      })
+      const request = createTestPostRequest('http://localhost:3000/api/auth/register', validUserData)
 
       const response = await POST(request)
       const data = await response.json()

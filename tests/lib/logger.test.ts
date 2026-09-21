@@ -1,12 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 describe('Logger', () => {
-  let originalNodeEnv: string | undefined
   let consoleLogSpy: ReturnType<typeof vi.spyOn>
 
   beforeEach(async () => {
-    originalNodeEnv = process.env.NODE_ENV
-
     // Spy on console.log (le nouveau logger utilise console.log pour tout)
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 
@@ -15,13 +12,13 @@ describe('Logger', () => {
   })
 
   afterEach(() => {
-    process.env.NODE_ENV = originalNodeEnv
+    vi.unstubAllEnvs()
     vi.restoreAllMocks()
   })
 
   describe('Development mode', () => {
     beforeEach(() => {
-      process.env.NODE_ENV = 'development'
+      vi.stubEnv('NODE_ENV', 'development')
     })
 
     it('should log debug messages in development', async () => {
@@ -90,7 +87,7 @@ describe('Logger', () => {
 
   describe('Production mode', () => {
     beforeEach(() => {
-      process.env.NODE_ENV = 'production'
+      vi.stubEnv('NODE_ENV', 'production')
     })
 
     it('should NOT log debug messages in production', async () => {
@@ -167,7 +164,7 @@ describe('Logger', () => {
 
   describe('logError helper', () => {
     beforeEach(() => {
-      process.env.NODE_ENV = 'development'
+      vi.stubEnv('NODE_ENV', 'development')
     })
 
     it('should log Error instances', async () => {
@@ -212,7 +209,7 @@ describe('Logger', () => {
 
   describe('Structured logging', () => {
     beforeEach(() => {
-      process.env.NODE_ENV = 'production'
+      vi.stubEnv('NODE_ENV', 'production')
     })
 
     it('should output JSON in production', async () => {
@@ -266,7 +263,7 @@ describe('Logger', () => {
 
   describe('Performance logging', () => {
     beforeEach(() => {
-      process.env.NODE_ENV = 'development'
+      vi.stubEnv('NODE_ENV', 'development')
     })
 
     it('should log performance metrics', async () => {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import Pagination from './Pagination'
 import DirectoryCard from './DirectoryCard'
 import { getMostRecentActivity } from '@/lib/userUtils'
@@ -84,10 +84,16 @@ export default function DirectoryList({ alumni, staff }: DirectoryListProps) {
     })
   }, [currentList, searchTerm, selectedPromotion])
 
-  // Reset à la première page quand les filtres changent
-  useEffect(() => {
+  // Reset à la première page quand les filtres changent.
+  // Ajustement pendant le rendu plutôt que dans un effet : évite un rendu
+  // intermédiaire affichant l'ancienne page.
+  // https://react.dev/learn/you-might-not-need-an-effect
+  const filtersKey = `${searchTerm}|${selectedPromotion}|${selectedType}`
+  const [prevFiltersKey, setPrevFiltersKey] = useState(filtersKey)
+  if (prevFiltersKey !== filtersKey) {
+    setPrevFiltersKey(filtersKey)
     setCurrentPage(1)
-  }, [searchTerm, selectedPromotion, selectedType])
+  }
 
   // Pagination
   const indexOfLastUser = currentPage * USERS_PER_PAGE

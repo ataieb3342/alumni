@@ -211,7 +211,7 @@ export default function ActivityStatsWidget() {
               📊 Visiteurs Connectés
             </Heading>
             <Text size={0} style={{ color: 'rgba(255,255,255,0.8)' }}>
-              Analyse de l'activité
+              Analyse de l&apos;activité
             </Text>
           </div>
           <Flex gap={2}>

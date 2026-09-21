@@ -6,6 +6,16 @@ vi.mock('@/lib/auth', () => ({
   auth: vi.fn((handler: any) => handler),
 }))
 
+// `auth()` est typé `(req, ctx) => void | Response` par NextAuth, alors que le
+// mock ci-dessus renvoie le handler nu, appelable avec la seule requête.
+// Ce helper porte la signature réellement exercée par les tests.
+type TestMiddleware = (req: unknown) => Promise<Response> | Response
+
+async function loadMiddleware(): Promise<TestMiddleware> {
+  const mod = await import('@/middleware')
+  return mod.default as unknown as TestMiddleware
+}
+
 // Helper to create mock requests
 function createMockRequest(pathname: string, session?: any) {
   const request = {
@@ -41,7 +51,7 @@ describe('Middleware', () => {
     ]
 
     it.each(publicRoutes)('allows access to %s without authentication', async (route) => {
-      const { default: middleware } = await import('@/middleware')
+      const middleware = await loadMiddleware()
       const req = createMockRequest(route, null)
       const response = await middleware(req)
 
@@ -50,7 +60,7 @@ describe('Middleware', () => {
     })
 
     it('allows access to nested public routes', async () => {
-      const { default: middleware } = await import('@/middleware')
+      const middleware = await loadMiddleware()
       const req = createMockRequest('/a-propos/team', null)
       const response = await middleware(req)
 
@@ -68,7 +78,7 @@ describe('Middleware', () => {
     ]
 
     it.each(publicApiRoutes)('allows access to %s without authentication', async (route) => {
-      const { default: middleware } = await import('@/middleware')
+      const middleware = await loadMiddleware()
       const req = createMockRequest(route, null)
       const response = await middleware(req)
 
@@ -78,7 +88,7 @@ describe('Middleware', () => {
 
   describe('Temporary OAuth Users', () => {
     it('redirects temp user trying to access protected route to /choisir-type', async () => {
-      const { default: middleware } = await import('@/middleware')
+      const middleware = await loadMiddleware()
       const session = {
         user: {
           id: 'temp-123456',
@@ -95,7 +105,7 @@ describe('Middleware', () => {
     })
 
     it('allows temp user to access /choisir-type', async () => {
-      const { default: middleware } = await import('@/middleware')
+      const middleware = await loadMiddleware()
       const session = {
         user: {
           id: 'temp-123456',
@@ -110,7 +120,7 @@ describe('Middleware', () => {
     })
 
     it('allows temp user to access auth API routes', async () => {
-      const { default: middleware } = await import('@/middleware')
+      const middleware = await loadMiddleware()
       const session = {
         user: {
           id: 'temp-123456',
@@ -127,7 +137,7 @@ describe('Middleware', () => {
 
   describe('Pending Account Status', () => {
     it('redirects pending user to /validation-en-cours when accessing protected route', async () => {
-      const { default: middleware } = await import('@/middleware')
+      const middleware = await loadMiddleware()
       const session = {
         user: {
           id: 'user-123',
@@ -144,7 +154,7 @@ describe('Middleware', () => {
     })
 
     it('allows pending user to access /validation-en-cours', async () => {
-      const { default: middleware } = await import('@/middleware')
+      const middleware = await loadMiddleware()
       const session = {
         user: {
           id: 'user-123',
@@ -160,7 +170,7 @@ describe('Middleware', () => {
     })
 
     it('allows pending user to access public routes', async () => {
-      const { default: middleware } = await import('@/middleware')
+      const middleware = await loadMiddleware()
       const session = {
         user: {
           id: 'user-123',
@@ -178,7 +188,7 @@ describe('Middleware', () => {
 
   describe('Unauthenticated Users', () => {
     it('redirects unauthenticated user to /connexion when accessing protected route', async () => {
-      const { default: middleware } = await import('@/middleware')
+      const middleware = await loadMiddleware()
       const req = createMockRequest('/tableau-de-bord', null)
       const response = await middleware(req)
 
@@ -187,7 +197,7 @@ describe('Middleware', () => {
     })
 
     it('redirects unauthenticated user to /connexion when accessing /annonces', async () => {
-      const { default: middleware } = await import('@/middleware')
+      const middleware = await loadMiddleware()
       const req = createMockRequest('/annonces', null)
       const response = await middleware(req)
 
@@ -196,7 +206,7 @@ describe('Middleware', () => {
     })
 
     it('allows unauthenticated user to access public routes', async () => {
-      const { default: middleware } = await import('@/middleware')
+      const middleware = await loadMiddleware()
       const req = createMockRequest('/connexion', null)
       const response = await middleware(req)
 
@@ -206,7 +216,7 @@ describe('Middleware', () => {
 
   describe('Authenticated Active Users', () => {
     it('allows active user to access protected routes', async () => {
-      const { default: middleware } = await import('@/middleware')
+      const middleware = await loadMiddleware()
       const session = {
         user: {
           id: 'user-123',
@@ -222,7 +232,7 @@ describe('Middleware', () => {
     })
 
     it('allows active user to access /annonces', async () => {
-      const { default: middleware } = await import('@/middleware')
+      const middleware = await loadMiddleware()
       const session = {
         user: {
           id: 'user-123',
@@ -238,7 +248,7 @@ describe('Middleware', () => {
     })
 
     it('allows active user to access public routes', async () => {
-      const { default: middleware } = await import('@/middleware')
+      const middleware = await loadMiddleware()
       const session = {
         user: {
           id: 'user-123',

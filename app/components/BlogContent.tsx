@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import BlogFilters from './BlogFilters'
 import Pagination from './Pagination'
 import Link from 'next/link'
@@ -91,10 +91,16 @@ export default function BlogContent({ posts }: BlogContentProps) {
     return filtered
   }, [posts, searchQuery, selectedYear, sortOrder])
 
-  // Reset à la première page quand les filtres changent
-  useEffect(() => {
+  // Reset à la première page quand les filtres changent.
+  // Ajustement pendant le rendu plutôt que dans un effet : évite un rendu
+  // intermédiaire affichant l'ancienne page.
+  // https://react.dev/learn/you-might-not-need-an-effect
+  const filtersKey = `${searchQuery}|${selectedYear}|${sortOrder}`
+  const [prevFiltersKey, setPrevFiltersKey] = useState(filtersKey)
+  if (prevFiltersKey !== filtersKey) {
+    setPrevFiltersKey(filtersKey)
     setCurrentPage(1)
-  }, [searchQuery, selectedYear, sortOrder])
+  }
 
   // Calculer les articles à afficher pour la page courante
   const indexOfLastPost = currentPage * POSTS_PER_PAGE
