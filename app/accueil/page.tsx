@@ -146,7 +146,7 @@ export default async function AccueilPage() {
         {/* Actions rapides - Version compacte et moderne */}
         <section className="max-w-7xl mx-auto px-6 -mt-12 relative z-20 mb-12">
           <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-2xl border border-white/50">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 min-[380px]:grid-cols-2 md:grid-cols-4 gap-4">
               <Link
                 href="/annonces/nouvelle"
                 className="group flex flex-col items-center justify-center p-4 rounded-xl hover:bg-blue-50 transition-all duration-300"
