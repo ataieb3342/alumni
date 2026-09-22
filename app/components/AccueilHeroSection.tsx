@@ -57,7 +57,7 @@ export default function AccueilHeroSection({
       >
         <div className="text-center space-y-6">
 
-          <h1 className="text-5xl md:text-7xl font-black leading-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-black leading-tight break-words">
             <span className="bg-gradient-to-r from-white via-blue-50 to-white bg-clip-text text-transparent drop-shadow-lg">
               Quoi de neuf
             </span>
