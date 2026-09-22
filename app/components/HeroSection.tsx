@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { ArrowRight, CheckCircle2 } from 'lucide-react'
 
 interface HeroSectionProps {
   title?: string
@@ -53,7 +54,7 @@ export default function HeroSection({
         {/* Overlay avec gradient bleu et opacité */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-900/80 via-indigo-900/75 to-blue-800/80"></div>
         {/* Effet de texture */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDE0YzMuMzEgMCA2LTIuNjkgNi02cy0yLjY5LTYtNi02LTYgMi42OS02IDYgMi42OSA2IDYgNiIvPjwvZz48L2c+PC9zdmc+')] opacity-40"></div>
+        <div className="absolute inset-0 bg-dots opacity-40" aria-hidden="true"></div>
       </div>
 
       {/* Contenu */}
@@ -69,7 +70,7 @@ export default function HeroSection({
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               {/* Badge décoratif */}
-              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-2 text-sm font-medium animate-fade-in">
+              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-2 text-sm font-medium">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-300 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-400"></span>
@@ -101,28 +102,20 @@ export default function HeroSection({
                       className="group inline-flex items-center gap-2 bg-white text-blue-900 hover:bg-blue-50 px-8 py-4 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 shadow-2xl hover:shadow-blue-500/50"
                     >
                       Créer mon compte
-                      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
                     </Link>
                     <Link
                       href="/connexion"
                       className="group inline-flex items-center gap-2 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 border-2 border-white/30 hover:border-white/50"
                     >
                       Se connecter
-                      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                      </svg>
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
                     </Link>
                   </div>
 
-                  <div className="flex items-center gap-6 pt-2 text-sm text-blue-100">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      Adhésion gratuite
-                    </div>
+                  <div className="flex items-center gap-2 pt-2 text-sm text-blue-100">
+                    <CheckCircle2 className="w-5 h-5 text-green-400" aria-hidden="true" />
+                    Adhésion gratuite
                   </div>
                 </>
               )}
@@ -141,8 +134,8 @@ export default function HeroSection({
                 <div className="absolute inset-0 bg-gradient-to-t from-blue-900/40 to-transparent"></div>
               </div>
               {/* Éléments décoratifs flottants */}
-              <div className="absolute -top-6 -right-6 w-32 h-32 bg-blue-400/20 rounded-full blur-3xl animate-pulse"></div>
-              <div className="absolute -bottom-6 -left-6 w-40 h-40 bg-indigo-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+              <div className="absolute -top-6 -right-6 w-32 h-32 bg-blue-400/20 rounded-full blur-3xl animate-pulse" aria-hidden="true"></div>
+              <div className="absolute -bottom-6 -left-6 w-40 h-40 bg-indigo-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} aria-hidden="true"></div>
             </div>
           </div>
         ) : (

@@ -55,16 +55,16 @@ export default async function ProfilePage() {
       <Header />
 
       <main className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
-        <section className="max-w-4xl mx-auto px-6 py-12">
+        <section className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
           <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Mon Profil</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Mon Profil</h1>
                 <p className="text-gray-600">Gérez vos informations personnelles et professionnelles</p>
               </div>
               <Link
                 href={`/annuaire/${userData._id}`}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm hover:shadow-md"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm hover:shadow-md shrink-0"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

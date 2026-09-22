@@ -4,33 +4,33 @@ export default function Footer() {
   return (
     <footer className="bg-gray-900 text-white py-8">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-8">
           <div>
             <h4 className="font-bold text-lg mb-4">À propos</h4>
             <p className="text-gray-400 text-sm mb-3">
               Association des anciens élèves et personnels du Lycée Victor Hugo de Besançon
             </p>
-            <Link href="/a-propos" className="text-blue-400 hover:text-blue-300 text-sm">
+            <Link href="/a-propos" className="inline-block py-1.5 text-blue-400 hover:text-blue-300 text-sm">
               En savoir plus →
             </Link>
           </div>
 
           <div>
             <h4 className="font-bold text-lg mb-4">Liens rapides</h4>
-            <ul className="space-y-2 text-gray-400 text-sm">
-              <li><Link href="/" className="hover:text-white">Accueil</Link></li>
-              <li><Link href="/a-propos" className="hover:text-white">À propos</Link></li>
-              <li><Link href="/blog" className="hover:text-white">Actualités</Link></li>
-              <li><Link href="/annuaire" className="hover:text-white">Annuaire</Link></li>
-              <li><Link href="/annonces" className="hover:text-white">Annonces</Link></li>
+            <ul className="space-y-1 text-gray-400 text-sm">
+              <li><Link href="/" className="inline-block py-1.5 hover:text-white">Accueil</Link></li>
+              <li><Link href="/a-propos" className="inline-block py-1.5 hover:text-white">À propos</Link></li>
+              <li><Link href="/blog" className="inline-block py-1.5 hover:text-white">Actualités</Link></li>
+              <li><Link href="/annuaire" className="inline-block py-1.5 hover:text-white">Annuaire</Link></li>
+              <li><Link href="/annonces" className="inline-block py-1.5 hover:text-white">Annonces</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-bold text-lg mb-4">Informations légales</h4>
-            <ul className="space-y-2 text-gray-400 text-sm">
-              <li><Link href="/mentions-legales" className="hover:text-white">Mentions légales</Link></li>
-              <li><Link href="/politique-confidentialite" className="hover:text-white">Politique de confidentialité (RGPD)</Link></li>
+            <ul className="space-y-1 text-gray-400 text-sm">
+              <li><Link href="/mentions-legales" className="inline-block py-1.5 hover:text-white">Mentions légales</Link></li>
+              <li><Link href="/politique-confidentialite" className="inline-block py-1.5 hover:text-white">Politique de confidentialité (RGPD)</Link></li>
             </ul>
           </div>
 
@@ -52,7 +52,7 @@ export default function Footer() {
           <div>
             <h4 className="font-bold text-lg mb-4">Contact</h4>
             <p className="text-gray-400 text-sm mb-3">
-              <a href="mailto:contact@vh-besancon-alumni.fr" className="hover:text-white">
+              <a href="mailto:contact@vh-besancon-alumni.fr" className="inline-block py-1.5 hover:text-white">
                 contact@vh-besancon-alumni.fr
               </a>
             </p>
@@ -89,7 +89,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-6 text-center text-gray-400">
-          <p>&copy; 2025 VH Besançon Alumni. Tous droits réservés.</p>
+          <p>&copy; 2026 VH Besançon Alumni. Tous droits réservés.</p>
           <p className="mt-2 text-sm">
             Site développé et maintenu par{' '}
             <a

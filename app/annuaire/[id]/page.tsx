@@ -311,9 +311,9 @@ export default async function MemberDetailPage({
                       }, index: number, arr: unknown[]) => (
                         <div key={index} className="relative pl-6 border-l-2 border-gray-200">
                           <div className="absolute left-0 top-0 -translate-x-[9px] w-4 h-4 rounded-full bg-blue-600 border-2 border-white"></div>
-                          <div className="flex items-start justify-between gap-4 mb-1">
-                            <h3 className="text-base font-bold text-gray-900">{exp.position}</h3>
-                            <div className="text-xs text-gray-500 whitespace-nowrap">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-4 mb-1">
+                            <h3 className="text-base font-bold text-gray-900 break-words min-w-0">{exp.position}</h3>
+                            <div className="text-xs text-gray-500 whitespace-nowrap shrink-0">
                               {new Date(exp.startDate).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}
                               {' - '}
                               {exp.current ? 'Présent' : exp.endDate ? new Date(exp.endDate).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' }) : ''}
@@ -388,9 +388,9 @@ export default async function MemberDetailPage({
                         return (
                           <div key={index} className="relative pl-6 border-l-2 border-gray-200">
                             <div className="absolute left-0 top-0 -translate-x-[9px] w-4 h-4 rounded-full bg-blue-600 border-2 border-white"></div>
-                            <div className="flex items-start justify-between gap-4 mb-1">
-                              <h3 className="text-base font-bold text-gray-900">{edu.degree}</h3>
-                              <div className="text-xs text-gray-500 whitespace-nowrap">
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-4 mb-1">
+                              <h3 className="text-base font-bold text-gray-900 break-words min-w-0">{edu.degree}</h3>
+                              <div className="text-xs text-gray-500 whitespace-nowrap shrink-0">
                                 {edu.startYear} - {edu.endYear || 'En cours'}
                               </div>
                             </div>

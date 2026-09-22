@@ -328,7 +328,7 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Type d'utilisateur */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Type de profil</h2>
         <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <div className="flex-shrink-0 w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
@@ -356,10 +356,10 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
 
       {/* Photo de profil */}
       {!isLyceen && (
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Photo de profil</h2>
         <div>
-          <div className="flex items-start gap-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
           {/* Prévisualisation de l'image */}
           <div className="flex-shrink-0">
             {imagePreview ? (
@@ -384,11 +384,11 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
           </div>
 
           {/* Contrôles d'upload */}
-          <div className="flex-1">
+          <div className="flex-1 w-full min-w-0 text-center sm:text-left">
             <p className="text-sm text-gray-600 mb-3">
               Formats acceptés : JPG, PNG, WEBP • Taille max : 5 MB • Recommandé : 400x400px
             </p>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap justify-center sm:justify-start gap-3">
               <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -423,7 +423,7 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
 
       {/* Photo de couverture */}
       {!isLyceen && (
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Photo de couverture</h2>
         <div className="space-y-4">
           {/* Prévisualisation de l'image de couverture */}
@@ -439,7 +439,7 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
                   placeholder={coverImagePreview.startsWith('data:') || coverImagePreview.startsWith('blob:') ? undefined : 'blur'}
                   blurDataURL={coverImagePreview.startsWith('data:') || coverImagePreview.startsWith('blob:') ? undefined : coverImagePreview}
                 />
-                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/30 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity flex items-center justify-center">
                   <button
                     type="button"
                     onClick={removeCoverImage}
@@ -466,7 +466,7 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
             <p className="text-sm text-gray-600 mb-3">
               Formats acceptés : JPG, PNG, WEBP • Taille max : 5 MB • Recommandé : 1920x580px
             </p>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -499,7 +499,7 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
       )}
 
       {/* Informations de base */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Informations de base</h2>
         <div className="space-y-6">
           <div className="grid md:grid-cols-2 gap-6">
@@ -597,7 +597,7 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
 
       {/* Section Personnel - Fonction au lycée */}
       {userData.userType === 'staff' && (
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Fonction au Lycée Victor Hugo</h2>
 
           <div className="space-y-6">
@@ -668,7 +668,7 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
       )}
 
       {/* Contact */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Contact</h2>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -686,7 +686,7 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
 
       {/* Biographie */}
       {!isLyceen && (
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Biographie</h2>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Parlez de vous
@@ -703,7 +703,7 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
 
       {/* Formations (uniquement pour alumni et staff) */}
       {canEditFullProfile && (
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Formations</h2>
 
           {/* Message d'information pour le Lycée Victor Hugo */}
@@ -805,7 +805,7 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
                         />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             Année début *
@@ -881,22 +881,22 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
                 ) : (
                   // Mode prévisualisation
                   <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-blue-300 transition group">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex-1">
-                        <h3 className="font-bold text-lg text-gray-900">{edu.degree || 'Diplôme non renseigné'}</h3>
-                        <p className="text-blue-900 font-semibold">{edu.school || 'École non renseignée'}</p>
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-lg text-gray-900 break-words">{edu.degree || 'Diplôme non renseigné'}</h3>
+                        <p className="text-blue-900 font-semibold break-words">{edu.school || 'École non renseignée'}</p>
                         {edu.field && (
-                          <p className="text-sm text-gray-600">{edu.field}</p>
+                          <p className="text-sm text-gray-600 break-words">{edu.field}</p>
                         )}
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
                         <span className="text-sm text-gray-600 font-medium whitespace-nowrap">
                           {edu.startYear || '?'} - {edu.endYear || 'En cours'}
                         </span>
                         <button
                           type="button"
                           onClick={() => setEditingEducationIndex(index)}
-                          className="opacity-0 group-hover:opacity-100 transition px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                          className="transition px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
                         >
                           Modifier
                         </button>
@@ -928,7 +928,7 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
 
       {/* Expériences professionnelles (uniquement pour alumni et staff) */}
       {canEditFullProfile && (
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Expériences professionnelles</h2>
           <div className="space-y-4">
             {experience.map((exp, index) => (
@@ -988,7 +988,7 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
                         />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             Date début *
@@ -1093,16 +1093,16 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
                 ) : (
                   // Mode prévisualisation
                   <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-blue-300 transition group">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex-1">
-                        <h3 className="font-bold text-lg text-gray-900">{exp.position || 'Poste non renseigné'}</h3>
-                        <p className="text-blue-900 font-semibold">{exp.company || 'Entreprise non renseignée'}</p>
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-lg text-gray-900 break-words">{exp.position || 'Poste non renseigné'}</h3>
+                        <p className="text-blue-900 font-semibold break-words">{exp.company || 'Entreprise non renseignée'}</p>
                         {exp.location && (
-                          <p className="text-sm text-gray-600">📍 {exp.location}</p>
+                          <p className="text-sm text-gray-600 break-words">📍 {exp.location}</p>
                         )}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="text-right">
+                      <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+                        <div className="sm:text-right">
                           <span className="text-sm text-gray-600 font-medium whitespace-nowrap block">
                             {exp.startDate ? new Date(exp.startDate).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' }) : '?'}
                             {' - '}
@@ -1117,7 +1117,7 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
                         <button
                           type="button"
                           onClick={() => setEditingExperienceIndex(index)}
-                          className="opacity-0 group-hover:opacity-100 transition px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                          className="transition px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
                         >
                           Modifier
                         </button>
@@ -1149,7 +1149,7 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
 
       {/* Visibilité dans l'annuaire */}
       {!isLyceen && (
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Visibilité</h2>
             <div className="flex items-start gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
               <input
@@ -1172,7 +1172,7 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
       )}
 
       {/* Boutons d'action */}
-      <div className="flex justify-end gap-4 pt-6">
+      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:gap-4 pt-6">
         <button
           type="button"
           onClick={() => router.push('/accueil')}

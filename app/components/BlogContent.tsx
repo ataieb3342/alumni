@@ -143,7 +143,7 @@ export default function BlogContent({ posts }: BlogContentProps) {
       ) : (
         <>
           {/* Grid des articles */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 [&>*]:min-w-0">
             {currentPosts.map((post) => (
               <Link
                 key={post._id}

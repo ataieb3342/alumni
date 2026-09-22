@@ -133,7 +133,7 @@ export default function AnnouncementCard({ announcement }: AnnouncementCardProps
 
           {/* Footer avec auteur */}
           <div className="mt-auto pt-4 border-t border-gray-100">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center justify-between gap-3 min-w-0">
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 {authorImageProps ? (
                   <Image

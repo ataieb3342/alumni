@@ -58,8 +58,8 @@ export default function PostCarousel({ posts, title, viewAllLink }: PostCarousel
 
   return (
     <div className="mb-12">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+      <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 min-w-0 break-words">{title}</h2>
         {viewAllLink && (
           <Link
             href={viewAllLink}

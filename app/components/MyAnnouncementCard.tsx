@@ -69,9 +69,9 @@ export default function MyAnnouncementCard({ announcement }: MyAnnouncementCardP
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition group">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
+      <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6 hover:shadow-md transition group">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-3">
               <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${typeInfo.color}`}>
                 <span>{typeInfo.emoji}</span>
@@ -89,7 +89,7 @@ export default function MyAnnouncementCard({ announcement }: MyAnnouncementCardP
               )}
             </div>
 
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
+            <h3 className="text-xl font-bold text-gray-900 mb-2 break-words">
               {announcement.title}
             </h3>
 
@@ -113,8 +113,8 @@ export default function MyAnnouncementCard({ announcement }: MyAnnouncementCardP
             </p>
           </div>
 
-          {/* Actions (visible au hover sur desktop) */}
-          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          {/* Actions : toujours visibles sur mobile, au survol à partir de sm */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100">
             <Link
               href={`/annonces/${announcement.slug.current}`}
               className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-lg transition text-sm"

@@ -205,7 +205,7 @@ export default function SettingsForm({ user, initialPreferences }: SettingsFormP
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Email
               </label>
-              <div className="px-4 py-2 bg-gray-50 rounded-lg text-gray-600">
+              <div className="px-4 py-2 bg-gray-50 rounded-lg text-gray-600 break-all">
                 {user.email}
               </div>
               <p className="mt-1 text-xs text-gray-500">
@@ -362,8 +362,8 @@ export default function SettingsForm({ user, initialPreferences }: SettingsFormP
             Actions irréversibles concernant votre compte
           </p>
 
-          <div className="flex items-start justify-between p-4 bg-red-50 rounded-lg">
-            <div className="flex-1">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 p-4 bg-red-50 rounded-lg">
+            <div className="flex-1 min-w-0">
               <h3 className="font-medium text-gray-900">
                 Supprimer mon compte
               </h3>
@@ -374,7 +374,7 @@ export default function SettingsForm({ user, initialPreferences }: SettingsFormP
             <button
               type="button"
               onClick={() => setShowDeleteModal(true)}
-              className="ml-4 px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors whitespace-nowrap"
+              className="sm:ml-4 px-4 py-2.5 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors whitespace-nowrap shrink-0"
             >
               Supprimer
             </button>

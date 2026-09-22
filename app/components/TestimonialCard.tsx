@@ -66,7 +66,7 @@ export default function TestimonialCard({ testimonial }: TestimonialCardProps) {
   }
 
   return (
-    <Link href={`/temoignages/${testimonial.slug.current}`} className="group block h-full">
+    <Link href={`/temoignages/${testimonial.slug.current}`} className="group block h-full min-w-0">
       <article className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 h-full flex flex-col border border-white/20 hover:border-white/40 transform hover:-translate-y-1">
         {/* Image de couverture si disponible */}
         {testimonial.featuredImage && (
@@ -80,7 +80,7 @@ export default function TestimonialCard({ testimonial }: TestimonialCardProps) {
           </div>
         )}
 
-        <div className="p-6 flex-1 flex flex-col">
+        <div className="p-5 sm:p-6 flex-1 flex flex-col min-w-0">
           {/* Header avec badge */}
           <div className="flex items-start justify-between mb-4">
             <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium ${config.color}`}>
@@ -96,12 +96,12 @@ export default function TestimonialCard({ testimonial }: TestimonialCardProps) {
           </div>
 
           {/* Titre */}
-          <h3 className="text-xl font-bold mb-3 text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
+          <h3 className="text-xl font-bold mb-3 text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 break-words">
             {testimonial.title}
           </h3>
 
           {/* Extrait */}
-          <p className="text-gray-600 mb-4 line-clamp-3 flex-1 text-sm leading-relaxed">
+          <p className="text-gray-600 mb-4 line-clamp-3 flex-1 text-sm leading-relaxed break-words">
             {testimonial.excerpt}
           </p>
 
@@ -111,7 +111,7 @@ export default function TestimonialCard({ testimonial }: TestimonialCardProps) {
               {testimonial.tags.slice(0, 3).map((tag, index) => (
                 <span
                   key={index}
-                  className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full"
+                  className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full max-w-full break-all"
                 >
                   #{tag}
                 </span>

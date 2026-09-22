@@ -17,5 +17,41 @@ html, body {
   padding: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Geist est chargé dans le layout : on l'utilise vraiment, avec repli système */
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+html {
+  /* Évite le gonflement du texte quand on tourne un iPhone en paysage */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Titres : coupures équilibrées plutôt qu'un mot orphelin en dernière ligne */
+h1, h2, h3 {
+  text-wrap: balance;
+}
+
+/* Anneau de focus homogène et visible, au clavier uniquement */
+:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Parallaxe, pulsations et transitions coupées pour qui le demande */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Texture pointillée réutilisée par les sections sombres (hero, espace membres) */
+.bg-dots {
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='36' cy='8' r='6' fill='%23fff' fill-opacity='0.03'/%3E%3C/svg%3E");
 }

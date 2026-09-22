@@ -158,7 +158,7 @@ export default function TestimonialFilters({ testimonials }: TestimonialFiltersP
 
       {/* Grille de témoignages */}
       {filteredAndSortedTestimonials.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 [&>*]:min-w-0">
           {filteredAndSortedTestimonials.map((testimonial) => (
             <TestimonialCard key={testimonial._id} testimonial={testimonial} />
           ))}

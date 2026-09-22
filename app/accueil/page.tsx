@@ -213,14 +213,14 @@ export default async function AccueilPage() {
               </div>
             )}
             <div className={isDarkSection('posts') ? "relative z-10 max-w-7xl mx-auto px-6" : ""}>
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
                 <div>
-                  <h2 className={`text-4xl font-black mb-2 ${isDarkSection('posts') ? 'text-white' : 'text-gray-900'}`}>À la une</h2>
+                  <h2 className={`text-3xl sm:text-4xl font-black mb-2 ${isDarkSection('posts') ? 'text-white' : 'text-gray-900'}`}>À la une</h2>
                   <p className={isDarkSection('posts') ? 'text-blue-200' : 'text-gray-600'}>Les derniers articles de la communauté</p>
                 </div>
                 <Link
                   href="/blog"
-                  className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 font-semibold shadow-lg"
+                  className="group inline-flex items-center justify-center gap-2 shrink-0 px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 font-semibold shadow-lg"
                 >
                   Voir tout
                   <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -332,14 +332,14 @@ export default async function AccueilPage() {
               </div>
             )}
             <div className={isDarkSection('members') ? "relative z-10 max-w-7xl mx-auto px-6" : ""}>
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
                 <div>
-                  <h2 className={`text-4xl font-black mb-2 ${isDarkSection('members') ? 'text-white' : 'text-gray-900'}`}>Nouveaux membres</h2>
+                  <h2 className={`text-3xl sm:text-4xl font-black mb-2 ${isDarkSection('members') ? 'text-white' : 'text-gray-900'}`}>Nouveaux membres</h2>
                   <p className={isDarkSection('members') ? 'text-blue-200' : 'text-gray-600'}>Ils viennent de rejoindre la communauté</p>
                 </div>
                 <Link
                   href="/annuaire"
-                  className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 font-semibold shadow-lg"
+                  className="group inline-flex items-center justify-center gap-2 shrink-0 px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 font-semibold shadow-lg"
                 >
                   Voir l&apos;annuaire
                   <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -363,14 +363,14 @@ export default async function AccueilPage() {
               </div>
             )}
             <div className={isDarkSection('announcements') ? "relative z-10 max-w-7xl mx-auto px-6" : ""}>
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
                 <div>
-                  <h2 className={`text-4xl font-black mb-2 ${isDarkSection('announcements') ? 'text-white' : 'text-gray-900'}`}>Opportunités</h2>
+                  <h2 className={`text-3xl sm:text-4xl font-black mb-2 ${isDarkSection('announcements') ? 'text-white' : 'text-gray-900'}`}>Opportunités</h2>
                   <p className={isDarkSection('announcements') ? 'text-blue-200' : 'text-gray-600'}>Les dernières annonces de la communauté</p>
                 </div>
                 <Link
                   href="/annonces"
-                  className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 font-semibold shadow-lg"
+                  className="group inline-flex items-center justify-center gap-2 shrink-0 px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 font-semibold shadow-lg"
                 >
                   Voir tout
                   <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -398,14 +398,14 @@ export default async function AccueilPage() {
               </div>
             )}
             <div className={isDarkSection('testimonials') ? "relative z-10 max-w-7xl mx-auto px-6" : ""}>
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
                 <div>
-                  <h2 className={`text-4xl font-black mb-2 ${isDarkSection('testimonials') ? 'text-white' : 'text-gray-900'}`}>Témoignages</h2>
+                  <h2 className={`text-3xl sm:text-4xl font-black mb-2 ${isDarkSection('testimonials') ? 'text-white' : 'text-gray-900'}`}>Témoignages</h2>
                   <p className={isDarkSection('testimonials') ? 'text-blue-200' : 'text-gray-600'}>Découvrez les expériences de nos membres</p>
                 </div>
                 <Link
                   href="/temoignages"
-                  className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 font-semibold shadow-lg"
+                  className="group inline-flex items-center justify-center gap-2 shrink-0 px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 font-semibold shadow-lg"
                 >
                   Voir tout
                   <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">

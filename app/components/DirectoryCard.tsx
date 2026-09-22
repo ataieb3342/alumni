@@ -55,7 +55,7 @@ interface DirectoryCardProps {
 
 export default function DirectoryCard({ users, showNewBadge = false }: DirectoryCardProps) {
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 [&>*]:min-w-0">
       {users.map((user) => {
         // Extraire les infos les plus récentes (expérience ou formation)
         const { currentJob, company, currentCity } = getMostRecentActivity(user)
