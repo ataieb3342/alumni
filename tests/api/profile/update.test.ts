@@ -163,6 +163,55 @@ describe('POST /api/profile/update', () => {
     expect(data.message).toBe('Profil mis à jour avec succès')
   })
 
+  it('keeps city, subjects and every location through validation', async () => {
+    const mockSet = vi.fn(() => ({
+      unset: vi.fn(() => ({ commit: vi.fn().mockResolvedValue({}) })),
+      commit: vi.fn().mockResolvedValue({}),
+    }))
+    mockSanityClient.patch.mockReturnValue({ set: mockSet })
+
+    const request = new Request('http://localhost:3000/api/profile/update', {
+      method: 'POST',
+      body: JSON.stringify({
+        ...validUpdateData,
+        city: 'Lyon',
+        subjects: ['maths', 'biologie'],
+        education: [
+          { _key: 'edu1', school: 'ENSTA Bretagne', degree: 'Ingénieur', location: 'Brest', startYear: 2019, endYear: 2022, description: 'Mécanique' },
+        ],
+        experience: [
+          { company: 'Airbus', position: 'Ingénieure', location: 'Toulouse', startDate: '2023-09-01', current: true },
+        ],
+      }),
+    })
+
+    const response = await POST(request)
+    expect(response.status).toBe(200)
+
+    const saved = (mockSet.mock.calls[0] as unknown[])[0] as {
+      city: string
+      subjects: string[]
+      education: Record<string, unknown>[]
+      experience: Record<string, unknown>[]
+    }
+    expect(saved.city).toBe('Lyon')
+    expect(saved.subjects).toEqual(['maths', 'biologie'])
+    expect(saved.education[0]).toMatchObject({ _key: 'edu1', location: 'Brest', description: 'Mécanique' })
+    expect(saved.experience[0]).toMatchObject({ location: 'Toulouse' })
+    // Sanity exige une clé par élément : elle est créée pour les nouveaux
+    expect(saved.experience[0]._key).toEqual(expect.any(String))
+  })
+
+  it('rejects unknown subjects', async () => {
+    const request = new Request('http://localhost:3000/api/profile/update', {
+      method: 'POST',
+      body: JSON.stringify({ ...validUpdateData, subjects: ['astrologie'] }),
+    })
+
+    const response = await POST(request)
+    expect(response.status).toBe(400)
+  })
+
   it('updates profile with profile image asset ID', async () => {
     const request = new Request('http://localhost:3000/api/profile/update', {
       method: 'POST',

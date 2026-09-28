@@ -4,6 +4,8 @@ import { client } from '@/sanity/lib/client'
 import { userByIdQuery, userPublishedTestimonialsQuery } from '@/sanity/lib/queries'
 import { getImageProps } from '@/sanity/lib/image'
 import { getMostRecentActivity } from '@/lib/userUtils'
+import { getCurrentCity } from '@/lib/directorySearch'
+import { getSubject } from '@/lib/subjects'
 import Header from '@/app/components/Header'
 import Footer from '@/app/components/Footer'
 import TestimonialCard from '@/app/components/TestimonialCard'
@@ -41,7 +43,10 @@ export default async function MemberDetailPage({
   const isStaff = user.userType === 'staff'
   const displayJob = isStaff ? user.staffDetails : currentJob
   const displayCompany = isStaff ? 'Lycée Victor Hugo' : company
-  const displayCity = isStaff ? 'Besançon' : currentCity
+  // Pour une formation, getMostRecentActivity range le domaine d'études dans currentCity
+  const displayField = !isStaff && isEducation ? currentCity : undefined
+  const displayCity = getCurrentCity(user)
+  const subjects = ((user.subjects ?? []) as string[]).map(getSubject).filter((t) => t !== undefined)
 
   const userTypeLabels: Record<string, string> = {
     lyceen: 'Lycéen',
@@ -126,6 +131,22 @@ export default async function MemberDetailPage({
                   <span className="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-xs font-semibold rounded-full">
                     {userTypeLabels[user.userType]}
                   </span>
+
+                  {subjects.length > 0 && (
+                    <ul className="mt-4 flex flex-wrap justify-center gap-1.5" aria-label="Matières">
+                      {subjects.map((subject) => (
+                        <li key={subject.value}>
+                          <Link
+                            href={`/annuaire?matiere=${subject.value}`}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                          >
+                            <span aria-hidden="true">{subject.emoji}</span>
+                            {subject.label}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
 
                 <div className="border-t border-gray-100"></div>
@@ -200,9 +221,25 @@ export default async function MemberDetailPage({
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium text-gray-500">
-                          {isStaff ? 'Ville' : isEducation ? 'Domaine' : 'Localisation'}
+                          {isStaff ? 'Ville' : 'Ville actuelle'}
                         </p>
                         <p className="text-sm font-semibold text-gray-900">{displayCity}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {displayField && (
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-gray-500">
+                          Domaine
+                        </p>
+                        <p className="text-sm font-semibold text-gray-900">{displayField}</p>
                       </div>
                     </div>
                   )}
@@ -319,7 +356,7 @@ export default async function MemberDetailPage({
                               {exp.current ? 'Présent' : exp.endDate ? new Date(exp.endDate).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' }) : ''}
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2">
                             <p className="text-sm text-gray-700 font-medium">{exp.company}</p>
                             {exp.location && (
                               <>
@@ -381,6 +418,7 @@ export default async function MemberDetailPage({
                         school: string
                         degree: string
                         field?: string
+                        location?: string
                         startYear: number
                         endYear?: number
                         description?: string
@@ -394,8 +432,14 @@ export default async function MemberDetailPage({
                                 {edu.startYear} - {edu.endYear || 'En cours'}
                               </div>
                             </div>
-                            <div className="flex items-center gap-2 mb-2">
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2">
                               <p className="text-sm text-gray-700 font-medium">{edu.school}</p>
+                              {edu.location && (
+                                <>
+                                  <span className="text-gray-400">•</span>
+                                  <p className="text-sm text-gray-500">{edu.location}</p>
+                                </>
+                              )}
                               {edu.field && (
                                 <>
                                   <span className="text-gray-400">•</span>

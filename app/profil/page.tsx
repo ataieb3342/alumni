@@ -18,6 +18,8 @@ async function getUserData(email: string) {
       currentStudies,
       linkedIn,
       bio,
+      city,
+      subjects,
       isVisibleInDirectory,
       staffCategory,
       staffDetails,

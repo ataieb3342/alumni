@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { MAX_SUBJECTS, SUBJECT_VALUES } from './subjects'
 
 // ========================================
 // Schémas de validation pour les utilisateurs
@@ -276,16 +277,31 @@ export const updateProfileSchema = z.object({
     .max(200, 'Les détails du poste sont trop longs')
     .optional()
     .or(z.literal('')),
+  city: z.string()
+    .trim()
+    .max(100, 'Le nom de ville est trop long')
+    .optional()
+    .or(z.literal('')),
+  subjects: z.array(z.enum(SUBJECT_VALUES))
+    .max(MAX_SUBJECTS, `${MAX_SUBJECTS} matières maximum`)
+    .optional(),
+  // Tout champ oublié ici est retiré en silence par Zod avant l'écriture :
+  // c'est ainsi que le lieu des expériences disparaissait à chaque enregistrement.
   education: z.array(z.object({
+    _key: z.string().max(64).optional(),
     school: z.string().max(200),
     degree: z.string().max(200),
     field: z.string().max(200).optional(),
+    location: z.string().max(100).optional(),
     startYear: z.number().int().min(1950).max(new Date().getFullYear() + 10),
     endYear: z.number().int().min(1950).max(new Date().getFullYear() + 10).optional(),
+    description: z.string().max(1000).optional(),
   })).optional(),
   experience: z.array(z.object({
+    _key: z.string().max(64).optional(),
     company: z.string().max(200),
     position: z.string().max(200),
+    location: z.string().max(100).optional(),
     description: z.string().max(1000).optional(),
     startDate: z.string(),
     endDate: z.string().optional(),

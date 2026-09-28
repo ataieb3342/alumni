@@ -1,4 +1,5 @@
 import { defineField, defineType } from 'sanity'
+import { MAX_SUBJECTS, SUBJECTS } from '../../lib/subjects'
 
 export const userType = defineType({
   name: 'user',
@@ -101,6 +102,25 @@ export const userType = defineType({
       hidden: ({ document }) => document?.userType === 'staff' || document?.userType === 'lyceen',
     }),
     defineField({
+      name: 'city',
+      title: 'Ville actuelle',
+      type: 'string',
+      description: 'Ville où vit le membre aujourd\'hui (recherche par ville de l\'annuaire)',
+      hidden: ({ document }) => document?.userType === 'staff' || document?.userType === 'lyceen',
+    }),
+    defineField({
+      name: 'subjects',
+      title: 'Matières',
+      type: 'array',
+      of: [{ type: 'string' }],
+      options: {
+        list: SUBJECTS.map((t) => ({ title: `${t.emoji} ${t.label}`, value: t.value })),
+      },
+      description: `Matières qui ont compté dans le parcours du membre (${MAX_SUBJECTS} maximum)`,
+      validation: (Rule) => Rule.max(MAX_SUBJECTS).unique(),
+      hidden: ({ document }) => document?.userType === 'lyceen',
+    }),
+    defineField({
       name: 'currentStudies',
       title: 'Études actuelles',
       type: 'string',
@@ -163,6 +183,11 @@ export const userType = defineType({
             {
               name: 'field',
               title: 'Domaine d\'études',
+              type: 'string',
+            },
+            {
+              name: 'location',
+              title: 'Ville',
               type: 'string',
             },
             {
@@ -344,6 +369,13 @@ export const userType = defineType({
       initialValue: 'active',
       validation: (Rule) => Rule.required(),
       description: 'État du compte utilisateur',
+    }),
+    defineField({
+      name: 'profileReminderSentAt',
+      title: 'Rappel « profil vide » envoyé le',
+      type: 'datetime',
+      description: 'Rappel automatique envoyé un mois après l\'inscription si le profil est resté vide (une seule fois)',
+      readOnly: true,
     }),
     defineField({
       name: 'createdAt',

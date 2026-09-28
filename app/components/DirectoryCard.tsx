@@ -2,44 +2,20 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { Briefcase, GraduationCap, MapPin, Quote } from 'lucide-react'
 import { getImageProps } from '@/sanity/lib/image'
-import { getMostRecentActivity } from '@/lib/userUtils'
+import {
+  getMemberSummary,
+  MEMBER_TYPE_LABELS,
+  type DirectoryMember,
+  type MatchHint,
+} from '@/lib/directorySearch'
+import { getSubject } from '@/lib/subjects'
 
-interface User {
+export interface DirectoryUser extends DirectoryMember {
   _id: string
-  firstName: string
-  lastName: string
-  email: string
-  userType: string
-  promotionYear?: number
-  linkedIn?: string
-  bio?: string
-  staffCategory?: string
-  staffDetails?: string
-  experience?: Array<{
-    company: string
-    position: string
-    location?: string
-    startDate: string
-    endDate?: string
-    current?: boolean
-    description?: string
-  }>
-  education?: Array<{
-    school: string
-    degree: string
-    field?: string
-    startYear: number
-    endYear?: number
-    description?: string
-  }>
+  email?: string
   profileImage?: {
-    asset: {
-      _id: string
-      url: string
-    }
-  }
-  coverImage?: {
     asset: {
       _id: string
       url: string
@@ -49,24 +25,57 @@ interface User {
 }
 
 interface DirectoryCardProps {
-  users: User[]
+  users: DirectoryUser[]
   showNewBadge?: boolean
+  currentUserId?: string
+  /** Pourquoi chaque membre ressort d'une recherche, quand ça ne se lit pas sur sa carte */
+  hints?: Record<string, MatchHint[]>
+  /** Matières cochées dans le filtre, mises en avant sur la carte */
+  highlightSubjects?: string[]
 }
 
-export default function DirectoryCard({ users, showNewBadge = false }: DirectoryCardProps) {
+// Varier la teinte des initiales évite un mur de pastilles bleues identiques
+const AVATAR_TINTS = [
+  'bg-blue-100 text-blue-700',
+  'bg-indigo-100 text-indigo-700',
+  'bg-sky-100 text-sky-700',
+  'bg-violet-100 text-violet-700',
+  'bg-teal-100 text-teal-700',
+  'bg-amber-100 text-amber-800',
+  'bg-rose-100 text-rose-700',
+]
+
+function tintFor(id: string) {
+  let hash = 0
+  for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) | 0
+  return AVATAR_TINTS[Math.abs(hash) % AVATAR_TINTS.length]
+}
+
+const HINT_ICONS = {
+  experience: Briefcase,
+  education: GraduationCap,
+  bio: Quote,
+}
+
+export default function DirectoryCard({
+  users,
+  showNewBadge = false,
+  currentUserId,
+  hints,
+  highlightSubjects = [],
+}: DirectoryCardProps) {
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 [&>*]:min-w-0">
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 [&>*]:min-w-0">
       {users.map((user) => {
-        // Extraire les infos les plus récentes (expérience ou formation)
-        const { currentJob, company, currentCity } = getMostRecentActivity(user)
+        const { headline, organization, isEducation, city } = getMemberSummary(user)
+        const main = headline ?? organization
+        const secondary = headline ? organization : undefined
+        const RoleIcon = isEducation ? GraduationCap : Briefcase
+        const subjects = (user.subjects ?? []).map(getSubject).filter((s) => s !== undefined)
+        const userHints = hints?.[user._id] ?? []
+        const isMe = user._id === currentUserId
 
-        // Pour le personnel, utiliser staffDetails et afficher Lycée Victor Hugo / Besançon
-        const isStaff = user.userType === 'staff'
-        const displayJob = isStaff ? user.staffDetails : currentJob
-        const displayCompany = isStaff ? 'Lycée Victor Hugo' : company
-        const displayCity = isStaff ? 'Besançon' : currentCity
-
-        // Vérifier si c'est un nouveau membre (inscrit il y a moins de 30 jours)
+        // Nouveau membre : inscrit il y a moins de 30 jours
         const isNew = showNewBadge && user._createdAt
           ? (new Date().getTime() - new Date(user._createdAt).getTime()) / (1000 * 60 * 60 * 24) < 30
           : false
@@ -75,127 +84,111 @@ export default function DirectoryCard({ users, showNewBadge = false }: Directory
           <Link
             key={user._id}
             href={`/annuaire/${user._id}`}
-            className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 group hover:border-blue-300 flex flex-col"
+            className={`group flex flex-col h-full bg-white rounded-2xl border p-5 shadow-sm hover:shadow-lg hover:border-blue-300 transition-all duration-200 ${
+              isMe ? 'border-blue-300 ring-1 ring-blue-100' : 'border-gray-200'
+            }`}
           >
-            {/* Photo de couverture */}
-            {user.coverImage ? (
-              <div className="w-full h-24 overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 relative">
-                <Image
-                  {...getImageProps(user.coverImage, 800, 192)}
-                  alt="Couverture"
-                  width={800}
-                  height={96}
-                  className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-                />
-                {isNew && (
-                  <div className="absolute top-2 right-2">
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-green-500 text-white shadow-lg">
+            <div className="flex items-start gap-4">
+              {user.profileImage ? (
+                <div className="w-14 h-14 rounded-full overflow-hidden shrink-0 bg-gray-100 ring-2 ring-white shadow">
+                  <Image
+                    {...getImageProps(user.profileImage, 112, 112)}
+                    alt=""
+                    width={56}
+                    height={56}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+              ) : (
+                <div
+                  aria-hidden="true"
+                  className={`w-14 h-14 rounded-full shrink-0 flex items-center justify-center text-lg font-semibold ${tintFor(user._id)}`}
+                >
+                  {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                </div>
+              )}
+
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="font-semibold text-gray-900 leading-snug break-words group-hover:text-blue-700 transition-colors">
+                    {user.firstName} {user.lastName}
+                  </h3>
+                  {isMe && (
+                    <span className="shrink-0 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                      Vous
+                    </span>
+                  )}
+                  {isNew && !isMe && (
+                    <span className="shrink-0 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500 text-white">
                       Nouveau
                     </span>
-                  </div>
-                )}
+                  )}
+                </div>
+                <p className="mt-0.5 text-sm text-gray-500">
+                  {MEMBER_TYPE_LABELS[user.userType]}
+                  {user.promotionYear && ` · Promo ${user.promotionYear}`}
+                </p>
               </div>
-            ) : (
-              <div className="w-full h-24 bg-gradient-to-br from-blue-600 to-blue-800 relative">
-                {isNew && (
-                  <div className="absolute top-2 right-2">
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-green-500 text-white shadow-lg">
-                      Nouveau
+            </div>
+
+            {(main || city) && (
+              <div className="mt-4 space-y-2 text-sm">
+                {main && (
+                  <p className="flex items-start gap-2">
+                    <RoleIcon className="w-4 h-4 mt-0.5 text-gray-400 shrink-0" aria-hidden="true" />
+                    <span className="min-w-0 line-clamp-2">
+                      <span className="font-medium text-gray-900">{main}</span>
+                      {secondary && <span className="text-gray-600"> · {secondary}</span>}
                     </span>
-                  </div>
+                  </p>
+                )}
+                {city && (
+                  <p className="flex items-start gap-2 text-gray-600">
+                    <MapPin className="w-4 h-4 mt-0.5 text-gray-400 shrink-0" aria-hidden="true" />
+                    <span className="min-w-0 break-words">{city}</span>
+                  </p>
                 )}
               </div>
             )}
 
-            {/* Contenu de la carte */}
-            <div className="flex-1 flex flex-col relative">
-              {/* Photo de profil et nom */}
-              <div className="px-6 -mt-10 mb-4 relative z-10">
-                <div className="flex items-end gap-4">
-                  {/* Photo de profil */}
-                  {user.profileImage ? (
-                    <div className="w-20 h-20 rounded-xl overflow-hidden ring-4 ring-white shadow-lg group-hover:ring-blue-100 transition-all flex-shrink-0 bg-white">
-                      <Image
-                        {...getImageProps(user.profileImage, 160, 160)}
-                        alt={`${user.firstName} ${user.lastName}`}
-                        width={80}
-                        height={80}
-                        className="object-cover w-full h-full"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center ring-4 ring-white shadow-lg group-hover:ring-blue-100 transition-all flex-shrink-0">
-                      <span className="text-2xl font-bold text-white">
-                        {user.firstName.charAt(0)}{user.lastName.charAt(0)}
-                      </span>
-                    </div>
-                  )}
+            {!main && !city && subjects.length === 0 && (
+              <p className="mt-4 text-sm text-gray-400 italic">Parcours pas encore renseigné</p>
+            )}
 
-                  {/* Badge promo */}
-                  {user.promotionYear && (
-                    <div className="mb-2">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 shadow-sm">
-                        Promo {user.promotionYear}
-                      </span>
-                    </div>
-                  )}
+            {subjects.length > 0 && (
+              <ul className="mt-3 flex flex-wrap gap-1.5" aria-label="Matières">
+                {subjects.map((subject) => (
+                  <li
+                    key={subject.value}
+                    title={subject.label}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                      highlightSubjects.includes(subject.value)
+                        ? 'bg-blue-100 text-blue-800 ring-1 ring-blue-300'
+                        : 'bg-gray-100 text-gray-700'
+                    }`}
+                  >
+                    <span aria-hidden="true">{subject.emoji}</span>
+                    {subject.short}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {userHints.length > 0 && (
+              <div className="mt-auto pt-4">
+                <div className="pt-3 border-t border-dashed border-gray-200 space-y-1.5">
+                  {userHints.map((hint) => {
+                    const Icon = HINT_ICONS[hint.kind]
+                    return (
+                      <p key={hint.label} className="flex items-start gap-2 text-xs text-gray-600">
+                        <Icon className="w-3.5 h-3.5 mt-0.5 text-amber-500 shrink-0" aria-hidden="true" />
+                        <span className="min-w-0 line-clamp-2">{hint.label}</span>
+                      </p>
+                    )
+                  })}
                 </div>
               </div>
-
-              {/* Nom et infos */}
-              <div className="px-6 pb-6 flex-1 flex flex-col">
-                <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors mb-3">
-                  {user.firstName} {user.lastName}
-                </h3>
-
-                {/* Informations professionnelles */}
-                <div className="space-y-2.5 flex-1">
-                  {displayJob && (
-                    <div className="flex items-start gap-2.5">
-                      <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                      <p className="text-sm font-medium text-gray-900 line-clamp-2 flex-1">
-                        {displayJob}
-                      </p>
-                    </div>
-                  )}
-
-                  {displayCompany && (
-                    <div className="flex items-start gap-2.5">
-                      <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
-                      <p className="text-sm text-gray-600 line-clamp-1 flex-1">
-                        {displayCompany}
-                      </p>
-                    </div>
-                  )}
-
-                  {displayCity && (
-                    <div className="flex items-start gap-2.5">
-                      <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <p className="text-sm text-gray-600 flex-1">
-                        {displayCity}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Footer avec CTA */}
-                <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-                  <span className="text-sm font-semibold text-blue-600 group-hover:text-blue-700 transition-colors">
-                    Voir le profil
-                  </span>
-                  <svg className="w-5 h-5 text-blue-600 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </div>
-              </div>
-            </div>
+            )}
           </Link>
         )
       })}

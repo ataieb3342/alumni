@@ -6,11 +6,14 @@ import Image from 'next/image'
 import { urlFor, getImageProps } from '@/sanity/lib/image'
 import ImageCropModal from './ImageCropModal'
 import { toast } from 'sonner'
+import { MAX_SUBJECTS } from '@/lib/subjects'
+import SubjectCheckboxes from './SubjectCheckboxes'
 
 interface Education {
   school: string
   degree: string
   field?: string
+  location?: string
   startYear: number | ''
   endYear?: number | ''
   description?: string
@@ -37,6 +40,8 @@ interface ProfileFormProps {
     currentStudies?: string
     linkedIn?: string
     bio?: string
+    city?: string
+    subjects?: string[]
     isVisibleInDirectory?: boolean
     staffCategory?: string
     staffDetails?: string
@@ -65,6 +70,8 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
     currentStudies: string
     linkedIn: string
     bio: string
+    city: string
+    subjects: string[]
     isVisibleInDirectory: boolean
     staffCategory: string
     staffDetails: string
@@ -75,6 +82,8 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
     currentStudies: userData.currentStudies || '',
     linkedIn: userData.linkedIn || '',
     bio: userData.bio || '',
+    city: userData.city || '',
+    subjects: userData.subjects || [],
     isVisibleInDirectory: userData.isVisibleInDirectory ?? true,
     staffCategory: userData.staffCategory || '',
     staffDetails: userData.staffDetails || '',
@@ -592,8 +601,45 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
               )}
             </div>
           )}
+
+          {!isLyceen && userData.userType !== 'staff' && (
+            <div>
+              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
+                Ville actuelle
+              </label>
+              <input
+                id="city"
+                type="text"
+                value={formData.city}
+                onChange={(e) => setFormData({...formData, city: e.target.value})}
+                autoComplete="address-level2"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
+                placeholder="Lyon, Paris, Montréal…"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Permet aux membres de vous trouver en cherchant une ville dans l&apos;annuaire
+              </p>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Matières */}
+      {!isLyceen && (
+        <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-1">Matières</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Quelles matières ont compté dans votre parcours ? Cochez-en jusqu&apos;à {MAX_SUBJECTS} :
+            les lycéens s&apos;en servent pour trouver dans l&apos;annuaire les profils qui leur ressemblent.
+          </p>
+          <SubjectCheckboxes
+            legend="Matières de votre parcours"
+            selected={formData.subjects}
+            onChange={(subjects) => setFormData({...formData, subjects})}
+            max={MAX_SUBJECTS}
+          />
+        </div>
+      )}
 
       {/* Section Personnel - Fonction au lycée */}
       {userData.userType === 'staff' && (
@@ -790,6 +836,23 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Ville
+                        </label>
+                        <input
+                          type="text"
+                          value={edu.location || ''}
+                          onChange={(e) => {
+                            const newEducation = [...education]
+                            newEducation[index].location = e.target.value
+                            setEducation(newEducation)
+                          }}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
+                          placeholder="Besançon"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                           Domaine d&apos;études
                         </label>
                         <input
@@ -888,6 +951,9 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
                         {edu.field && (
                           <p className="text-sm text-gray-600 break-words">{edu.field}</p>
                         )}
+                        {edu.location && (
+                          <p className="text-sm text-gray-600 break-words">📍 {edu.location}</p>
+                        )}
                       </div>
                       <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
                         <span className="text-sm text-gray-600 font-medium whitespace-nowrap">
@@ -973,7 +1039,7 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Lieu
+                          Ville
                         </label>
                         <input
                           type="text"
@@ -984,7 +1050,7 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
                             setExperience(newExperience)
                           }}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900 placeholder:text-gray-400"
-                          placeholder="Paris, France"
+                          placeholder="Paris, Lyon, Bruxelles…"
                         />
                       </div>
 

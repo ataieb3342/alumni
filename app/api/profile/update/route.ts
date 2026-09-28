@@ -1,8 +1,13 @@
+import { randomUUID } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
 import { serverClient } from '@/sanity/lib/server-client'
 import { auth } from '@/lib/auth'
 import { updateProfileSchema } from '@/lib/validations'
+
+function withKeys<T extends { _key?: string }>(items: T[]) {
+  return items.map((item) => ({ ...item, _key: item._key ?? randomUUID().slice(0, 12) }))
+}
 
 export async function POST(request: Request) {
   try {
@@ -35,6 +40,8 @@ export async function POST(request: Request) {
       currentStudies,
       linkedIn,
       bio,
+      city,
+      subjects,
       isVisibleInDirectory,
       staffCategory,
       staffDetails,
@@ -67,17 +74,21 @@ export async function POST(request: Request) {
       currentStudies,
       linkedIn,
       bio,
+      city,
+      subjects,
       isVisibleInDirectory,
       staffCategory,
       staffDetails,
     }
 
-    // Ajouter les formations et expériences si fournies (uniquement pour alumni et staff)
+    // Ajouter les formations et expériences si fournies (uniquement pour alumni et staff).
+    // Sanity exige une _key par élément de tableau ; les éléments ajoutés depuis
+    // le formulaire n'en ont pas encore.
     if (education !== undefined) {
-      updateData.education = education
+      updateData.education = withKeys(education)
     }
     if (experience !== undefined) {
-      updateData.experience = experience
+      updateData.experience = withKeys(experience)
     }
 
     // Ajouter l'image de profil si fournie

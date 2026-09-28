@@ -25,7 +25,8 @@
     "test-drive-sync": "tsx scripts/test-drive-sync.ts",
     "sync-drive": "tsx scripts/sync-drive-direct.ts",
     "get-refresh-token": "tsx scripts/get-google-refresh-token.ts",
-    "export:members": "tsx scripts/export-members.ts"
+    "export:members": "tsx scripts/export-members.ts",
+    "backfill:subjects": "tsx scripts/backfill-subjects.ts"
   },
   "dependencies": {
     "@portabletext/react": "^4.0.3",
