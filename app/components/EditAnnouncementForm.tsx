@@ -19,6 +19,7 @@ interface Announcement {
   contactPhone?: string
   externalLink?: string
   expiresAt?: string
+  eventDate?: string
   status: string
 }
 
@@ -45,6 +46,12 @@ const extractTextFromPortableText = (blocks: PortableTextBlock[]): string => {
     .join('\n\n')
 }
 
+/** Date ISO → valeur d'un champ datetime-local, à l'heure du navigateur */
+function toLocalDateTimeInput(iso: string) {
+  const date = new Date(iso)
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
+}
+
 export default function EditAnnouncementForm({ announcement }: EditAnnouncementFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -60,6 +67,7 @@ export default function EditAnnouncementForm({ announcement }: EditAnnouncementF
     contactPhone: announcement.contactPhone || '',
     externalLink: announcement.externalLink || '',
     expiresAt: announcement.expiresAt ? new Date(announcement.expiresAt).toISOString().split('T')[0] : '',
+    eventDate: announcement.eventDate ? toLocalDateTimeInput(announcement.eventDate) : '',
   })
 
   const handleChange = (
@@ -101,6 +109,7 @@ export default function EditAnnouncementForm({ announcement }: EditAnnouncementF
           contactPhone: formData.contactPhone || null,
           externalLink: formData.externalLink || null,
           expiresAt: formData.expiresAt ? new Date(formData.expiresAt).toISOString() : null,
+          eventDate: formData.type === 'event' && formData.eventDate ? new Date(formData.eventDate).toISOString() : null,
         }),
       })
 
@@ -168,6 +177,26 @@ export default function EditAnnouncementForm({ announcement }: EditAnnouncementF
           <option value="other" className="text-gray-900">📢 Autre</option>
         </select>
       </div>
+
+      {formData.type === 'event' && (
+        <div>
+          <label htmlFor="eventDate" className="block text-sm font-medium text-gray-700 mb-2">
+            Date et heure de l&apos;événement <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="datetime-local"
+            id="eventDate"
+            name="eventDate"
+            required
+            value={formData.eventDate}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+          />
+          <p className="mt-1 text-sm text-gray-500">
+            Le prochain événement s&apos;affiche en grand sur l&apos;accueil des membres
+          </p>
+        </div>
+      )}
 
       {/* Entreprise et Localisation */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

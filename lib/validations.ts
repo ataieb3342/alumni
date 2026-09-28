@@ -32,7 +32,8 @@ export const registerSchema = z.object({
 // Schémas de validation pour les annonces
 // ========================================
 
-const ANNOUNCEMENT_TYPES = ['job', 'internship', 'event', 'housing', 'other'] as const
+// Mêmes valeurs que le schéma Sanity (sanity/schemaTypes/announcement.ts) et le formulaire
+const ANNOUNCEMENT_TYPES = ['job_offer', 'internship', 'opportunity', 'event', 'school_supplies', 'other'] as const
 
 export const createAnnouncementSchema = z.object({
   title: z.string()
@@ -66,6 +67,10 @@ export const createAnnouncementSchema = z.object({
     .or(z.literal('')),
   expiresAt: z.string()
     .datetime('Date d\'expiration invalide')
+    .optional()
+    .or(z.literal('')),
+  eventDate: z.string()
+    .datetime('Date de l\'événement invalide')
     .optional()
     .or(z.literal('')),
   userId: z.string()
@@ -147,6 +152,11 @@ export const patchAnnouncementSchema = z.object({
   ]).optional(),
   expiresAt: z.union([
     z.string().datetime('Date d\'expiration invalide'),
+    z.literal(''),
+    z.null(),
+  ]).optional(),
+  eventDate: z.union([
+    z.string().datetime('Date de l\'événement invalide'),
     z.literal(''),
     z.null(),
   ]).optional(),

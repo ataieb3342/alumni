@@ -22,6 +22,7 @@ export default function AnnouncementForm({ userId }: AnnouncementFormProps) {
     contactPhone: '',
     externalLink: '',
     expiresAt: '',
+    eventDate: '',
   })
 
   const handleChange = (
@@ -44,6 +45,9 @@ export default function AnnouncementForm({ userId }: AnnouncementFormProps) {
         },
         body: JSON.stringify({
           ...formData,
+          // La validation attend des dates ISO complètes, pas les valeurs brutes des champs
+          expiresAt: formData.expiresAt ? new Date(formData.expiresAt).toISOString() : '',
+          eventDate: formData.type === 'event' && formData.eventDate ? new Date(formData.eventDate).toISOString() : '',
           userId,
         }),
       })
@@ -116,6 +120,26 @@ export default function AnnouncementForm({ userId }: AnnouncementFormProps) {
               <option value="other" className="text-gray-900">📢 Autre</option>
             </select>
           </div>
+
+          {formData.type === 'event' && (
+            <div>
+              <label htmlFor="eventDate" className="block text-sm font-medium text-gray-700 mb-2">
+                Date et heure de l&apos;événement <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="datetime-local"
+                id="eventDate"
+                name="eventDate"
+                required
+                value={formData.eventDate}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 text-gray-900"
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                Le prochain événement s&apos;affiche en grand sur l&apos;accueil des membres
+              </p>
+            </div>
+          )}
 
           {/* Entreprise et Localisation */}
           <div className="grid md:grid-cols-2 gap-6">

@@ -6,6 +6,7 @@ import { announcementQuery } from '@/sanity/lib/queries'
 import { PortableText } from '@portabletext/react'
 import { getImageProps } from '@/sanity/lib/image'
 import Link from 'next/link'
+import { eventCountdown, formatEventDate } from '@/lib/eventDate'
 import Image from 'next/image'
 import Header from '@/app/components/Header'
 import Footer from '@/app/components/Footer'
@@ -50,6 +51,7 @@ interface Announcement {
   externalLink?: string
   publishedAt: string
   expiresAt?: string
+  eventDate?: string
   status: string
   author: Author
 }
@@ -141,6 +143,18 @@ export default async function AnnouncementDetailPage({
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
               {announcement.title}
             </h1>
+
+            {announcement.type === 'event' && announcement.eventDate && (
+              <p className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 mb-3 px-3 py-2 rounded-xl bg-orange-50 text-orange-900 border border-orange-200 text-sm font-medium">
+                <span aria-hidden="true">📅</span>
+                <span className="first-letter:uppercase">{formatEventDate(announcement.eventDate)}</span>
+                {new Date(announcement.eventDate) > new Date() && (
+                  <span className="px-2 py-0.5 rounded-full bg-orange-500 text-white text-xs font-semibold">
+                    {eventCountdown(announcement.eventDate)}
+                  </span>
+                )}
+              </p>
+            )}
 
             {(announcement.company || announcement.location) && (
               <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">

@@ -209,7 +209,8 @@ describe('Email Functions', () => {
       mockSendMail.mockResolvedValue({ messageId: 'test-message-id' })
 
       const types = [
-        { type: 'job', label: "Offre d'emploi" },
+        { type: 'job_offer', label: "Offre d'emploi" },
+        { type: 'school_supplies', label: 'Vente matos scolaire' },
         { type: 'event', label: 'Événement' },
         { type: 'other', label: 'Autre' },
       ]

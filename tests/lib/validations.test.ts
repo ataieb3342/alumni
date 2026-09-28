@@ -143,10 +143,37 @@ describe('Validation Schemas', () => {
       expect(result.success).toBe(true)
     })
 
+    // Le formulaire propose ces valeurs : chacune doit passer la validation
+    it.each(['job_offer', 'internship', 'opportunity', 'event', 'school_supplies', 'other'])(
+      'devrait accepter le type %s proposé par le formulaire',
+      (type) => {
+        const result = createAnnouncementSchema.safeParse({
+          title: 'Titre valide',
+          type,
+          description: 'Une description suffisamment longue.',
+          contactEmail: 'contact@example.com',
+          userId: 'user123',
+        })
+        expect(result.success).toBe(true)
+      }
+    )
+
+    it("devrait accepter la date d'un événement", () => {
+      const result = createAnnouncementSchema.safeParse({
+        title: 'Afterwork des anciens',
+        type: 'event',
+        description: 'On se retrouve pour un verre, venez nombreux !',
+        contactEmail: 'contact@example.com',
+        eventDate: '2026-10-15T17:00:00.000Z',
+        userId: 'user123',
+      })
+      expect(result.success).toBe(true)
+    })
+
     it('devrait rejeter un titre trop court', () => {
       const invalidAnnouncement = {
         title: 'AB',
-        type: 'job',
+        type: 'job_offer',
         description: 'Description valide',
         contactEmail: 'contact@example.com',
         userId: 'user123',
@@ -159,7 +186,7 @@ describe('Validation Schemas', () => {
     it('devrait rejeter une description trop courte', () => {
       const invalidAnnouncement = {
         title: 'Titre valide',
-        type: 'job',
+        type: 'job_offer',
         description: 'Court',
         contactEmail: 'contact@example.com',
         userId: 'user123',
@@ -185,7 +212,7 @@ describe('Validation Schemas', () => {
     it('devrait rejeter un email de contact invalide', () => {
       const invalidAnnouncement = {
         title: 'Titre valide',
-        type: 'job',
+        type: 'job_offer',
         description: 'Description valide et suffisamment longue',
         contactEmail: 'invalid-email',
         userId: 'user123',
@@ -198,7 +225,7 @@ describe('Validation Schemas', () => {
     it('devrait rejeter un numéro de téléphone invalide', () => {
       const invalidAnnouncement = {
         title: 'Titre valide',
-        type: 'job',
+        type: 'job_offer',
         description: 'Description valide et suffisamment longue',
         contactPhone: 'invalid!!!phone',
         userId: 'user123',
@@ -211,7 +238,7 @@ describe('Validation Schemas', () => {
     it('devrait rejeter sans aucun moyen de contact', () => {
       const invalidAnnouncement = {
         title: 'Titre valide',
-        type: 'job',
+        type: 'job_offer',
         description: 'Description valide et suffisamment longue',
         userId: 'user123',
       }
@@ -223,7 +250,7 @@ describe('Validation Schemas', () => {
     it('devrait accepter un numéro de téléphone comme contact', () => {
       const validAnnouncement = {
         title: 'Titre valide',
-        type: 'job',
+        type: 'job_offer',
         description: 'Description valide et suffisamment longue',
         contactPhone: '+33 6 12 34 56 78',
         userId: 'user123',
@@ -236,7 +263,7 @@ describe('Validation Schemas', () => {
     it('devrait accepter un lien externe comme contact', () => {
       const validAnnouncement = {
         title: 'Titre valide',
-        type: 'job',
+        type: 'job_offer',
         description: 'Description valide et suffisamment longue',
         externalLink: 'https://example.com/apply',
         userId: 'user123',

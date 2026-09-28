@@ -39,6 +39,13 @@ export const announcementType = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'eventDate',
+      title: "Date de l'événement",
+      type: 'datetime',
+      description: "Le prochain événement s'affiche en grand sur l'accueil des membres",
+      hidden: ({ document }) => document?.type !== 'event',
+    }),
+    defineField({
       name: 'company',
       title: 'Entreprise',
       type: 'string',

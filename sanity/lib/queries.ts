@@ -206,6 +206,21 @@ export const recentAnnouncementsQuery = groq`*[
   }
 }`
 
+// Événements à venir, le plus proche d'abord (mis en avant sur l'accueil des membres)
+export const upcomingEventsQuery = groq`*[
+  _type == "announcement" &&
+  type == "event" &&
+  status == "published" &&
+  eventDate > now()
+] | order(eventDate asc) [0...3] {
+  _id,
+  title,
+  slug,
+  company,
+  location,
+  eventDate
+}`
+
 // Récupérer une annonce par son slug
 export const announcementQuery = groq`*[_type == "announcement" && slug.current == $slug][0] {
   _id,
@@ -220,6 +235,7 @@ export const announcementQuery = groq`*[_type == "announcement" && slug.current 
   externalLink,
   publishedAt,
   expiresAt,
+  eventDate,
   status,
   author->{
     _id,

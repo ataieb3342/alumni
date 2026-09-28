@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
       contactPhone,
       externalLink,
       expiresAt,
+      eventDate,
       userId,
     } = validation.data
 
@@ -117,6 +118,7 @@ export async function POST(request: NextRequest) {
       },
       publishedAt: new Date().toISOString(),
       expiresAt: expiresAt ? new Date(expiresAt).toISOString() : undefined,
+      eventDate: type === 'event' && eventDate ? new Date(eventDate).toISOString() : undefined,
       status: 'published',
     })
 

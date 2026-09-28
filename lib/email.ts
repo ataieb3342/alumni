@@ -150,9 +150,11 @@ export async function sendAnnouncementNotificationEmail(
   const announcementUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/annonces/${announcement.slug}`
 
   const typeLabels: Record<string, string> = {
-    job: 'Offre d\'emploi',
+    job_offer: 'Offre d\'emploi',
     internship: 'Stage',
+    opportunity: 'Opportunité',
     event: 'Événement',
+    school_supplies: 'Vente matos scolaire',
     other: 'Autre',
   }
 

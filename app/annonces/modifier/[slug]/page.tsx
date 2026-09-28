@@ -27,6 +27,7 @@ interface Announcement {
   contactPhone?: string
   externalLink?: string
   expiresAt?: string
+  eventDate?: string
   status: string
   author: {
     _id: string

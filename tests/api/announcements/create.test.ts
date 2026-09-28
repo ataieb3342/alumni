@@ -37,7 +37,7 @@ describe('POST /api/announcements/create', () => {
 
   const validAnnouncementData = {
     title: 'Recherche Développeur Full-Stack',
-    type: 'job',
+    type: 'job_offer',
     company: 'Tech Corp',
     location: 'Paris',
     description: 'Nous recherchons un développeur full-stack expérimenté.',
@@ -166,7 +166,7 @@ describe('POST /api/announcements/create', () => {
     mockSanityClient.create.mockResolvedValue({
       _id: 'announcement-789',
       title: 'Test Announcement',
-      type: 'job',
+      type: 'job_offer',
       slug: { current: 'test-announcement' },
     })
 
