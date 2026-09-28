@@ -1,12 +1,13 @@
-import { randomUUID } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
 import { serverClient } from '@/sanity/lib/server-client'
 import { auth } from '@/lib/auth'
 import { updateProfileSchema } from '@/lib/validations'
 
+// Pas de node:crypto ici : son import fait échouer les tests sur la machine
+// de build Vercel. Une clé Sanity doit seulement être unique dans son tableau.
 function withKeys<T extends { _key?: string }>(items: T[]) {
-  return items.map((item) => ({ ...item, _key: item._key ?? randomUUID().slice(0, 12) }))
+  return items.map((item) => ({ ...item, _key: item._key ?? Math.random().toString(36).slice(2, 14) }))
 }
 
 export async function POST(request: Request) {
