@@ -28,6 +28,18 @@ import {
   sendPasswordResetEmail,
 } from '@/lib/email'
 
+// Avant les autres blocs : leur beforeEach efface les appels enregistrés à l'import
+describe('Transporteur email', () => {
+  it('envoie par Gmail et renvoie les réponses vers la boîte contact', async () => {
+    const nodemailer = (await import('nodemailer')).default
+    expect(nodemailer.createTransport).toHaveBeenCalledTimes(1)
+    expect(nodemailer.createTransport).toHaveBeenCalledWith(
+      expect.objectContaining({ host: 'smtp.gmail.com' }),
+      { replyTo: '"Association VH Besançon" <contact@vh-besancon-alumni.fr>' }
+    )
+  })
+})
+
 describe('Email Functions', () => {
   beforeEach(() => {
     vi.clearAllMocks()

@@ -1,16 +1,5 @@
-import nodemailer from 'nodemailer'
 import { logger } from '@/lib/logger'
-
-// Configuration du transporteur email
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: Number(process.env.EMAIL_PORT) || 587,
-  secure: false, // true pour 465, false pour les autres ports
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-})
+import { transporter } from './emails/config'
 
 interface NewUserNotification {
   firstName: string

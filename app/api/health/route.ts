@@ -35,8 +35,12 @@ export async function GET() {
 
     // Check Email service
     email: async () => {
-      if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER) {
+      if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
         throw new Error('Email service not configured');
+      }
+      // L'envoi passe par le SMTP de Gmail (voir lib/emails/config.ts)
+      if (!process.env.EMAIL_USER.endsWith('@gmail.com')) {
+        throw new Error('EMAIL_USER doit être l\'adresse Gmail de l\'association');
       }
       // On ne teste pas l'envoi réel pour éviter de spammer
     },
