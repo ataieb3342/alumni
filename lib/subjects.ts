@@ -7,22 +7,22 @@
  * parcours part de là.
  */
 export const SUBJECTS = [
-  { value: 'maths', label: 'Mathématiques', short: 'Maths', emoji: '📐' },
-  { value: 'physique', label: 'Physique', short: 'Physique', emoji: '⚛️' },
-  { value: 'chimie', label: 'Chimie', short: 'Chimie', emoji: '🧪' },
-  { value: 'biologie', label: 'Biologie & SVT', short: 'Biologie', emoji: '🧬' },
-  { value: 'sante', label: 'Santé & médecine', short: 'Santé', emoji: '🩺' },
-  { value: 'informatique', label: 'Informatique & numérique', short: 'Informatique', emoji: '💻' },
-  { value: 'ingenierie', label: "Sciences de l'ingénieur", short: 'Ingénierie', emoji: '⚙️' },
-  { value: 'economie', label: 'Économie, gestion & commerce', short: 'Éco & commerce', emoji: '📈' },
-  { value: 'droit', label: 'Droit & sciences politiques', short: 'Droit & politique', emoji: '⚖️' },
-  { value: 'histoire', label: 'Histoire-géo & géopolitique', short: 'Histoire-géo', emoji: '🏛️' },
-  { value: 'psychologie', label: 'Psychologie & sciences sociales', short: 'Psycho & socio', emoji: '🧠' },
-  { value: 'litterature', label: 'Littérature', short: 'Littérature', emoji: '📚' },
-  { value: 'philosophie', label: 'Philosophie', short: 'Philo', emoji: '💭' },
-  { value: 'langues', label: 'Langues étrangères', short: 'Langues', emoji: '🌍' },
-  { value: 'arts', label: 'Arts & culture', short: 'Arts', emoji: '🎨' },
-  { value: 'sport', label: 'Sport', short: 'Sport', emoji: '⚽' },
+  { value: 'maths', label: 'Mathématiques', short: 'Maths', emoji: '📐', keywords: 'mathématiques statistiques' },
+  { value: 'physique', label: 'Physique', short: 'Physique', emoji: '⚛️', keywords: 'physique-chimie mécanique astrophysique' },
+  { value: 'chimie', label: 'Chimie', short: 'Chimie', emoji: '🧪', keywords: 'physique-chimie pharmacie' },
+  { value: 'biologie', label: 'Biologie & SVT', short: 'Biologie', emoji: '🧬', keywords: 'svt sciences de la vie vivant génétique écologie' },
+  { value: 'sante', label: 'Santé & médecine', short: 'Santé', emoji: '🩺', keywords: 'médecine pass las infirmier pharmacie kiné dentaire' },
+  { value: 'informatique', label: 'Informatique & numérique', short: 'Informatique', emoji: '💻', keywords: 'nsi code programmation développeur numérique data ia' },
+  { value: 'ingenierie', label: "Sciences de l'ingénieur", short: 'Ingénierie', emoji: '⚙️', keywords: 'si ingénieur mécanique énergie' },
+  { value: 'economie', label: 'Économie, gestion & commerce', short: 'Éco & commerce', emoji: '📈', keywords: 'ses gestion commerce finance management marketing' },
+  { value: 'droit', label: 'Droit & sciences politiques', short: 'Droit & politique', emoji: '⚖️', keywords: 'sciences po politique avocat' },
+  { value: 'histoire', label: 'Histoire-géo & géopolitique', short: 'Histoire-géo', emoji: '🏛️', keywords: 'hggsp géographie géopolitique' },
+  { value: 'psychologie', label: 'Psychologie & sciences sociales', short: 'Psycho & socio', emoji: '🧠', keywords: 'psycho sociologie sciences sociales' },
+  { value: 'litterature', label: 'Littérature', short: 'Littérature', emoji: '📚', keywords: 'lettres hlp français' },
+  { value: 'philosophie', label: 'Philosophie', short: 'Philo', emoji: '💭', keywords: 'philo hlp' },
+  { value: 'langues', label: 'Langues étrangères', short: 'Langues', emoji: '🌍', keywords: 'anglais allemand espagnol italien chinois llcer lea' },
+  { value: 'arts', label: 'Arts & culture', short: 'Arts', emoji: '🎨', keywords: 'musique cinéma théâtre design architecture dessin' },
+  { value: 'sport', label: 'Sport', short: 'Sport', emoji: '⚽', keywords: 'staps eps' },
 ] as const
 
 export type SubjectValue = (typeof SUBJECTS)[number]['value']

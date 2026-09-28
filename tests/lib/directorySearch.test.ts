@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import {
+  collectOrganizations,
   getCurrentCity,
   indexMember,
+  matchesTokens,
   matchPlace,
   matchQuery,
   normalize,
@@ -131,5 +133,29 @@ describe('suggestCities', () => {
     expect(suggestions[0]).toEqual({ name: 'Brest', count: 2 })
     expect(suggestions.map((s) => s.name)).toEqual(expect.arrayContaining(['Dijon', 'Toulouse']))
     expect(suggestions.map((s) => s.name)).not.toContain('Besançon')
+  })
+})
+
+describe('matchesTokens', () => {
+  it('trouve par début de mot, sans accents', () => {
+    expect(matchesTokens('Sciences Po Paris', tokenize('sci po'))).toBe(true)
+    expect(matchesTokens('Santé & médecine', tokenize('medecine'))).toBe(true)
+  })
+
+  it('ne trouve pas au milieu d’un mot', () => {
+    expect(matchesTokens('Sciences Po Paris', tokenize('ences'))).toBe(false)
+  })
+
+  it('ne propose rien pour une recherche vide', () => {
+    expect(matchesTokens('Brest', [])).toBe(false)
+  })
+})
+
+describe('collectOrganizations', () => {
+  it('compte chaque membre une fois par école et écarte le lycée', () => {
+    const organizations = collectOrganizations([engineer, { ...base, firstName: 'Léo', education: [{ school: 'ESIREM à DIJON (21)', degree: 'Master', startYear: 2020 }] }].map(indexMember))
+    expect(organizations[0]).toEqual({ name: 'ESIREM à DIJON (21)', count: 2 })
+    expect(organizations.map((o) => o.name)).toEqual(expect.arrayContaining(['Airbus', 'ENSTA Bretagne, Brest (29200)']))
+    expect(organizations.map((o) => o.name).join()).not.toMatch(/Victor Hugo/)
   })
 })

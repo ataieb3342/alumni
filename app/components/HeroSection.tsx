@@ -11,6 +11,8 @@ interface HeroSectionProps {
   showButtons?: boolean
   backgroundImage?: string
   sideImage?: string
+  /** Bandeau plus bas, pour les pages où le contenu doit apparaître tout de suite */
+  compact?: boolean
 }
 
 export default function HeroSection({
@@ -18,7 +20,8 @@ export default function HeroSection({
   subtitle,
   showButtons = true,
   backgroundImage = '/images/lycee-victor-hugo.jpg',
-  sideImage = '/images/lvh-facade-640x360.jpg'
+  sideImage = '/images/lvh-facade-640x360.jpg',
+  compact = false,
 }: HeroSectionProps = {}) {
   const [scrollY, setScrollY] = useState(0)
 
@@ -35,7 +38,7 @@ export default function HeroSection({
   const isPublicHome = !title && !subtitle
 
   return (
-    <section className={`relative text-white overflow-hidden ${isPublicHome ? 'min-h-[600px] md:min-h-[700px]' : 'py-20'}`}>
+    <section className={`relative text-white overflow-hidden ${isPublicHome ? 'min-h-[600px] md:min-h-[700px]' : compact ? 'pt-12 pb-20 md:pt-14 md:pb-24' : 'py-20'}`}>
       {/* Image de fond avec overlay */}
       <div
         className="absolute inset-0"
@@ -140,16 +143,18 @@ export default function HeroSection({
           </div>
         ) : (
           // Mode page interne (blog, annuaire, annonces)
-          <div className="text-center space-y-6">
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+          <div className={`text-center ${compact ? 'space-y-3' : 'space-y-6'}`}>
+            <h1 className={`font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent ${compact ? 'text-4xl md:text-5xl' : 'text-5xl md:text-6xl mb-6'}`}>
               {title}
             </h1>
-            <p className="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto leading-relaxed">
+            <p className={`text-blue-100 max-w-3xl mx-auto leading-relaxed ${compact ? 'text-base md:text-lg' : 'text-xl md:text-2xl'}`}>
               {subtitle}
             </p>
-            <div className="mt-8 flex justify-center">
-              <div className="w-24 h-1 bg-blue-400 rounded-full"></div>
-            </div>
+            {!compact && (
+              <div className="mt-8 flex justify-center">
+                <div className="w-24 h-1 bg-blue-400 rounded-full"></div>
+              </div>
+            )}
           </div>
         )}
       </div>

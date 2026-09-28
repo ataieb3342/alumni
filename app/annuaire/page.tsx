@@ -33,12 +33,13 @@ export default async function AnnuairePage({
       <main className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
         {/* Hero Section avec image en background */}
         <HeroSection
+          compact
           title="Annuaire"
-          subtitle="Retrouvez les anciens élèves et le personnel du Lycée Victor Hugo"
+          subtitle={`${members.length} anciens élèves, prépas et personnels du lycée Victor Hugo : trouvez un parcours qui vous inspire`}
         />
 
         {/* Directory Section */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-0 pb-16 -mt-10 relative z-10">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-0 pb-16 -mt-12 relative z-10">
           <DirectoryList members={members} currentUserId={currentUserId} initialParams={params} />
         </section>
       </main>

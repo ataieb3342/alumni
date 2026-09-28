@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { urlFor, getImageProps } from '@/sanity/lib/image'
@@ -96,6 +96,21 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
   const [imageDeleted, setImageDeleted] = useState(false)
   const [coverImage, setCoverImage] = useState<File | null>(null)
   const [coverImageDeleted, setCoverImageDeleted] = useState(false)
+
+  // Les éditions modifient les objets en place : l'état enregistré est figé en
+  // JSON au premier rendu, pour savoir s'il reste des changements à envoyer.
+  // Sans ça, « Terminer » sur une expérience laissait croire que c'était enregistré.
+  const [savedSnapshot, setSavedSnapshot] = useState(() => JSON.stringify({ formData, education, experience }))
+  const isDirty =
+    JSON.stringify({ formData, education, experience }) !== savedSnapshot ||
+    !!profileImage || !!coverImage || imageDeleted || coverImageDeleted
+
+  useEffect(() => {
+    if (!isDirty) return
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault()
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [isDirty])
 
   // États pour le modal de recadrage
   const [imageToCrop, setImageToCrop] = useState<string | null>(null)
@@ -316,6 +331,9 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
 
       const successMessage = 'Profil mis à jour avec succès !'
       toast.success(successMessage)
+      setSavedSnapshot(JSON.stringify({ formData, education, experience }))
+      setEditingEducationIndex(null)
+      setEditingExperienceIndex(null)
       setProfileImage(null) // Réinitialiser le fichier après l'upload réussi
       setImageDeleted(false) // Réinitialiser le flag de suppression
       setCoverImage(null) // Réinitialiser le fichier de couverture
@@ -1234,6 +1252,22 @@ export default function ProfileForm({ userData }: ProfileFormProps) {
                 </p>
               </div>
             </div>
+        </div>
+      )}
+
+      {/* Rappel d'enregistrement, visible où qu'on soit dans le formulaire */}
+      {isDirty && (
+        <div className="sticky bottom-4 z-30">
+          <div className="flex items-center justify-between gap-3 rounded-2xl bg-gray-900 text-white pl-5 pr-3 py-3 shadow-2xl">
+            <p className="text-sm font-medium">Modifications non enregistrées</p>
+            <button
+              type="submit"
+              disabled={loading}
+              className="shrink-0 px-5 py-2 rounded-xl bg-blue-500 hover:bg-blue-400 text-white text-sm font-semibold transition disabled:opacity-50"
+            >
+              {loading ? 'Enregistrement…' : 'Enregistrer'}
+            </button>
+          </div>
         </div>
       )}
 

@@ -442,3 +442,48 @@ export function suggestCities(members: IndexedMember[], scope: CityScope): CityS
 
   return suggestions.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'fr'))
 }
+
+// ---------------------------------------------------------------------------
+// Suggestions de la barre de recherche
+// ---------------------------------------------------------------------------
+
+/** Chaque terme commence un mot du texte : « sci po » trouve « Sciences Po Paris » */
+export function matchesTokens(text: string, tokens: string[]): boolean {
+  const normalized = normalize(text)
+  return tokens.length > 0 && tokens.every((token) => startsWord(normalized, token))
+}
+
+export interface OrganizationSuggestion {
+  name: string
+  count: number
+}
+
+/**
+ * Écoles et entreprises citées dans l'annuaire, avec le nombre de membres
+ * passés par chacune. Le lycée est exclu : tout le monde y est passé.
+ */
+export function collectOrganizations(members: IndexedMember[]): OrganizationSuggestion[] {
+  const groups = new Map<string, { names: Map<string, number>; members: Set<IndexedMember> }>()
+  const collect = (raw: string | undefined, entry: IndexedMember) => {
+    const name = clean(raw)
+    if (!name || isLycee(name)) return
+    const key = normalize(name)
+    if (!key || key === 'non specifie') return
+    const group = groups.get(key) ?? { names: new Map<string, number>(), members: new Set<IndexedMember>() }
+    group.names.set(name, (group.names.get(name) ?? 0) + 1)
+    group.members.add(entry)
+    groups.set(key, group)
+  }
+
+  for (const entry of members) {
+    for (const edu of entry.member.education ?? []) collect(edu.school, entry)
+    for (const exp of entry.member.experience ?? []) collect(exp.company, entry)
+  }
+
+  return [...groups.values()]
+    .map(({ names, members: found }) => ({
+      name: [...names.entries()].sort(([, a], [, b]) => b - a)[0][0],
+      count: found.size,
+    }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'fr'))
+}
