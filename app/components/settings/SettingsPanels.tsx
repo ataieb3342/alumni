@@ -72,7 +72,14 @@ export function PasswordPanel({ hasPassword }: { hasPassword: boolean }) {
   )
 }
 
-export function NewsletterPanel({ initial }: { initial: { generalNewsletter: boolean; announcementsNewsletter: boolean } }) {
+/** Préférences de newsletter ; `endpoint` permet à un administrateur de modifier celles d'un membre */
+export function NewsletterPanel({
+  initial,
+  endpoint = '/api/user/preferences',
+}: {
+  initial: { generalNewsletter: boolean; announcementsNewsletter: boolean }
+  endpoint?: string
+}) {
   const [preferences, setPreferences] = useState(initial)
   const [saving, setSaving] = useState<string | null>(null)
 
@@ -83,7 +90,7 @@ export function NewsletterPanel({ initial }: { initial: { generalNewsletter: boo
     setPreferences(next)
     setSaving(key)
     try {
-      await api('/api/user/preferences', { body: { preferences: next } })
+      await api(endpoint, { body: { preferences: next } })
       toast.success(value ? 'Abonnement activé' : 'Abonnement désactivé')
     } catch (error) {
       setPreferences(previous)

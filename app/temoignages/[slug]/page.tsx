@@ -12,6 +12,7 @@ import { ButtonLink } from '@/app/components/ui/Button'
 import { Picture } from '@/app/components/ui/Picture'
 import { Alert } from '@/app/components/ui/Alert'
 import { ItemActions } from '@/app/components/content/ItemActions'
+import { CoverImageControl } from '@/app/components/testimonials/CoverImageControl'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const testimonial = await getTestimonialBySlug((await params).slug)
@@ -41,6 +42,7 @@ export default async function TestimonialPage({ params }: { params: Promise<{ sl
           <Link href="/temoignages" className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-blue">
             <ArrowLeft className="size-4" aria-hidden="true" /> Tous les témoignages
           </Link>
+          {viewer.role === 'admin' && <CoverImageControl testimonialId={testimonial.id} hasImage={!!testimonial.featuredImage} />}
           {testimonial.status !== 'published' && (
             <Alert tone="warning" className="mt-4">
               Ce témoignage est {testimonial.status === 'draft' ? 'en brouillon' : 'archivé'} : seuls son auteur et les administrateurs le voient.

@@ -113,6 +113,21 @@ describe('Témoignages', () => {
     signInAs(admin)
     expect((await DELETE(apiRequest('/x', { method: 'DELETE' }), routeParams({ id: testimonial.id }))).status).toBe(200)
   })
+
+  it('l’image de couverture est réservée aux administrateurs, et limitée aux images du site', async () => {
+    const testimonial = await createTestimonial(author.id, input)
+    const { PATCH } = await import('@/app/api/testimonials/[id]/route')
+    const cover = { url: '/media/uploads/couverture.webp', width: 1200, height: 800 }
+    signInAs(author)
+    expect((await PATCH(apiRequest('/x', { method: 'PATCH', body: { featuredImage: cover } }), routeParams({ id: testimonial.id }))).status).toBe(403)
+    signInAs(admin)
+    expect((await PATCH(apiRequest('/x', { method: 'PATCH', body: { featuredImage: { url: 'https://evil.example/x.png' } } }), routeParams({ id: testimonial.id }))).status).toBe(400)
+    expect((await PATCH(apiRequest('/x', { method: 'PATCH', body: { featuredImage: cover } }), routeParams({ id: testimonial.id }))).status).toBe(200)
+    expect((await getTestimonialById(testimonial.id))?.featuredImage).toMatchObject(cover)
+    expect((await getTestimonialById(testimonial.id))?.answers).toEqual(testimonial.answers)
+    expect((await PATCH(apiRequest('/x', { method: 'PATCH', body: { featuredImage: null } }), routeParams({ id: testimonial.id }))).status).toBe(200)
+    expect((await getTestimonialById(testimonial.id))?.featuredImage).toBeNull()
+  })
 })
 
 describe('Profil et compte', () => {

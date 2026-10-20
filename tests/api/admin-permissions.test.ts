@@ -63,6 +63,7 @@ const cases: Case[] = [
   { name: 'valider un compte', load: () => import('@/app/api/admin/users/[id]/route'), method: 'PATCH', path: '/api/admin/users/x', params: () => ({ id: target.id }), body: () => ({ accountStatus: 'active' }) },
   { name: 'supprimer un compte', load: () => import('@/app/api/admin/users/[id]/route'), method: 'DELETE', path: '/api/admin/users/x', params: () => ({ id: target.id }) },
   { name: 'envoyer une invitation', load: () => import('@/app/api/admin/users/[id]/invite/route'), method: 'POST', path: '/api/admin/users/x/invite', params: () => ({ id: target.id }) },
+  { name: 'modifier les abonnements d’un membre', load: () => import('@/app/api/admin/users/[id]/newsletter/route'), method: 'POST', path: '/api/admin/users/x/newsletter', params: () => ({ id: target.id }), body: () => ({ preferences: { generalNewsletter: true, announcementsNewsletter: true } }) },
   { name: 'lire les statistiques', load: () => import('@/app/api/admin/stats/route'), method: 'GET', path: '/api/admin/stats' },
   { name: 'exporter les abonnés', load: () => import('@/app/api/admin/newsletter/export/route'), method: 'GET', path: '/api/admin/newsletter/export' },
   { name: 'synchroniser Google Drive', load: () => import('@/app/api/admin/newsletter/sync-drive/route'), method: 'POST', path: '/api/admin/newsletter/sync-drive' },

@@ -7,6 +7,7 @@ import { logActivity } from '@/lib/activity-logger'
 import { CONTENT_STATUSES } from '@/db/schema'
 import { splitTestimonialInput } from '@/lib/testimonials'
 import { updateTestimonialSchema } from '@/lib/validations'
+import { imageSchema } from '@/lib/content/definitions'
 
 async function editable(id: string, user: { id: string; role: string }) {
   const testimonial = await getTestimonialById(id)
@@ -15,12 +16,17 @@ async function editable(id: string, user: { id: string; role: string }) {
   return testimonial
 }
 
-const patchSchema = updateTestimonialSchema.omit({ id: true }).extend({ status: z.enum(CONTENT_STATUSES).optional() })
+const patchSchema = updateTestimonialSchema.omit({ id: true }).extend({
+  status: z.enum(CONTENT_STATUSES).optional(),
+  /** Image de couverture : réservée aux administrateurs */
+  featuredImage: imageSchema.nullable().optional(),
+})
 
 export const PATCH = apiRoute({ auth: 'user', body: patchSchema }, async ({ params, body, user }) => {
   const current = await editable(params.id, user)
   if (body.status && user.role !== 'admin') throw new HttpError(403, 'Seul un administrateur peut changer le statut')
-  const { status, ...fields } = body
+  if (body.featuredImage !== undefined && user.role !== 'admin') throw new HttpError(403, 'Seul un administrateur peut changer l’image de couverture')
+  const { status, featuredImage, ...fields } = body
   const input = splitTestimonialInput(fields, current.answers)
   const updated = await updateTestimonial(current.id, {
     ...(fields.title !== undefined ? { title: input.title } : {}),
@@ -30,6 +36,7 @@ export const PATCH = apiRoute({ auth: 'user', body: patchSchema }, async ({ para
     ...(fields.tags !== undefined ? { tags: input.tags } : {}),
     answers: input.answers,
     ...(status ? { status } : {}),
+    ...(featuredImage !== undefined ? { featuredImage } : {}),
   })
   if (user.role === 'admin' && current.authorId !== user.id) {
     await logActivity({ userId: user.id, action: 'admin.testimonial.update', resourceId: current.id })

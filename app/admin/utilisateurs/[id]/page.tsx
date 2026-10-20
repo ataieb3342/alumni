@@ -2,11 +2,13 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, ExternalLink } from 'lucide-react'
 import { requireAdminPage } from '@/lib/auth/session'
+import { getPreferences } from '@/lib/data/newsletter'
 import { getUserById } from '@/lib/data/users'
 import { USER_TYPE_LABELS } from '@/lib/utils'
 import { AdminCard, AdminHeader } from '@/app/components/admin/AdminCard'
 import { AdminUserForm } from '@/app/components/admin/AdminUserForm'
 import { UserActions } from '@/app/components/admin/UserActions'
+import { NewsletterPanel } from '@/app/components/settings/SettingsPanels'
 import { Avatar } from '@/app/components/ui/Avatar'
 
 export const metadata = { title: 'Compte' }
@@ -16,6 +18,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
   const user = await getUserById((await params).id)
   if (!user) notFound()
   const legacy = (user.legacy ?? {}) as { source?: string }
+  const preferences = await getPreferences(user.id)
   return (
     <div className="space-y-6">
       <Link href="/admin/utilisateurs" className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-blue">
@@ -75,6 +78,9 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
               </div>
             )}
           </dl>
+        </AdminCard>
+        <AdminCard title="Abonnements" className="xl:col-start-2">
+          <NewsletterPanel initial={preferences} endpoint={`/api/admin/users/${user.id}/newsletter`} />
         </AdminCard>
       </div>
     </div>
