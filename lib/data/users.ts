@@ -4,6 +4,7 @@
 import { and, asc, count, desc, eq, ilike, inArray, isNull, ne, or, sql } from 'drizzle-orm'
 import { getDb } from '@/db'
 import {
+  authTokens,
   users,
   type AccountStatus,
   type Education,
@@ -91,9 +92,13 @@ export async function recordLogin(id: string) {
  * partent avec lui (clés étrangères en cascade) ; le journal d'activité est
  * anonymisé.
  */
+/** Supprime le compte ; annonces, témoignages et abonnements suivent (cascade), ainsi que les liens d'invitation ou de réinitialisation en cours */
 export async function deleteUser(id: string) {
   const db = await getDb()
-  await db.delete(users).where(eq(users.id, id))
+  await db.transaction(async (tx) => {
+    const [deleted] = await tx.delete(users).where(eq(users.id, id)).returning({ email: users.email })
+    if (deleted) await tx.delete(authTokens).where(eq(authTokens.email, deleted.email))
+  })
 }
 
 // ---------------------------------------------------------------------------
