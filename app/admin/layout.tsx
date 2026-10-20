@@ -11,8 +11,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const counts = await countUsersByStatus()
   return (
     <div className="bg-paper-sunken">
-      <div className="container-page grid gap-6 py-6 lg:grid-cols-[14rem_1fr] lg:gap-10 lg:py-10">
-        <aside className="lg:sticky lg:top-24 lg:self-start">
+      <div className="container-page grid grid-cols-1 gap-6 py-6 lg:grid-cols-[14rem_1fr] lg:gap-10 lg:py-10">
+        <aside className="min-w-0 lg:sticky lg:top-24 lg:self-start">
           <p className="mb-3 hidden font-display text-xl text-ink lg:block">Administration</p>
           <AdminNav pending={counts.pending ?? 0} />
         </aside>

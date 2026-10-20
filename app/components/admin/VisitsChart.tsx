@@ -28,9 +28,8 @@ export function VisitsChart({ series }: { series: { date: string; visitors: numb
         {series.map((point, index) => (
           <g key={point.date}>
             <circle cx={x(index)} cy={y(point.visitors)} r="3.5" fill="var(--paper-raised)" stroke="var(--blue)" strokeWidth="2">
-              <title>
-                {label(point.date)} : {point.visitors} visiteur{point.visitors > 1 ? 's' : ''}
-              </title>
+              {/* Un seul nœud texte : plusieurs enfants dans <title> empêchent l'hydratation */}
+              <title>{`${label(point.date)} : ${point.visitors} visiteur${point.visitors > 1 ? 's' : ''}`}</title>
             </circle>
             {index % every === 0 && (
               <text x={x(index)} y={height - 8} textAnchor="middle" fontSize="11" fill="var(--ink-muted)">
