@@ -72,6 +72,8 @@ export function EditorShell({ initialEditMode, children }: { initialEditMode: bo
     docsRef.current = docs
   }, [docs])
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+  // Heure du dernier enregistrement, conservée quand la page se rafraîchit et réenregistre ses contenus
+  const savedAt = useRef<Record<string, number>>({})
 
   const setEditMode = useCallback(
     (value: boolean) => {
@@ -93,7 +95,7 @@ export function EditorShell({ initialEditMode, children }: { initialEditMode: bo
           ...descriptor,
           dirty: false,
           saving: false,
-          lastSavedAt: existing?.lastSavedAt ?? null,
+          lastSavedAt: existing?.lastSavedAt ?? savedAt.current[descriptor.key] ?? null,
           error: null,
         }
       }
@@ -126,7 +128,8 @@ export function EditorShell({ initialEditMode, children }: { initialEditMode: bo
           const latest = current[key]
           if (!latest) return current
           const unchanged = latest.data === doc.data
-          return { ...current, [key]: { ...latest, saving: false, hasDraft: true, dirty: !unchanged, lastSavedAt: Date.now(), error: null } }
+          savedAt.current[key] = Date.now()
+          return { ...current, [key]: { ...latest, saving: false, hasDraft: true, dirty: !unchanged, lastSavedAt: savedAt.current[key], error: null } }
         })
       } catch (error) {
         ok = false

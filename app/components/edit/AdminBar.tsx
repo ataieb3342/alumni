@@ -24,7 +24,12 @@ export function AdminBar() {
   const confirm = useConfirm()
   const [selected, setSelected] = useState<string | null>(null)
   const [historyFor, setHistoryFor] = useState<string | null>(null)
-  const [menuOpen, setMenuOpen] = useState(false)
+  // Menu positionné à l'écran (fixed) : la barre défile horizontalement et couperait un menu absolu
+  const [menuAt, setMenuAt] = useState<{ right: number; bottom: number } | null>(null)
+  const menuOpen = menuAt !== null
+  const setMenuOpen = (open: boolean) => {
+    if (!open) setMenuAt(null)
+  }
   if (!editor) return null
 
   const docs = Object.values(editor.docs)
@@ -132,13 +137,22 @@ export function AdminBar() {
                       type="button"
                       aria-expanded={menuOpen}
                       aria-label="Plus d'actions"
-                      onClick={() => setMenuOpen((value) => !value)}
+                      onClick={(event) => {
+                        if (menuOpen) return setMenuAt(null)
+                        const rect = event.currentTarget.getBoundingClientRect()
+                        setMenuAt({ right: Math.max(12, window.innerWidth - rect.right), bottom: window.innerHeight - rect.top + 8 })
+                      }}
+                      onKeyDown={(event) => event.key === 'Escape' && setMenuAt(null)}
                       className="inline-flex size-9 items-center justify-center rounded-full text-on-wash-soft hover:bg-white/10 hover:text-on-wash"
                     >
                       <MoreHorizontal className="size-5" aria-hidden="true" />
                     </button>
                     {menuOpen && (
-                      <ul className="fixed bottom-16 right-3 z-[61] w-64 overflow-hidden rounded-[var(--radius-md)] border border-line bg-paper-raised p-1.5 text-ink shadow-[var(--shadow-lg)] sm:absolute sm:right-0 sm:bottom-12">
+                      <ul
+                        style={menuAt}
+                        onKeyDown={(event) => event.key === 'Escape' && setMenuAt(null)}
+                        className="fixed z-[61] w-64 overflow-hidden rounded-[var(--radius-md)] border border-line bg-paper-raised p-1.5 text-ink shadow-[var(--shadow-lg)]"
+                      >
                         <li>
                           <MenuButton icon={History} onClick={() => { setMenuOpen(false); setHistoryFor(doc.key) }}>
                             Historique des versions
