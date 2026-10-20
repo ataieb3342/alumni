@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+/playwright-report/
+/test-results/
 
 # next.js
 /.next/
@@ -33,6 +35,13 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 *.md
+# Livrables de la refonte (versionnés malgré la règle ci-dessus)
+!/MAP.md
+!/PARITY.md
+!/DECISIONS.md
+!/DESIGN.md
+!/REPORT.md
+!/docs/**/*.md
 /scripts/
 *.csv
 
