@@ -58,11 +58,13 @@ export { EDIT_MODE_COOKIE }
  * Contexte d'édition d'une page : l'interface d'édition et les brouillons ne
  * sont servis qu'à un administrateur (vérifié en base) qui a activé le mode.
  */
-export async function getEditorContext(): Promise<{ isAdmin: boolean; editMode: boolean; user: User | null }> {
+export async function getEditorContext(): Promise<{ isAdmin: boolean; editMode: boolean; user: User | null; signedIn: boolean }> {
   const session = await auth()
-  if (session?.user?.role !== 'admin' || !session.user.id) return { isAdmin: false, editMode: false, user: null }
+  // Membre connecté (compte actif) : les appels à adhérer ou à se connecter ne le concernent plus
+  const signedIn = session?.user?.accountStatus === 'active' && !session.user.id?.startsWith('temp-')
+  if (session?.user?.role !== 'admin' || !session.user.id) return { isAdmin: false, editMode: false, user: null, signedIn }
   const user = await getUserById(session.user.id)
-  if (!user || user.role !== 'admin' || user.accountStatus !== 'active') return { isAdmin: false, editMode: false, user: null }
+  if (!user || user.role !== 'admin' || user.accountStatus !== 'active') return { isAdmin: false, editMode: false, user: null, signedIn }
   const store = await cookies()
-  return { isAdmin: true, editMode: store.get(EDIT_MODE_COOKIE)?.value === '1', user }
+  return { isAdmin: true, editMode: store.get(EDIT_MODE_COOKIE)?.value === '1', user, signedIn }
 }

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ArrowUpRight, Mail, MapPin } from 'lucide-react'
+import { auth } from '@/lib/auth'
 import { getPublishedContent } from '@/lib/data/content'
 import { Logo } from './Logo'
 
@@ -26,7 +27,10 @@ const LINKS = [
 
 /** Pied de page : textes et coordonnées éditables dans Administration › Réglages du site */
 export default async function Footer() {
-  const site = await getPublishedContent('site')
+  const [site, session] = await Promise.all([getPublishedContent('site'), auth()])
+  // Un membre connecté n'a plus à adhérer
+  const signedIn = session?.user?.accountStatus === 'active'
+  const links = LINKS.map((column) => ({ ...column, items: column.items.filter((item) => !(signedIn && item.href === '/inscription')) }))
   return (
     <footer className="bg-wash text-on-wash">
       <div className="container-page grid gap-10 py-14 md:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
@@ -50,7 +54,7 @@ export default async function Footer() {
             ))}
           </ul>
         </div>
-        {LINKS.map((column) => (
+        {links.map((column) => (
           <nav key={column.title} aria-label={column.title}>
             <h2 className="mb-3 font-sans text-xs font-bold tracking-[0.14em] text-on-wash-soft uppercase">{column.title}</h2>
             <ul className="space-y-2">

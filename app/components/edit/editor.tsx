@@ -34,7 +34,10 @@ interface TextOptions {
 
 export type Editor = ReturnType<typeof createEditor>
 
-export function createEditor(docKey: string, data: unknown, enabled: boolean) {
+/** Liens vers l'inscription ou la connexion : sans objet pour un membre connecté */
+const isAccountLink = (href: string) => /^\/(inscription|connexion)(\/|\?|#|$)/.test(href)
+
+export function createEditor(docKey: string, data: unknown, enabled: boolean, viewer: { signedIn?: boolean } = {}) {
   const get = <V = unknown,>(path: string) => getAt(data, path) as V
 
   return {
@@ -80,6 +83,7 @@ export function createEditor(docKey: string, data: unknown, enabled: boolean) {
 
     link(path: string, options: { className?: string; icon?: ReactNode; iconRight?: ReactNode } = {}): ReactNode {
       const link = get<{ label: string; href: string }>(path) ?? { label: '', href: '/' }
+      if (!enabled && viewer.signedIn && isAccountLink(link.href)) return null
       if (!enabled) {
         return (
           <Link href={link.href || '/'} className={options.className}>

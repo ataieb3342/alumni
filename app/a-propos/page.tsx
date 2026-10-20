@@ -10,6 +10,7 @@ import { buttonClasses } from '@/app/components/ui/Button'
 import { Avatar } from '@/app/components/ui/Avatar'
 import { Picture } from '@/app/components/ui/Picture'
 import { PageHero, SectionHeading } from '@/app/components/site/PageHero'
+import { cn } from '@/lib/utils'
 
 export const metadata: Metadata = {
   title: 'À propos',
@@ -56,7 +57,8 @@ function currentPosition(member: DirectoryUser): string | null {
 
 export default async function AboutPage() {
   const [page, site, board] = await Promise.all([loadPageContent('about'), getPublishedContent('site'), listBoardMembers()])
-  const e = createEditor('content:about', page.data, page.editMode)
+  const e = createEditor('content:about', page.data, page.editMode, { signedIn: page.signedIn })
+  const showJoin = page.editMode || !page.signedIn
   const members = [...board].sort((a, b) => rank(a) - rank(b))
 
   return (
@@ -167,13 +169,15 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      {/* Adhésion et contact */}
-      <section className="container-page grid gap-6 py-16 sm:py-20 lg:grid-cols-2">
-        <div className="rounded-[var(--radius-lg)] bg-blue p-8 text-on-blue shadow-[0_6px_0_0_var(--blue-strong)]">
-          {e.text('join.title', { as: 'h2', label: 'Titre : adhésion', className: 'text-3xl' })}
-          {e.text('join.text', { as: 'p', label: 'Texte : adhésion', multiline: true, className: 'mt-3 text-lg opacity-90' })}
-          <div className="mt-6">{e.link('join.cta', { className: buttonClasses('highlight', 'lg'), iconRight: <ArrowRight className="size-5" aria-hidden="true" /> })}</div>
-        </div>
+      {/* Adhésion (visiteurs seulement) et contact */}
+      <section className={cn('container-page grid gap-6 py-16 sm:py-20', showJoin && 'lg:grid-cols-2')}>
+        {showJoin && (
+          <div className="rounded-[var(--radius-lg)] bg-blue p-8 text-on-blue shadow-[0_6px_0_0_var(--blue-strong)]">
+            {e.text('join.title', { as: 'h2', label: 'Titre : adhésion', className: 'text-3xl' })}
+            {e.text('join.text', { as: 'p', label: 'Texte : adhésion', multiline: true, className: 'mt-3 text-lg opacity-90' })}
+            <div className="mt-6">{e.link('join.cta', { className: buttonClasses('highlight', 'lg'), iconRight: <ArrowRight className="size-5" aria-hidden="true" /> })}</div>
+          </div>
+        )}
         <div className="rounded-[var(--radius-lg)] border border-line bg-paper-raised p-8">
           {e.text('contact.title', { as: 'h2', label: 'Titre : contact', className: 'text-3xl text-ink' })}
           <dl className="mt-5 space-y-4">

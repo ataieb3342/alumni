@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { authConfig } from '@/lib/auth.config'
 import { CSRF_COOKIE, generateCsrfToken } from '@/lib/security/csrf'
 import { EDIT_MODE_COOKIE } from '@/lib/edit-mode'
+import { safeCallbackUrl } from '@/lib/utils'
 
 // Proxy sans accès à la base : seul le jeton de session est lu ici. Les
 // droits d'écriture sont revérifiés en base par chaque route (lib/api.ts).
@@ -62,6 +63,11 @@ export default auth((req) => {
     const editingHome = session?.user?.role === 'admin' && req.cookies.get(EDIT_MODE_COOKIE)?.value === '1'
     if (pathname === '/' && isActiveMember && !editingHome) {
       return NextResponse.redirect(new URL('/accueil', req.url))
+    }
+
+    // Déjà connecté : ni inscription ni connexion (retour à la page demandée si elle est sur le site)
+    if (isActiveMember && (pathname === '/inscription' || pathname === '/connexion')) {
+      return NextResponse.redirect(new URL(safeCallbackUrl(req.nextUrl.searchParams.get('callbackUrl')), req.url))
     }
 
     // L'administration est réservée aux administrateurs (revérifié en base dans les pages)

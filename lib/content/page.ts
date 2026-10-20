@@ -12,19 +12,22 @@ export interface PageContent<T> {
   data: T
   editMode: boolean
   isAdmin: boolean
+  /** Membre connecté : les liens d'inscription et de connexion sont masqués */
+  signedIn: boolean
   doc: DocDescriptor | null
 }
 
 export async function loadPageContent<K extends ContentKey>(key: K): Promise<PageContent<ContentOf<K>>> {
   const context = await getEditorContext()
   if (!context.editMode) {
-    return { data: await getPublishedContent(key), editMode: false, isAdmin: context.isAdmin, doc: null }
+    return { data: await getPublishedContent(key), editMode: false, isAdmin: context.isAdmin, signedIn: context.signedIn, doc: null }
   }
   const editable = await getEditableContent(key)
   return {
     data: editable.data,
     editMode: true,
     isAdmin: true,
+    signedIn: context.signedIn,
     doc: {
       key: `content:${key}`,
       label: CONTENT_PAGES[key].label,

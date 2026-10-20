@@ -13,7 +13,7 @@ import { buttonClasses } from '@/app/components/ui/Button'
  */
 export async function CampaignPage({ contentKey }: { contentKey: 'alumni' | 'qrcode' }) {
   const [page, site] = await Promise.all([loadPageContent(contentKey), getPublishedContent('site')])
-  const e = createEditor(`content:${contentKey}`, page.data, page.editMode)
+  const e = createEditor(`content:${contentKey}`, page.data, page.editMode, { signedIn: page.signedIn })
 
   return (
     <EditableArea docs={[page.doc]}>
@@ -55,16 +55,28 @@ export async function CampaignPage({ contentKey }: { contentKey: 'alumni' | 'qrc
           {e.text('ctaTitle', { as: 'h2', label: 'Titre de l’appel', className: 'mt-4 text-[clamp(1.75rem,4vw,2.5rem)] text-ink' })}
           {e.text('ctaText', { as: 'p', label: 'Texte de l’appel', multiline: true, className: 'mt-3 text-lg text-ink-soft' })}
           {e.text('ctaNote', { as: 'p', label: 'Mention', className: 'mt-2 text-sm font-semibold text-ink-muted' })}
-          {e.text('ctaPrompt', { as: 'p', label: 'Invitation', className: 'mt-6 font-semibold text-ink' })}
-          <div className="mt-4 flex flex-col items-center gap-3">
-            {e.link('cta', { className: buttonClasses('primary', 'lg'), iconRight: <ArrowRight className="size-5" aria-hidden="true" /> })}
-            <p className="text-sm text-ink-soft">
-              Déjà un compte ?{' '}
-              <Link href="/connexion" className="link-ink font-semibold">
-                Se connecter
+          {page.signedIn && !page.editMode ? (
+            // Déjà membre : pas d'appel à créer un compte
+            <div className="mt-6 flex flex-col items-center gap-3">
+              <p className="font-semibold text-ink">Vous êtes déjà membre du réseau.</p>
+              <Link href="/accueil" className={buttonClasses('primary', 'lg')}>
+                Mon espace membre <ArrowRight className="size-5" aria-hidden="true" />
               </Link>
-            </p>
-          </div>
+            </div>
+          ) : (
+            <>
+              {e.text('ctaPrompt', { as: 'p', label: 'Invitation', className: 'mt-6 font-semibold text-ink' })}
+              <div className="mt-4 flex flex-col items-center gap-3">
+                {e.link('cta', { className: buttonClasses('primary', 'lg'), iconRight: <ArrowRight className="size-5" aria-hidden="true" /> })}
+                <p className="text-sm text-ink-soft">
+                  Déjà un compte ?{' '}
+                  <Link href="/connexion" className="link-ink font-semibold">
+                    Se connecter
+                  </Link>
+                </p>
+              </div>
+            </>
+          )}
         </div>
 
         <p className="mt-10 flex items-center justify-center gap-2 text-sm text-ink-soft">
