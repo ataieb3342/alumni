@@ -86,6 +86,11 @@ export function publishedContent(post: Post): PostContent {
   }
 }
 
+/** Version publiée d'un article (importé ou déjà publié), gardée comme version d'origine de l'historique */
+function postBaseline(post: Post) {
+  return post.status === 'published' ? { ...publishedContent(post) } : null
+}
+
 /** Ce que voit un administrateur en mode édition : le brouillon s'il existe */
 export function editableContent(post: Post): PostContent {
   return post.draft ?? publishedContent(post)
@@ -138,7 +143,7 @@ export async function savePostDraft(id: string, input: unknown, userId: string) 
   await assertSlugAvailable(content.slug, id)
   const db = await getDb()
   await db.update(posts).set({ draft: content, updatedAt: new Date(), updatedBy: userId }).where(eq(posts.id, id))
-  await recordVersion(db, 'post', id, 'save', { ...content }, userId)
+  await recordVersion(db, 'post', id, 'save', { ...content }, userId, postBaseline(post))
   return content
 }
 
@@ -165,7 +170,7 @@ export async function publishPost(id: string, userId: string, input?: unknown) {
       updatedBy: userId,
     })
     .where(eq(posts.id, id))
-  await recordVersion(db, 'post', id, 'publish', { ...content }, userId)
+  await recordVersion(db, 'post', id, 'publish', { ...content }, userId, postBaseline(post))
   return content
 }
 
@@ -178,7 +183,7 @@ export async function unpublishPost(id: string, userId: string) {
     .update(posts)
     .set({ status: 'draft', draft: post.draft ?? publishedContent(post), updatedAt: new Date(), updatedBy: userId })
     .where(eq(posts.id, id))
-  await recordVersion(db, 'post', id, 'unpublish', { ...editableContent(post) }, userId)
+  await recordVersion(db, 'post', id, 'unpublish', { ...editableContent(post) }, userId, postBaseline(post))
 }
 
 export async function discardPostDraft(id: string, userId: string) {
@@ -206,6 +211,6 @@ export async function deletePost(id: string, userId: string) {
   if (!post) throw new ContentError('Article introuvable', 404)
   const db = await getDb()
   // Une trace reste dans l'historique : l'article supprimé peut être recréé
-  await recordVersion(db, 'post', id, 'delete', { ...editableContent(post), status: post.status }, userId)
+  await recordVersion(db, 'post', id, 'delete', { ...editableContent(post), status: post.status }, userId, postBaseline(post))
   await db.delete(posts).where(eq(posts.id, id))
 }

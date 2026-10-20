@@ -295,7 +295,7 @@ export const contentEntries = pgTable('content_entries', {
   updatedBy: text('updated_by').references(() => users.id, { onDelete: 'set null' }),
 })
 
-export const VERSION_ACTIONS = ['save', 'publish', 'unpublish', 'restore', 'delete', 'create'] as const
+export const VERSION_ACTIONS = ['initial', 'save', 'publish', 'unpublish', 'restore', 'delete', 'create'] as const
 export type VersionAction = (typeof VERSION_ACTIONS)[number]
 
 /** Historique des versions des contenus éditables (pages et articles) */

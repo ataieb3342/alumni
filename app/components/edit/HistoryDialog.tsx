@@ -7,11 +7,12 @@ import { Button } from '@/app/components/ui/Button'
 import { Dialog, useConfirm } from '@/app/components/ui/Dialog'
 import { Spinner } from '@/app/components/ui/Spinner'
 import { Badge } from '@/app/components/ui/Badge'
+import type { VersionAction } from '@/db/schema'
 import type { DocDescriptor } from './EditorShell'
 
 interface Version {
   id: string
-  action: 'save' | 'publish' | 'unpublish' | 'restore' | 'delete' | 'create'
+  action: VersionAction
   createdAt: string
   author: string | null
   summary: string
@@ -24,6 +25,7 @@ const ACTION_LABELS: Record<Version['action'], { label: string; tone: 'blue' | '
   restore: { label: 'Restauration', tone: 'blue' },
   delete: { label: 'Suppression', tone: 'red' },
   create: { label: 'Création', tone: 'blue' },
+  initial: { label: 'Version d’origine', tone: 'neutral' },
 }
 
 /** Historique des versions d'un contenu, avec restauration dans le brouillon */

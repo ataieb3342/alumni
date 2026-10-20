@@ -12,7 +12,9 @@ import {
 } from '@/lib/data/content'
 import { createPost, getPostById, listPublishedPosts, publishPost, savePostDraft, unpublishPost, editableContent } from '@/lib/data/posts'
 import { seedDefaultContent } from '@/lib/content/seed'
+import { eq } from 'drizzle-orm'
 import { getDb } from '@/db'
+import { contentVersions } from '@/db/schema'
 import { createAdmin, freshDb } from '../helpers/db'
 
 let adminId: string
@@ -52,6 +54,21 @@ describe('Contenus des pages : brouillon et publication', () => {
     await expect(saveContentDraft('home', withImage, adminId)).rejects.toThrow()
   })
 
+  it('garde la version d’origine : on peut revenir au texte d’avant la première modification', async () => {
+    const original = (await getPublishedContent('testimonials')).title
+    const edited = structuredClone(CONTENT_DEFAULTS.testimonials)
+    edited.title = 'Titre modifié'
+    await publishContent('testimonials', adminId, edited)
+    const versions = await listVersionsForUi('content', 'testimonials')
+    const initial = versions.find((v) => v.action === 'initial')
+    expect(initial).toBeDefined()
+    await restoreContentVersion('testimonials', initial!.id, adminId)
+    await publishContent('testimonials', adminId)
+    expect((await getPublishedContent('testimonials')).title).toBe(original)
+    // Une seule version d'origine, même après plusieurs modifications
+    expect((await listVersionsForUi('content', 'testimonials')).filter((v) => v.action === 'initial')).toHaveLength(1)
+  })
+
   it('conserve l’historique et restaure une version dans le brouillon', async () => {
     const first = structuredClone(CONTENT_DEFAULTS.directory)
     first.title = 'Version A'
@@ -89,6 +106,18 @@ describe('Articles du blog', () => {
     expect((await getPostById(post.id))?.title).toBe('Article stable')
     await publishPost(post.id, adminId)
     expect((await getPostById(post.id))?.title).toBe('Titre retravaillé')
+  })
+
+  it('un article importé garde sa version publiée d’origine dans l’historique', async () => {
+    const post = await createPost({ title: 'Article importé' }, adminId)
+    await publishPost(post.id, adminId)
+    const db = await getDb()
+    // Simule un article importé de Sanity : publié, sans aucun historique
+    await db.delete(contentVersions).where(eq(contentVersions.entityId, post.id))
+    const content = editableContent((await getPostById(post.id))!)
+    await savePostDraft(post.id, { ...content, title: 'Titre retouché' }, adminId)
+    const versions = await listVersionsForUi('post', post.id)
+    expect(versions.map((v) => v.action)).toEqual(['save', 'initial'])
   })
 
   it('les articles « membres » ne sont pas listés pour les visiteurs', async () => {

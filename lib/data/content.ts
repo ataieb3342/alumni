@@ -59,9 +59,24 @@ export async function recordVersion(
   entityId: string,
   action: (typeof contentVersions.$inferInsert)['action'],
   snapshot: Record<string, unknown>,
-  userId: string | null
+  userId: string | null,
+  /** État publié avant cette action : conservé comme « version d'origine » si l'historique est vide */
+  baseline?: Record<string, unknown> | null
 ) {
-  await db.insert(contentVersions).values({ id: newId(), entityType, entityId, action, snapshot, createdBy: userId })
+  const now = Date.now()
+  if (baseline) {
+    const [existing] = await db
+      .select({ id: contentVersions.id })
+      .from(contentVersions)
+      .where(and(eq(contentVersions.entityType, entityType), eq(contentVersions.entityId, entityId)))
+      .limit(1)
+    if (!existing) {
+      await db
+        .insert(contentVersions)
+        .values({ id: newId(), entityType, entityId, action: 'initial', snapshot: baseline, createdBy: null, createdAt: new Date(now - 1) })
+    }
+  }
+  await db.insert(contentVersions).values({ id: newId(), entityType, entityId, action, snapshot, createdBy: userId, createdAt: new Date(now) })
   // Élagage : on garde les MAX_VERSIONS plus récentes
   const keep = await db
     .select({ createdAt: contentVersions.createdAt })
@@ -83,22 +98,29 @@ export async function recordVersion(
   }
 }
 
+async function publishedSnapshot(db: Db, key: ContentKey) {
+  const row = await db.query.contentEntries.findFirst({ where: eq(contentEntries.key, key), columns: { published: true } })
+  return (row?.published as Record<string, unknown> | null | undefined) ?? null
+}
+
 /** Valide (Zod) et assainit, puis enregistre le brouillon */
 export async function saveContentDraft<K extends ContentKey>(key: K, input: unknown, userId: string) {
   const data = CONTENT_SCHEMAS[key].parse(input) as Record<string, unknown>
   const db = await getDb()
+  const baseline = await publishedSnapshot(db, key)
   const now = new Date()
   await db
     .insert(contentEntries)
     .values({ key, draft: data, updatedAt: now, updatedBy: userId })
     .onConflictDoUpdate({ target: contentEntries.key, set: { draft: data, updatedAt: now, updatedBy: userId } })
-  await recordVersion(db, 'content', key, 'save', data, userId)
+  await recordVersion(db, 'content', key, 'save', data, userId, baseline)
   return data as ContentOf<K>
 }
 
 /** Publie le brouillon (ou `input` s'il est fourni, après validation) */
 export async function publishContent<K extends ContentKey>(key: K, userId: string, input?: unknown) {
   const db = await getDb()
+  const baseline = await publishedSnapshot(db, key)
   let data: Record<string, unknown>
   if (input !== undefined) {
     data = CONTENT_SCHEMAS[key].parse(input) as Record<string, unknown>
@@ -115,7 +137,7 @@ export async function publishContent<K extends ContentKey>(key: K, userId: strin
       target: contentEntries.key,
       set: { published: data, draft: null, publishedAt: now, publishedBy: userId, updatedAt: now, updatedBy: userId },
     })
-  await recordVersion(db, 'content', key, 'publish', data, userId)
+  await recordVersion(db, 'content', key, 'publish', data, userId, baseline)
   return data as ContentOf<K>
 }
 
@@ -149,12 +171,13 @@ export async function restoreContentVersion(key: ContentKey, versionId: string, 
 async function saveContentDraftFromVersion<K extends ContentKey>(key: K, snapshot: unknown, userId: string) {
   const data = normalize(key, snapshot) as Record<string, unknown>
   const db = await getDb()
+  const baseline = await publishedSnapshot(db, key)
   const now = new Date()
   await db
     .insert(contentEntries)
     .values({ key, draft: data, updatedAt: now, updatedBy: userId })
     .onConflictDoUpdate({ target: contentEntries.key, set: { draft: data, updatedAt: now, updatedBy: userId } })
-  await recordVersion(db, 'content', key, 'restore', data, userId)
+  await recordVersion(db, 'content', key, 'restore', data, userId, baseline)
   return data as ContentOf<K>
 }
 
