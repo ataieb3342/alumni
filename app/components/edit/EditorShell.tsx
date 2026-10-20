@@ -178,9 +178,13 @@ export function EditorShell({ initialEditMode, children }: { initialEditMode: bo
       if (!doc) return
       if (doc.dirty && !(await save(docKey))) return
       try {
-        await api(`${doc.endpoint}/publish`, { method: 'POST' })
+        const result = await api<{ slug?: string }>(`${doc.endpoint}/publish`, { method: 'POST' })
         patchDoc(docKey, { hasDraft: false, dirty: false, status: 'published' })
         toast.success(`${doc.label} : publié. Les visiteurs voient maintenant cette version.`)
+        // L'adresse d'un article a pu changer avec la publication
+        if (result.slug && doc.publicUrl && doc.publicUrl !== `/blog/${result.slug}` && location.pathname === doc.publicUrl) {
+          router.push(`/blog/${result.slug}`)
+        }
         router.refresh()
       } catch (error) {
         toast.error(error instanceof ApiError ? error.message : 'Publication impossible')

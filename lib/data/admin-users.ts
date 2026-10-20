@@ -1,51 +1,15 @@
+export { adminCreateUserSchema, adminUserPatchSchema, BOARD_ROLES, STAFF_CATEGORIES } from './admin-users-schema'
 /**
  * Actions d'administration sur les comptes (remplacent le Studio Sanity et
  * son webhook de validation).
  */
-import { z } from 'zod'
-import { ACCOUNT_STATUSES, ROLES, USER_TYPES } from '@/db/schema'
+import type { z } from 'zod'
+import { adminCreateUserSchema, type AdminUserPatch } from './admin-users-schema'
 import { HttpError } from '@/lib/auth/session'
 import { issueToken } from '@/lib/data/tokens'
 import { countAdmins, createUser, deleteUser, getUserByEmail, getUserById, updateUser, type User } from '@/lib/data/users'
 import { sendUserAccountValidated, sendUserInvitation, sendUserPasswordReset } from '@/lib/emails'
 import { logActivity } from '@/lib/activity-logger'
-
-export const BOARD_ROLES = [
-  { value: 'president', label: 'Président(e)' },
-  { value: 'vice_president', label: 'Vice-président(e)' },
-  { value: 'tresorier', label: 'Trésorier(e)' },
-  { value: 'secretaire_general', label: 'Secrétaire général(e)' },
-  { value: 'resp_communication', label: 'Responsable communication' },
-  { value: 'resp_evenementiel', label: 'Responsable événementiel' },
-  { value: 'resp_informatique', label: 'Responsable informatique' },
-  { value: 'resp_mailing', label: 'Responsable mailing list' },
-  { value: 'pole_communication', label: 'Pôle communication' },
-  { value: 'pole_informatique', label: 'Pôle informatique' },
-] as const
-
-export const STAFF_CATEGORIES = [
-  { value: 'direction', label: 'Direction' },
-  { value: 'enseignant', label: 'Enseignant' },
-  { value: 'vie_scolaire', label: 'Vie scolaire' },
-  { value: 'administratif', label: 'Administratif' },
-  { value: 'autre', label: 'Autre' },
-] as const
-
-export const adminUserPatchSchema = z.object({
-  accountStatus: z.enum(ACCOUNT_STATUSES).optional(),
-  role: z.enum(ROLES).optional(),
-  userType: z.enum(USER_TYPES).optional(),
-  roleAssociation: z.array(z.enum(BOARD_ROLES.map((r) => r.value) as [string, ...string[]])).max(10).optional(),
-  isVisibleInDirectory: z.boolean().optional(),
-  firstName: z.string().trim().min(1).max(50).optional(),
-  lastName: z.string().trim().min(1).max(50).optional(),
-  promotionYear: z.number().int().min(1950).max(new Date().getFullYear() + 10).nullable().optional(),
-  city: z.string().trim().max(100).nullable().optional(),
-  staffCategory: z.string().max(50).nullable().optional(),
-  staffDetails: z.string().max(200).nullable().optional(),
-})
-
-export type AdminUserPatch = z.infer<typeof adminUserPatchSchema>
 
 export async function adminUpdateUser(actor: User, id: string, patch: AdminUserPatch) {
   const target = await getUserById(id)
@@ -107,15 +71,6 @@ export async function adminSendAccessLink(actor: User, id: string) {
   await logActivity({ userId: actor.id, action: 'admin.user.invite', resourceId: id })
   return { kind: 'invite' as const }
 }
-
-export const adminCreateUserSchema = z.object({
-  email: z.string().trim().email('E-mail invalide').max(200),
-  firstName: z.string().trim().min(1, 'Prénom requis').max(50),
-  lastName: z.string().trim().min(1, 'Nom requis').max(50),
-  userType: z.enum(USER_TYPES),
-  role: z.enum(ROLES).default('member'),
-  sendInvitation: z.boolean().default(true),
-})
 
 /** Création d'un compte par un administrateur : actif, sans mot de passe, invité par e-mail */
 export async function adminCreateUser(actor: User, input: z.infer<typeof adminCreateUserSchema>) {

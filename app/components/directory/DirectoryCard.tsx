@@ -1,18 +1,13 @@
 import Link from 'next/link'
 import { Briefcase, GraduationCap, MapPin, Quote } from 'lucide-react'
-import { getMemberSummary, MEMBER_TYPE_LABELS, type DirectoryMember, type MatchHint } from '@/lib/directorySearch'
+import { getMemberSummary, MEMBER_TYPE_LABELS, type MatchHint } from '@/lib/directorySearch'
+import type { DirectoryCardUser } from '@/lib/directoryView'
 import { getSubject } from '@/lib/subjects'
-import type { ImageRef } from '@/db/schema'
 import { cn } from '@/lib/utils'
 import { Avatar } from '@/app/components/ui/Avatar'
 import { SubjectIcon } from '@/app/components/ui/icons'
 
-export interface DirectoryCardUser extends DirectoryMember {
-  id: string
-  email?: string
-  profileImage?: ImageRef | null
-  createdAt?: string | Date
-}
+export type { DirectoryCardUser } from '@/lib/directoryView'
 
 const HINT_ICONS = { experience: Briefcase, education: GraduationCap, bio: Quote }
 

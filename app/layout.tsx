@@ -18,6 +18,9 @@ const text = Atkinson_Hyperlegible_Next({
   subsets: ['latin', 'latin-ext'],
   variable: '--font-text',
   display: 'swap',
+  // Pas de métriques de repli connues pour cette police : repli système simple
+  adjustFontFallback: false,
+  fallback: ['ui-sans-serif', 'system-ui', 'Segoe UI', 'Roboto', 'Arial', 'sans-serif'],
 })
 
 const serif = Fraunces({

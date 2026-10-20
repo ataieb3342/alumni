@@ -38,7 +38,7 @@ export const registerSchema = z.object({
 // Schémas de validation pour les annonces
 // ========================================
 
-// Mêmes valeurs que le schéma Sanity (sanity/schemaTypes/announcement.ts) et le formulaire
+// Mêmes valeurs que le schéma de la base (db/schema.ts) et le formulaire
 const ANNOUNCEMENT_TYPES = ['job_offer', 'internship', 'opportunity', 'event', 'school_supplies', 'other'] as const
 
 export const createAnnouncementSchema = z.object({

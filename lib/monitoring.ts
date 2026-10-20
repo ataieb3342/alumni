@@ -30,20 +30,20 @@ interface MonitoringOptions {
 }
 
 /**
- * Monitorer une requête vers Sanity
+ * Monitorer une requête vers la base de données
  */
-export async function monitorSanityQuery<T>(
+export async function monitorDatabaseQuery<T>(
   fn: () => Promise<T>,
   options: MonitoringOptions
 ): Promise<T> {
   const { operation, slowThreshold = 500, context } = options;
 
   return await measurePerformance(
-    `Sanity: ${operation}`,
+    `DB: ${operation}`,
     async () => {
       return await startSpan(operation, 'db.query', fn);
     },
-    { ...context, service: 'sanity' }
+    { ...context, service: 'database' }
   );
 }
 
@@ -296,7 +296,7 @@ class CircuitBreaker {
 
 // Circuit breakers pour services externes communs
 export const circuitBreakers = {
-  sanity: new CircuitBreaker(5, 60000),
+  database: new CircuitBreaker(5, 60000),
   email: new CircuitBreaker(3, 120000),
   storage: new CircuitBreaker(5, 60000),
   externalApi: new CircuitBreaker(5, 60000),

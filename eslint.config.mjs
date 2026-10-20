@@ -14,6 +14,11 @@ const eslintConfig = [
       "coverage/**",
       "next-env.d.ts",
       "*.tsbuildinfo",
+      // Scripts ponctuels non versionnés (anciennement branchés sur Sanity)
+      "scripts/**",
+      ".data/**",
+      ".migration/**",
+      "docs/perf/**",
     ],
   },
   ...nextCoreWebVitals,

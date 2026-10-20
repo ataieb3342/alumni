@@ -3,10 +3,11 @@
  */
 import { collectOrganizations, indexMember, suggestCities } from '@/lib/directorySearch'
 import { listDirectoryMembers } from './users'
+import { toCardUser } from '@/lib/directoryView'
 
 export async function getNetworkFigures() {
   const members = await listDirectoryMembers()
-  const indexed = members.map(indexMember)
+  const indexed = members.map((member) => indexMember(toCardUser(member)))
   return {
     members: members.length,
     cities: suggestCities(indexed, 'any').length,
