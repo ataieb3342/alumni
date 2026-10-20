@@ -3,8 +3,9 @@
 import { signIn } from 'next-auth/react'
 import { useState } from 'react'
 import { Spinner } from '@/app/components/ui/Spinner'
+import type { OAuthProvider } from '@/lib/auth/providers'
 
-export type OAuthProvider = 'google' | 'linkedin'
+export type { OAuthProvider }
 
 const LABELS: Record<OAuthProvider, string> = { google: 'Google', linkedin: 'LinkedIn' }
 
@@ -55,11 +56,4 @@ export function OAuthButtons({ providers, mode, callbackUrl }: { providers: OAut
       </div>
     </div>
   )
-}
-
-export function availableProviders(): OAuthProvider[] {
-  return [
-    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? (['google'] as const) : []),
-    ...(process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET ? (['linkedin'] as const) : []),
-  ]
 }

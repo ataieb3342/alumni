@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { AuthLayout } from '@/app/components/auth/AuthLayout'
-import { availableProviders } from '@/app/components/auth/OAuthButtons'
+import { availableProviders } from '@/lib/auth/providers'
 import { RegisterForm } from './RegisterForm'
 
 export const metadata: Metadata = { title: 'Adhérer', description: 'Adhésion libre et gratuite au réseau des anciens du lycée Victor Hugo de Besançon' }

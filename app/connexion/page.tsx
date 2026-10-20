@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import { safeCallbackUrl } from '@/lib/utils'
 import { AuthLayout } from '@/app/components/auth/AuthLayout'
-import { availableProviders } from '@/app/components/auth/OAuthButtons'
+import { availableProviders } from '@/lib/auth/providers'
 import { LoginForm } from './LoginForm'
 
 export const metadata: Metadata = { title: 'Connexion' }
