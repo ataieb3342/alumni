@@ -42,6 +42,13 @@ function tokenFieldsFromUser(user: User) {
 
 export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
   ...authConfig,
+  logger: {
+    error(error) {
+      // Connexion refusée (mot de passe faux, compte en attente…) : cas normal, pas une erreur serveur
+      if (error.name === 'CredentialsSignin' || (error as { type?: string }).type === 'CredentialsSignin') return
+      logger.error('[auth]', error)
+    },
+  },
   providers: [
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
       ? [
