@@ -86,13 +86,14 @@ describe('Email Functions', () => {
       expect(call.text).toContain('Jean Dupont')
     })
 
-    it('should include Sanity URL in email', async () => {
+    it("renvoie vers les demandes en attente de l'administration du site (plus de Sanity)", async () => {
       mockSendMail.mockResolvedValue({ messageId: 'test-message-id' })
 
       await sendAdminNotificationEmail(userData)
 
       const call = mockSendMail.mock.calls[0][0]
-      expect(call.html).toContain('https://test.sanity.studio/structure/user;user-123')
+      expect(call.html).toContain('/admin/utilisateurs?statut=pending')
+      expect(call.html).not.toMatch(/sanity/i)
     })
 
     it('should handle different user types', async () => {

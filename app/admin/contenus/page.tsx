@@ -14,6 +14,7 @@ import { ItemActions } from '@/app/components/content/ItemActions'
 import { Badge } from '@/app/components/ui/Badge'
 import { ANNOUNCEMENT_TYPES_META } from '@/app/components/announcements/meta'
 import { TESTIMONIAL_TYPES_INFO } from '@/lib/testimonials'
+import { isPast } from '@/lib/dates'
 
 export const metadata = { title: 'Contenus' }
 
@@ -104,7 +105,7 @@ export default async function AdminContentPage() {
                     {a.title}
                   </Link>
                   <Badge tone="neutral">{ANNOUNCEMENT_TYPES_META[a.type].label}</Badge>
-                  {a.expiresAt && a.expiresAt.getTime() < Date.now() && <Badge tone="red">Expirée</Badge>}
+                  {isPast(a.expiresAt) && <Badge tone="red">Expirée</Badge>}
                 </p>
                 <p className="text-sm text-ink-muted">
                   {a.author ? `${a.author.firstName} ${a.author.lastName}` : 'Auteur supprimé'} · {a.publishedAt.toLocaleDateString('fr-FR')}

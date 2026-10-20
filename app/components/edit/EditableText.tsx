@@ -60,36 +60,39 @@ export function EditableText({
     if (event.key === 'Escape') (event.currentTarget as HTMLElement).blur()
   }
 
-  return createElement(as, {
-    ref,
-    className: cn(className, editableOutline, multiline && 'whitespace-pre-line', 'empty:before:content-[attr(data-placeholder)] empty:before:text-ink-muted/70 empty:before:italic'),
-    contentEditable: 'plaintext-only',
-    suppressContentEditableWarning: true,
-    role: 'textbox',
-    'aria-label': label,
-    'aria-multiline': multiline || undefined,
-    'data-placeholder': placeholder,
-    'data-editable': path,
-    spellCheck: true,
-    onKeyDown,
-    onPaste: (event: React.ClipboardEvent<HTMLElement>) => {
-      // Collage en texte brut uniquement
-      event.preventDefault()
-      const text = event.clipboardData.getData('text/plain')
-      document.execCommand('insertText', false, multiline ? text : text.replace(/\s*\n\s*/g, ' '))
-    },
-    onInput: (event: React.FormEvent<HTMLElement>) => {
-      let text = (event.currentTarget as HTMLElement).innerText.replace(/ /g, ' ')
-      if (!multiline) text = text.replace(/\n/g, ' ')
-      if (maxLength && text.length > maxLength) text = text.slice(0, maxLength)
-      setValue(text)
-    },
-    onBlur: (event: React.FocusEvent<HTMLElement>) => {
-      const text = event.currentTarget.innerText.trim()
-      if (text !== value) setValue(text)
-    },
-    dangerouslySetInnerHTML: { __html: initialHtml },
-  })
+  const Tag = as
+  return (
+    <Tag
+      ref={ref}
+      className={cn(className, editableOutline, multiline && 'whitespace-pre-line', 'empty:before:text-ink-muted/70 empty:before:italic empty:before:content-[attr(data-placeholder)]')}
+      contentEditable="plaintext-only"
+      suppressContentEditableWarning
+      role="textbox"
+      aria-label={label}
+      aria-multiline={multiline || undefined}
+      data-placeholder={placeholder}
+      data-editable={path}
+      spellCheck
+      onKeyDown={onKeyDown}
+      onPaste={(event: React.ClipboardEvent<HTMLElement>) => {
+        // Collage en texte brut uniquement
+        event.preventDefault()
+        const text = event.clipboardData.getData('text/plain')
+        document.execCommand('insertText', false, multiline ? text : text.replace(/\s*\n\s*/g, ' '))
+      }}
+      onInput={(event: React.FormEvent<HTMLElement>) => {
+        let text = event.currentTarget.innerText.replace(/\u00a0/g, ' ')
+        if (!multiline) text = text.replace(/\n/g, ' ')
+        if (maxLength && text.length > maxLength) text = text.slice(0, maxLength)
+        setValue(text)
+      }}
+      onBlur={(event: React.FocusEvent<HTMLElement>) => {
+        const text = event.currentTarget.innerText.trim()
+        if (text !== value) setValue(text)
+      }}
+      dangerouslySetInnerHTML={{ __html: initialHtml }}
+    />
+  )
 }
 
 function escapeHtml(text: string) {

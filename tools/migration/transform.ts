@@ -105,8 +105,8 @@ export function transformUser(doc: SanityDoc, lookup: MediaLookup, adminEmails: 
     linkedIn: str(doc.linkedIn) ?? null,
     bio: str(doc.bio) ?? null,
     description: str(doc.description) ?? null,
-    education: education.map(({ _type: _ignored, ...rest }) => rest),
-    experience: experience.map(({ _type: _ignored, ...rest }) => rest),
+    education: education.map(({ _type: _type, ...rest }) => rest),
+    experience: experience.map(({ _type: _type, ...rest }) => rest),
     roleAssociation: (Array.isArray(doc.roleAssociation) ? doc.roleAssociation : []).filter(
       (value): value is string => typeof value === 'string'
     ),

@@ -27,7 +27,7 @@ const eslintConfig = [
     // Règles reprises de l'ancien .eslintrc.json
     rules: {
       "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrors: "none" }],
       "@next/next/no-html-link-for-pages": "warn",
     },
   },

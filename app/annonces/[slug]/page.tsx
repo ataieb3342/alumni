@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowUpRight, Building2, CalendarDays, Mail, MapPin, Phone }
 import { requireMemberPage } from '@/lib/auth/session'
 import { getAnnouncementBySlug } from '@/lib/data/announcements'
 import { eventCountdown, formatEventDate } from '@/lib/eventDate'
+import { isFuture, isPast } from '@/lib/dates'
 import { Alert } from '@/app/components/ui/Alert'
 import { Avatar } from '@/app/components/ui/Avatar'
 import { Badge } from '@/app/components/ui/Badge'
@@ -26,7 +27,7 @@ export default async function AnnouncementPage({ params }: { params: Promise<{ s
   const meta = ANNOUNCEMENT_TYPES_META[announcement.type]
   const Icon = meta.icon
   const current = announcement.author?.experience.find((exp) => exp.current)
-  const expired = announcement.expiresAt && announcement.expiresAt.getTime() < Date.now()
+  const expired = isPast(announcement.expiresAt)
   const canEdit = viewer.id === announcement.authorId || viewer.role === 'admin'
 
   return (
@@ -55,7 +56,7 @@ export default async function AnnouncementPage({ params }: { params: Promise<{ s
               <p className="mt-4 inline-flex flex-wrap items-center gap-2 rounded-[var(--radius-md)] bg-highlight px-4 py-2.5 font-semibold text-on-highlight">
                 <CalendarDays className="size-5" aria-hidden="true" />
                 <span className="first-letter:uppercase">{formatEventDate(announcement.eventDate.toISOString())}</span>
-                {announcement.eventDate.getTime() > Date.now() && <span className="rounded-full bg-ink px-2.5 py-0.5 text-xs text-paper">{eventCountdown(announcement.eventDate.toISOString())}</span>}
+                {isFuture(announcement.eventDate) && <span className="rounded-full bg-ink px-2.5 py-0.5 text-xs text-paper">{eventCountdown(announcement.eventDate.toISOString())}</span>}
               </p>
             )}
             {(announcement.company || announcement.location) && (

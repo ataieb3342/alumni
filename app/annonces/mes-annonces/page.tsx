@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Megaphone } from 'lucide-react'
 import { requireMemberPage } from '@/lib/auth/session'
 import { listAnnouncementsByAuthor } from '@/lib/data/announcements'
+import { isPast } from '@/lib/dates'
 import { Badge } from '@/app/components/ui/Badge'
 import { ButtonLink } from '@/app/components/ui/Button'
 import { EmptyState } from '@/app/components/ui/EmptyState'
@@ -36,7 +37,7 @@ export default async function MyAnnouncementsPage() {
             <ul className="space-y-4">
               {announcements.map((announcement) => {
                 const meta = ANNOUNCEMENT_TYPES_META[announcement.type]
-                const expired = announcement.expiresAt && announcement.expiresAt.getTime() < Date.now()
+                const expired = isPast(announcement.expiresAt)
                 return (
                   <li key={announcement.id} className="rounded-[var(--radius-lg)] border border-line bg-paper-raised p-5">
                     <div className="flex flex-wrap items-center gap-2">

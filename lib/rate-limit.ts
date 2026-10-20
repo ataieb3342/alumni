@@ -201,20 +201,16 @@ export const RateLimitPresets = {
  */
 export function getRateLimitStats(ip?: string) {
   if (ip) {
-    const attempts = requestStore.get(ip) || []
-    return {
-      ip,
-      attempts: attempts.length,
-      timestamps: attempts,
-    }
+    // Les compteurs sont par route (« /chemin:IP ») : on cumule ceux de l'IP
+    const timestamps = [...requestStore.entries()]
+      .filter(([key]) => key === ip || key.endsWith(`:${ip}`))
+      .flatMap(([, attempts]) => attempts)
+    return { ip, attempts: timestamps.length, timestamps }
   }
 
   return {
     totalIps: requestStore.size,
-    totalAttempts: Array.from(requestStore.values()).reduce(
-      (sum, attempts) => sum + attempts.length,
-      0
-    ),
+    totalAttempts: Array.from(requestStore.values()).reduce((sum, attempts) => sum + attempts.length, 0),
   }
 }
 
