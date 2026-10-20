@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { MapPin, Search, X } from 'lucide-react'
-import DirectoryCard, { type DirectoryUser } from './DirectoryCard'
+import { DirectoryCard, DirectoryGrid, type DirectoryCardUser } from './DirectoryCard'
 import DirectorySearchBox, { type Suggestion } from './DirectorySearchBox'
 import FilterMenu from './FilterMenu'
 import SubjectCheckboxes from './SubjectCheckboxes'
@@ -22,9 +22,12 @@ import {
   type MatchHint,
 } from '@/lib/directorySearch'
 import { getSubject, SUBJECTS } from '@/lib/subjects'
+import { cn } from '@/lib/utils'
+import { SubjectIcon } from '@/app/components/ui/icons'
+import { buttonClasses } from '@/app/components/ui/Button'
 
 interface DirectoryListProps {
-  members: DirectoryUser[]
+  members: DirectoryCardUser[]
   currentUserId?: string
   /** Paramètres de l'URL, pour retrouver sa recherche en revenant d'un profil */
   initialParams?: Record<string, string | string[] | undefined>
@@ -142,7 +145,7 @@ export default function DirectoryList({ members, currentUserId, initialParams }:
     const queryTokens = tokenize(filters.q)
     const cityTokens = tokenize(filters.city)
     const found: {
-      entry: IndexedMember<DirectoryUser>
+      entry: IndexedMember<DirectoryCardUser>
       score: number
       subjectMatches: number
       hints: MatchHint[]
@@ -254,7 +257,7 @@ export default function DirectoryList({ members, currentUserId, initialParams }:
         .slice(0, 4)
         .map((entry) => ({
           kind: 'member' as const,
-          id: entry.member._id,
+          id: entry.member.id,
           name: `${entry.member.firstName} ${entry.member.lastName}`,
           detail: [
             entry.member.promotionYear && `Promo ${entry.member.promotionYear}`,
@@ -282,7 +285,7 @@ export default function DirectoryList({ members, currentUserId, initialParams }:
   }
 
   // Ce qu'il manque au profil du visiteur pour qu'on le trouve
-  const me = currentUserId ? indexed.find((entry) => entry.member._id === currentUserId) : undefined
+  const me = currentUserId ? indexed.find((entry) => entry.member.id === currentUserId) : undefined
   const missing = me
     ? [
         !me.summary.city && 'votre ville actuelle',
@@ -294,7 +297,7 @@ export default function DirectoryList({ members, currentUserId, initialParams }:
 
   const hasFilters = filtersToSearch({ ...filters, scope: 'any', sort: 'pertinence' }) !== ''
   const visible = results.slice(0, visibleCount)
-  const hints = Object.fromEntries(results.map(({ entry, hints }) => [entry.member._id, hints]))
+  const hints = Object.fromEntries(results.map(({ entry, hints }) => [entry.member.id, hints]))
   const cityScope = SCOPE_OPTIONS.find((option) => option.value === filters.scope)!
   const cityTokens = tokenize(filters.city)
 
@@ -312,7 +315,7 @@ export default function DirectoryList({ members, currentUserId, initialParams }:
       const subject = getSubject(value)!
       return {
         key: value,
-        label: `${subject.emoji} ${subject.short}`,
+        label: subject.short,
         remove: () => update({ subjects: filters.subjects.filter((s) => s !== value) }),
       }
     }),
@@ -323,49 +326,47 @@ export default function DirectoryList({ members, currentUserId, initialParams }:
   ]
 
   return (
-    <div className="space-y-8">
-      {/* Recherche */}
-      <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-3 sm:p-4">
-        <DirectorySearchBox
-          value={filters.q}
-          onChange={(q) => update({ q })}
-          suggestions={suggestions}
-          onSelect={onSuggestion}
-        />
+    <div className="space-y-10">
+      {/* Recherche et filtres */}
+      <div className="rounded-[var(--radius-lg)] border border-line bg-paper-raised p-3 shadow-[var(--shadow-md)] sm:p-4">
+        <DirectorySearchBox value={filters.q} onChange={(q) => update({ q })} suggestions={suggestions} onSelect={onSuggestion} />
 
-        <div className="mt-3 flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-3 px-3 sm:mx-0 sm:px-0 sm:overflow-visible sm:flex-wrap">
+        <div className="scrollbar-none -mx-3 mt-3 flex items-center gap-2 overflow-x-auto px-3 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
           <FilterMenu
             title="Ville"
             active={!!filters.city.trim()}
             resultCount={results.length}
             label={
               <>
-                <MapPin className="w-4 h-4" aria-hidden="true" />
+                <MapPin className="size-4" aria-hidden="true" />
                 {filters.city.trim() ? cityLabel : 'Ville'}
               </>
             }
           >
             {(close) => (
               <div className="space-y-3">
-                <div className="flex p-1 bg-gray-100 rounded-xl text-sm" role="group" aria-label="Portée de la ville">
+                <div className="flex rounded-[var(--radius-sm)] bg-paper-sunken p-1 text-sm" role="group" aria-label="Portée de la ville">
                   {SCOPE_OPTIONS.map((option) => (
                     <button
                       key={option.value}
                       type="button"
                       aria-pressed={filters.scope === option.value}
                       onClick={() => update({ scope: option.value })}
-                      className={`flex-1 px-3 py-1.5 rounded-lg font-medium transition ${
-                        filters.scope === option.value ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                      }`}
+                      className={cn(
+                        'flex-1 rounded-[6px] px-3 py-1.5 font-semibold transition',
+                        filters.scope === option.value ? 'bg-paper-raised text-blue shadow-sm' : 'text-ink-soft hover:text-ink'
+                      )}
                     >
                       {option.label}
                     </button>
                   ))}
                 </div>
-                <p className="text-xs text-gray-500 px-1">{cityScope.help}</p>
+                <p className="px-1 text-xs text-ink-muted">{cityScope.help}</p>
                 <div className="relative">
-                  <label htmlFor="directory-city" className="sr-only">Ville</label>
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" aria-hidden="true" />
+                  <label htmlFor="directory-city" className="sr-only">
+                    Ville
+                  </label>
+                  <MapPin className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ink-muted" aria-hidden="true" />
                   <input
                     id="directory-city"
                     type="text"
@@ -373,16 +374,16 @@ export default function DirectoryList({ members, currentUserId, initialParams }:
                     onChange={(event) => update({ city: event.target.value })}
                     placeholder="Lyon, Brest, Montréal…"
                     autoComplete="off"
-                    className="w-full h-11 pl-9 pr-9 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-400 outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="h-11 w-full rounded-[var(--radius-sm)] border border-line-strong/60 bg-paper pr-9 pl-9 text-ink outline-none placeholder:text-ink-muted focus:border-blue"
                   />
                   {filters.city && (
                     <button
                       type="button"
                       onClick={() => update({ city: '' })}
                       aria-label="Effacer la ville"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full text-gray-400 hover:text-gray-700"
+                      className="absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1 text-ink-muted hover:text-ink"
                     >
-                      <X className="w-4 h-4" aria-hidden="true" />
+                      <X className="size-4" aria-hidden="true" />
                     </button>
                   )}
                 </div>
@@ -398,10 +399,10 @@ export default function DirectoryList({ members, currentUserId, initialParams }:
                             update({ city: city.name })
                             close()
                           }}
-                          className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-gray-800 hover:bg-gray-50"
+                          className="flex w-full items-center justify-between rounded-[var(--radius-sm)] px-3 py-2 text-sm text-ink hover:bg-paper-sunken"
                         >
                           {city.name}
-                          <span className="text-xs text-gray-400">{city.count}</span>
+                          <span className="text-xs text-ink-muted">{city.count}</span>
                         </button>
                       </li>
                     ))}
@@ -419,16 +420,14 @@ export default function DirectoryList({ members, currentUserId, initialParams }:
             >
               {() => (
                 <div className="space-y-3">
-                  <p className="text-sm text-gray-600">
-                    Cochez celles qui vous plaisent : les profils qui en cumulent le plus apparaissent en premier.
-                  </p>
+                  <p className="text-sm text-ink-soft">Cochez celles qui vous plaisent : les profils qui en cumulent le plus apparaissent en premier.</p>
                   <SubjectCheckboxes
                     legend="Filtrer par matière"
                     selected={filters.subjects}
                     onChange={(subjects) => update({ subjects })}
                     counts={subjectCounts}
                     compact
-                    className="grid grid-cols-2 gap-2 [&>label]:rounded-xl [&>label]:py-2"
+                    className="grid grid-cols-2 gap-2 [&>label]:rounded-[var(--radius-sm)] [&>label]:py-2"
                   />
                 </div>
               )}
@@ -436,12 +435,7 @@ export default function DirectoryList({ members, currentUserId, initialParams }:
           )}
 
           {filters.type !== 'staff' && promoOptions.length > 0 && (
-            <FilterMenu
-              title="Promotion"
-              active={!!filters.promo}
-              resultCount={results.length}
-              label={filters.promo ? `Promo ${filters.promo}` : 'Promo'}
-            >
+            <FilterMenu title="Promotion" active={!!filters.promo} resultCount={results.length} label={filters.promo ? `Promo ${filters.promo}` : 'Promo'}>
               {(close) => (
                 <div className="grid grid-cols-3 gap-2">
                   <button
@@ -450,9 +444,10 @@ export default function DirectoryList({ members, currentUserId, initialParams }:
                       update({ promo: '' })
                       close()
                     }}
-                    className={`col-span-3 px-3 py-2 rounded-xl border text-sm font-medium ${
-                      !filters.promo ? 'bg-blue-50 border-blue-500 text-blue-800' : 'border-gray-200 text-gray-700 hover:border-gray-400'
-                    }`}
+                    className={cn(
+                      'col-span-3 rounded-[var(--radius-sm)] border px-3 py-2 text-sm font-semibold',
+                      !filters.promo ? 'border-blue bg-blue-soft text-blue' : 'border-line text-ink-soft hover:border-ink'
+                    )}
                   >
                     Toutes les promos
                   </button>
@@ -465,13 +460,12 @@ export default function DirectoryList({ members, currentUserId, initialParams }:
                         update({ promo: String(year) })
                         close()
                       }}
-                      className={`px-2 py-2 rounded-xl border text-sm font-medium ${
-                        filters.promo === String(year)
-                          ? 'bg-blue-50 border-blue-500 text-blue-800'
-                          : 'border-gray-200 text-gray-700 hover:border-gray-400'
-                      }`}
+                      className={cn(
+                        'rounded-[var(--radius-sm)] border px-2 py-2 text-sm font-semibold',
+                        filters.promo === String(year) ? 'border-blue bg-blue-soft text-blue' : 'border-line text-ink-soft hover:border-ink'
+                      )}
                     >
-                      {year} <span className="text-xs text-gray-400">{count}</span>
+                      {year} <span className="text-xs text-ink-muted">{count}</span>
                     </button>
                   ))}
                 </div>
@@ -479,54 +473,48 @@ export default function DirectoryList({ members, currentUserId, initialParams }:
             </FilterMenu>
           )}
 
-          <FilterMenu
-            title="Profil"
-            active={!!filters.type}
-            resultCount={results.length}
-            label={TYPE_FILTERS.find((type) => type.value === filters.type)?.label ?? 'Profil'}
-          >
+          <FilterMenu title="Profil" active={!!filters.type} resultCount={results.length} label={TYPE_FILTERS.find((type) => type.value === filters.type)?.label ?? 'Profil'}>
             {(close) => (
               <ul className="-mx-1">
-                {[{ value: '', label: 'Tous les membres' }, ...TYPE_FILTERS.filter((type) => typeCounts.get(type.value))].map(
-                  (type) => (
-                    <li key={type.value || 'all'}>
-                      <button
-                        type="button"
-                        aria-pressed={filters.type === type.value}
-                        onClick={() => {
-                          update({ type: type.value, promo: type.value === 'staff' ? '' : filters.promo })
-                          close()
-                        }}
-                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm ${
-                          filters.type === type.value ? 'bg-blue-50 text-blue-800 font-semibold' : 'text-gray-800 hover:bg-gray-50'
-                        }`}
-                      >
-                        {type.label}
-                        <span className="text-xs text-gray-400">{type.value ? typeCounts.get(type.value) : members.length}</span>
-                      </button>
-                    </li>
-                  )
-                )}
+                {[{ value: '', label: 'Tous les membres' }, ...TYPE_FILTERS.filter((type) => typeCounts.get(type.value))].map((type) => (
+                  <li key={type.value || 'all'}>
+                    <button
+                      type="button"
+                      aria-pressed={filters.type === type.value}
+                      onClick={() => {
+                        update({ type: type.value, promo: type.value === 'staff' ? '' : filters.promo })
+                        close()
+                      }}
+                      className={cn(
+                        'flex w-full items-center justify-between rounded-[var(--radius-sm)] px-3 py-2.5 text-sm',
+                        filters.type === type.value ? 'bg-blue-soft font-semibold text-blue' : 'text-ink hover:bg-paper-sunken'
+                      )}
+                    >
+                      {type.label}
+                      <span className="text-xs text-ink-muted">{type.value ? typeCounts.get(type.value) : members.length}</span>
+                    </button>
+                  </li>
+                ))}
               </ul>
             )}
           </FilterMenu>
         </div>
 
         {activeChips.length > 0 && (
-          <div className="mt-3 pt-3 border-t border-gray-100 flex flex-wrap items-center gap-2">
+          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-line pt-3">
             {activeChips.map((chip) => (
               <button
                 key={chip.key}
                 type="button"
                 onClick={chip.remove}
                 aria-label={`Retirer le filtre ${chip.label}`}
-                className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1 rounded-full bg-gray-900 text-white text-sm hover:bg-gray-700 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-full bg-ink py-1 pr-2 pl-3 text-sm font-semibold text-paper transition-colors hover:bg-ink-soft"
               >
                 {chip.label}
-                <X className="w-3.5 h-3.5" aria-hidden="true" />
+                <X className="size-3.5" aria-hidden="true" />
               </button>
             ))}
-            <button type="button" onClick={reset} className="ml-1 text-sm font-medium text-gray-500 hover:text-gray-900">
+            <button type="button" onClick={reset} className="ml-1 text-sm font-semibold text-ink-muted hover:text-ink">
               Tout effacer
             </button>
           </div>
@@ -535,15 +523,11 @@ export default function DirectoryList({ members, currentUserId, initialParams }:
 
       {/* Invitation à compléter son profil */}
       {missing.length > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-2xl bg-blue-50 border border-blue-200">
-          <p className="flex-1 text-sm text-blue-900">
-            <span className="font-semibold">Aidez les autres à vous trouver :</span>{' '}
-            ajoutez {joinFrench(missing)} à votre profil.
+        <div className="flex flex-col gap-3 rounded-[var(--radius-md)] border border-dashed border-red/50 bg-red-soft/50 p-4 sm:flex-row sm:items-center">
+          <p className="flex-1 text-sm text-ink">
+            <span className="font-bold">Aidez les autres à vous trouver :</span> ajoutez {joinFrench(missing)} à votre profil.
           </p>
-          <Link
-            href="/profil"
-            className="shrink-0 inline-flex items-center justify-center px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition"
-          >
+          <Link href="/profil" className={buttonClasses('primary', 'sm', 'shrink-0')}>
             Compléter mon profil
           </Link>
         </div>
@@ -551,43 +535,45 @@ export default function DirectoryList({ members, currentUserId, initialParams }:
 
       {/* Découverte, tant qu'aucune recherche n'est lancée */}
       {!hasFilters && subjectCounts.size > 0 && (
-        <section aria-labelledby="explorer-matieres" className="space-y-4">
+        <section aria-labelledby="explorer-matieres" className="space-y-5">
           <div>
-            <h2 id="explorer-matieres" className="text-xl font-bold text-gray-900">Explorer par matière</h2>
-            <p className="text-sm text-gray-600">Choisissez une matière qui vous plaît pour découvrir où elle a mené les anciens.</p>
+            <h2 id="explorer-matieres" className="text-2xl text-ink">
+              Explorer par matière
+            </h2>
+            <p className="text-ink-soft">Choisissez une matière qui vous plaît pour découvrir où elle a mené les anciens.</p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {SUBJECTS.filter((subject) => subjectCounts.get(subject.value)).map((subject) => (
               <button
                 key={subject.value}
                 type="button"
                 onClick={() => update({ subjects: [subject.value] })}
-                className="group flex items-center gap-3 rounded-2xl bg-white border border-gray-200 p-3 sm:p-4 text-left hover:border-blue-300 hover:shadow-md transition"
+                className="group flex items-center gap-3 rounded-[var(--radius-md)] border border-line bg-paper-raised p-3 text-left transition hover:-translate-y-0.5 hover:border-blue/60 hover:shadow-[var(--shadow-md)] sm:p-4"
               >
-                <span className="w-10 h-10 shrink-0 rounded-xl bg-gray-50 flex items-center justify-center text-xl" aria-hidden="true">
-                  {subject.emoji}
+                <span className="grid size-10 shrink-0 place-items-center rounded-[var(--radius-sm)] bg-blue-soft text-blue transition-colors group-hover:bg-blue group-hover:text-on-blue" aria-hidden="true">
+                  <SubjectIcon value={subject.value} className="size-5" />
                 </span>
                 <span className="min-w-0">
-                  <span className="block font-semibold leading-snug text-gray-900 group-hover:text-blue-700">{subject.short}</span>
-                  <span className="block text-xs text-gray-500">{plural(subjectCounts.get(subject.value)!, 'profil')}</span>
+                  <span className="block leading-snug font-bold text-ink">{subject.short}</span>
+                  <span className="block text-xs text-ink-muted">{plural(subjectCounts.get(subject.value)!, 'profil')}</span>
                 </span>
               </button>
             ))}
           </div>
 
           {citiesAnyScope.length > 0 && (
-            <div className="flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap pt-2">
-              <span className="shrink-0 text-sm font-medium text-gray-700">Où sont-ils passés ?</span>
+            <div className="scrollbar-none -mx-4 flex items-center gap-2 overflow-x-auto px-4 pt-2 sm:mx-0 sm:flex-wrap sm:px-0">
+              <span className="shrink-0 font-display text-lg text-ink">Où sont-ils passés ?</span>
               {citiesAnyScope.slice(0, 10).map((city) => (
                 <button
                   key={city.name}
                   type="button"
                   onClick={() => update({ city: city.name, scope: 'any' })}
-                  className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-sm text-gray-700 hover:border-blue-300 hover:text-blue-700 transition-colors"
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line bg-paper-raised px-3 py-1.5 text-sm font-semibold text-ink-soft transition-colors hover:border-red/60 hover:text-ink"
                 >
-                  <MapPin className="w-3.5 h-3.5 text-gray-400" aria-hidden="true" />
+                  <MapPin className="size-3.5 text-red" aria-hidden="true" />
                   {city.name}
-                  <span className="text-xs text-gray-400">{city.count}</span>
+                  <span className="text-xs text-ink-muted">{city.count}</span>
                 </button>
               ))}
             </div>
@@ -599,21 +585,23 @@ export default function DirectoryList({ members, currentUserId, initialParams }:
       <section aria-labelledby="directory-results" className="space-y-4">
         <div className="flex items-end justify-between gap-3">
           <div className="min-w-0">
-            <h2 id="directory-results" className="text-xl font-bold text-gray-900" aria-live="polite">
+            <h2 id="directory-results" className="text-2xl text-ink" aria-live="polite">
               {hasFilters ? plural(results.length, 'membre') : 'Tous les membres'}
-              {!hasFilters && <span className="ml-2 text-base font-medium text-gray-400">{members.length}</span>}
+              {!hasFilters && <span className="ml-2 font-sans text-base font-semibold text-ink-muted">{members.length}</span>}
             </h2>
             {filters.subjects.length > 1 && filters.sort === 'pertinence' && (
-              <p className="text-xs text-gray-500">Ceux qui cochent le plus de ces matières apparaissent en premier</p>
+              <p className="text-xs text-ink-muted">Ceux qui cochent le plus de ces matières apparaissent en premier</p>
             )}
           </div>
           <div className="shrink-0">
-            <label htmlFor="directory-sort" className="sr-only">Trier par</label>
+            <label htmlFor="directory-sort" className="sr-only">
+              Trier par
+            </label>
             <select
               id="directory-sort"
               value={filters.sort}
               onChange={(event) => update({ sort: event.target.value as Sort })}
-              className="h-9 pl-3 pr-8 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="h-10 rounded-[var(--radius-sm)] border border-line-strong/50 bg-paper-raised pr-8 pl-3 text-sm text-ink outline-none focus:border-blue"
             >
               {SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -628,50 +616,48 @@ export default function DirectoryList({ members, currentUserId, initialParams }:
           <button
             type="button"
             onClick={() => update({ scope: 'any' })}
-            className="w-full text-left p-3 rounded-xl border border-dashed border-gray-300 text-sm text-gray-700 hover:border-blue-300 hover:bg-white transition"
+            className="w-full rounded-[var(--radius-md)] border border-dashed border-line-strong/60 p-3 text-left text-sm text-ink-soft transition hover:border-blue hover:bg-paper-raised"
           >
             Peu de membres ont indiqué leur ville actuelle.{' '}
-            <span className="font-semibold text-blue-700">
+            <span className="font-bold text-blue">
               {widerCount > 1 ? `Voir les ${widerCount} membres passés` : 'Voir le membre passé'} par {cityLabel} →
             </span>
           </button>
         )}
 
         {results.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center">
-            <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Search className="w-6 h-6 text-gray-400" aria-hidden="true" />
+          <div className="rounded-[var(--radius-lg)] border border-dashed border-line-strong/50 bg-paper-raised p-10 text-center">
+            <div className="mx-auto mb-4 grid size-14 place-items-center rounded-full bg-paper-sunken">
+              <Search className="size-6 text-ink-muted" aria-hidden="true" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">Aucun membre ne correspond</h3>
-            <p className="text-gray-600 max-w-md mx-auto">
+            <h3 className="text-xl text-ink">Aucun membre ne correspond</h3>
+            <p className="mx-auto mt-1 max-w-md text-ink-soft">
               {filters.city
                 ? 'Essayez une ville voisine, ou cherchez plutôt une école ou une entreprise de la région.'
                 : 'Essayez un autre mot : une école, une entreprise, un métier ou une promo.'}
             </p>
-            <button
-              type="button"
-              onClick={reset}
-              className="mt-5 inline-flex items-center px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:border-blue-300 hover:text-blue-700 transition"
-            >
+            <button type="button" onClick={reset} className={buttonClasses('secondary', 'md', 'mt-5')}>
               Tout effacer
             </button>
           </div>
         ) : (
           <>
-            <DirectoryCard
-              users={visible.map(({ entry }) => entry.member)}
-              currentUserId={currentUserId}
-              hints={hints}
-              highlightSubjects={filters.subjects}
-            />
+            <DirectoryGrid>
+              {visible.map(({ entry }) => (
+                <li key={entry.member.id}>
+                  <DirectoryCard
+                    user={entry.member}
+                    isMe={entry.member.id === currentUserId}
+                    hints={hints[entry.member.id]}
+                    highlightSubjects={filters.subjects}
+                  />
+                </li>
+              ))}
+            </DirectoryGrid>
 
             {results.length > visibleCount && (
               <div className="flex justify-center pt-2">
-                <button
-                  type="button"
-                  onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
-                  className="px-6 py-3 rounded-xl bg-white border border-gray-200 text-sm font-semibold text-gray-700 shadow-sm hover:border-blue-300 hover:text-blue-700 transition"
-                >
+                <button type="button" onClick={() => setVisibleCount((count) => count + PAGE_SIZE)} className={buttonClasses('secondary', 'lg')}>
                   Afficher plus ({plural(results.length - visibleCount, 'restant')})
                 </button>
               </div>

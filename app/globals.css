@@ -41,9 +41,9 @@
   --warning: #8a5300;
   --warning-soft: #fff1d6;
   /* Réglure Seyès */
-  --seyes-line: rgb(35 67 199 / 0.12);
-  --seyes-strong: rgb(35 67 199 / 0.22);
-  --seyes-margin: rgb(200 52 43 / 0.45);
+  --seyes-line: rgb(35 67 199 / 0.07);
+  --seyes-strong: rgb(35 67 199 / 0.13);
+  --seyes-margin: rgb(200 52 43 / 0.4);
   /* Lavis d'encre (sections sombres) */
   --wash: #141729;
   --wash-raised: #1d2140;

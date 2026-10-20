@@ -1,38 +1,20 @@
-import { redirect } from 'next/navigation'
-import { auth } from '@/lib/auth'
-import Header from '@/app/components/Header'
-import Footer from '@/app/components/Footer'
-import HeroSection from '@/app/components/HeroSection'
-import TestimonialForm from '@/app/components/TestimonialForm'
+import type { Metadata } from 'next'
+import { requireMemberPage } from '@/lib/auth/session'
+import { PageHero } from '@/app/components/site/PageHero'
+import { TestimonialForm } from '@/app/components/testimonials/TestimonialForm'
 
-export const metadata = {
-  title: 'Nouveau témoignage - Association VH Besançon',
-  description: 'Partagez votre expérience avec la communauté',
-}
+export const metadata: Metadata = { title: 'Écrire un témoignage' }
 
 export default async function NewTestimonialPage() {
-  const session = await auth()
-
-  if (!session) {
-    redirect('/connexion?callbackUrl=/temoignages/nouveau')
-  }
-
+  await requireMemberPage('/temoignages/nouveau')
   return (
     <>
-      <Header />
-
-      <main className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
-        <HeroSection
-          title="Créer un témoignage"
-          subtitle="Partagez votre expérience et inspirez la communauté"
-        />
-
-        <section className="max-w-7xl mx-auto px-6 py-16 -mt-10">
-          <TestimonialForm />
-        </section>
-      </main>
-
-      <Footer />
+      <PageHero size="sm" eyebrow="Témoignages" title="Partagez votre expérience" lead="Votre parcours peut aider un lycéen à choisir le sien. Quelques réponses suffisent." />
+      <div className="container-page py-10">
+        <div className="mx-auto max-w-3xl">
+          <TestimonialForm cancelHref="/temoignages" />
+        </div>
+      </div>
     </>
   )
 }

@@ -1,82 +1,51 @@
-import { redirect } from 'next/navigation'
-import { auth } from '@/lib/auth'
-import { client } from '@/sanity/lib/client'
-import { testimonialsQuery } from '@/sanity/lib/queries'
-import TestimonialFilters from '@/app/components/TestimonialFilters'
-import Header from '@/app/components/Header'
-import Footer from '@/app/components/Footer'
-import HeroSection from '@/app/components/HeroSection'
+import type { Metadata } from 'next'
+import { PenLine, NotebookPen } from 'lucide-react'
+import { requireMemberPage } from '@/lib/auth/session'
+import { loadPageContent } from '@/lib/content/page'
+import { listPublishedTestimonials } from '@/lib/data/testimonials'
+import { createEditor } from '@/app/components/edit/editor'
+import { EditableArea } from '@/app/components/edit/EditableArea'
+import { ButtonLink } from '@/app/components/ui/Button'
+import { EmptyState } from '@/app/components/ui/EmptyState'
+import { PageHero } from '@/app/components/site/PageHero'
+import { TestimonialBrowser } from '@/app/components/testimonials/TestimonialBrowser'
 
-export const metadata = {
-  title: 'Témoignages - Association VH Besançon',
-  description:
-    'Découvrez les retours d\'expérience des alumni sur leurs études, parcours professionnels et vies à l\'international',
-}
-
-interface Author {
-  _id: string
-  firstName: string
-  lastName: string
-  userType: string
-  promotionYear?: string
-  profileImage?: {
-    asset: {
-      _id: string
-      url: string
-    }
-  }
-}
-
-interface Testimonial {
-  _id: string
-  title: string
-  slug: {
-    current: string
-  }
-  type: string
-  excerpt: string
-  rating?: number
-  likes?: number
-  tags?: string[]
-  publishedAt: string
-  featuredImage?: {
-    asset: {
-      _id: string
-      url: string
-    }
-  }
-  author: Author
+export const metadata: Metadata = {
+  title: 'Témoignages',
+  description: "Les retours d'expérience des anciens sur leurs études, parcours professionnels et vies à l'international",
 }
 
 export default async function TestimonialsPage() {
-  // Vérifier l'authentification
-  const session = await auth()
-
-  if (!session) {
-    redirect('/connexion?callbackUrl=/temoignages')
-  }
-
-  // Récupérer tous les témoignages
-  const testimonials: Testimonial[] = await client.fetch(testimonialsQuery)
-
+  await requireMemberPage('/temoignages')
+  const [testimonials, page] = await Promise.all([listPublishedTestimonials(), loadPageContent('testimonials')])
+  const e = createEditor('content:testimonials', page.data, page.editMode)
   return (
-    <>
-      <Header />
-
-      <main className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
-        {/* Hero Section */}
-        <HeroSection
-          title="Témoignages de la communauté"
-          subtitle="Découvrez les parcours, expériences et conseils de nos alumni"
-        />
-
-        {/* Testimonials Section */}
-        <section className="max-w-7xl mx-auto px-6 py-16">
-          <TestimonialFilters testimonials={testimonials} />
-        </section>
-      </main>
-
-      <Footer />
-    </>
+    <EditableArea docs={[page.doc]}>
+      <PageHero
+        size="sm"
+        eyebrow="Ils racontent"
+        title={e.text('title', { label: 'Titre' })}
+        lead={e.text('lead', { as: 'p', label: 'Chapeau', multiline: true })}
+        actions={
+          <>
+            <ButtonLink href="/temoignages/nouveau" icon={<PenLine className="size-4" aria-hidden="true" />}>
+              Écrire un témoignage
+            </ButtonLink>
+            <ButtonLink href="/temoignages/mes-temoignages" variant="secondary" icon={<NotebookPen className="size-4" aria-hidden="true" />}>
+              Mes témoignages
+            </ButtonLink>
+          </>
+        }
+      />
+      <div className="container-page py-10 sm:py-14">
+        {testimonials.length === 0 ? (
+          <EmptyState title="Aucun témoignage pour l’instant" action={<ButtonLink href="/temoignages/nouveau">Écrire le premier</ButtonLink>}>
+            Votre parcours peut aider un lycéen à choisir le sien.
+          </EmptyState>
+        ) : (
+          <TestimonialBrowser testimonials={testimonials} />
+        )}
+      </div>
+    </EditableArea>
   )
 }

@@ -38,8 +38,9 @@ async function connect(url: string): Promise<Db> {
     const { drizzle } = await import('drizzle-orm/pglite')
     const { migrate } = await import('drizzle-orm/pglite/migrator')
     if (location !== 'memory') {
-      const { mkdirSync } = await import('node:fs')
-      mkdirSync(path.dirname(path.resolve(location)), { recursive: true })
+      const fs = await import('node:fs')
+      fs.mkdirSync(path.dirname(path.resolve(location)), { recursive: true })
+      lockLocalDatabase(fs, path.resolve(location))
     }
     const client = location === 'memory' ? new PGlite() : new PGlite(path.resolve(location))
     const db = drizzle(client, { schema })
@@ -55,6 +56,38 @@ async function connect(url: string): Promise<Db> {
     prepare: false,
   })
   return drizzle(client, { schema }) as unknown as Db
+}
+
+/**
+ * PGlite ne supporte qu'un processus à la fois : deux processus sur le même
+ * dossier corrompraient la base. Un fichier verrou contient le PID du
+ * propriétaire ; un verrou laissé par un processus mort est repris.
+ */
+function lockLocalDatabase(fs: typeof import('node:fs'), location: string) {
+  const lock = `${location}.lock`
+  try {
+    const owner = Number(fs.readFileSync(lock, 'utf8'))
+    if (owner && owner !== process.pid) {
+      try {
+        process.kill(owner, 0)
+        throw new Error(
+          `La base locale ${location} est déjà ouverte par le processus ${owner} (serveur de développement ?). Arrêtez-le avant de lancer ce script.`
+        )
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error
+      }
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+  }
+  fs.writeFileSync(lock, String(process.pid))
+  process.once('exit', () => {
+    try {
+      if (Number(fs.readFileSync(lock, 'utf8')) === process.pid) fs.rmSync(lock)
+    } catch {
+      // verrou déjà retiré
+    }
+  })
 }
 
 export function getDb(): Promise<Db> {

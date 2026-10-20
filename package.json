@@ -31,7 +31,8 @@
     "db:migrate": "tsx tools/db/migrate.ts",
     "migrate:export": "tsx tools/migration/export-sanity.ts",
     "migrate:import": "tsx tools/migration/import.ts",
-    "migrate:verify": "tsx tools/migration/verify.ts"
+    "migrate:verify": "tsx tools/migration/verify.ts",
+    "db:seed-local": "tsx tools/db/seed-local.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.10",

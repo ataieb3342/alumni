@@ -2,6 +2,8 @@
 
 import { Check } from 'lucide-react'
 import { SUBJECTS } from '@/lib/subjects'
+import { cn } from '@/lib/utils'
+import { SubjectIcon } from '@/app/components/ui/icons'
 
 interface SubjectCheckboxesProps {
   legend: string
@@ -42,13 +44,14 @@ export default function SubjectCheckboxes({
             <label
               key={subject.value}
               title={compact ? subject.label : undefined}
-              className={`relative inline-flex shrink-0 items-center gap-2 pl-2 pr-3 py-1.5 rounded-full border text-sm font-medium select-none transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-blue-500 has-[:focus-visible]:ring-offset-1 ${
+              className={cn(
+                'relative inline-flex shrink-0 select-none items-center gap-2 rounded-full border py-1.5 pr-3 pl-2 text-sm font-semibold transition-colors has-[:focus-visible]:shadow-[var(--focus-ring)]',
                 checked
-                  ? 'bg-blue-50 border-blue-500 text-blue-800 cursor-pointer'
+                  ? 'cursor-pointer border-blue bg-blue-soft text-blue'
                   : disabled
-                    ? 'bg-white border-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-white border-gray-200 text-gray-700 hover:border-blue-300 cursor-pointer'
-              }`}
+                    ? 'cursor-not-allowed border-line bg-paper-raised text-ink-muted/60'
+                    : 'cursor-pointer border-line bg-paper-raised text-ink-soft hover:border-blue/60'
+              )}
             >
               <input
                 type="checkbox"
@@ -61,15 +64,16 @@ export default function SubjectCheckboxes({
               />
               <span
                 aria-hidden="true"
-                className={`w-4 h-4 rounded flex items-center justify-center border transition-colors ${
-                  checked ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-300'
-                }`}
+                className={cn(
+                  'flex size-4 items-center justify-center rounded border transition-colors',
+                  checked ? 'border-blue bg-blue text-on-blue' : 'border-line-strong bg-paper-raised'
+                )}
               >
                 {checked && <Check className="w-3 h-3" strokeWidth={3} />}
               </span>
-              <span aria-hidden="true">{subject.emoji}</span>
+              <SubjectIcon value={subject.value} className="size-4" />
               {compact ? subject.short : subject.label}
-              {counts && <span className={`text-xs ${checked ? 'text-blue-500' : 'text-gray-400'}`}>{count}</span>}
+              {counts && <span className={cn('text-xs', checked ? 'text-blue' : 'text-ink-muted')}>{count}</span>}
             </label>
           )
         })}

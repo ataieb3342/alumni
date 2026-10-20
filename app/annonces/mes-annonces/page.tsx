@@ -1,121 +1,69 @@
-import { redirect } from 'next/navigation'
-import { auth } from '@/lib/auth'
-import { client } from '@/sanity/lib/client'
-import { userAnnouncementsQuery } from '@/sanity/lib/queries'
-import Header from '@/app/components/Header'
-import Footer from '@/app/components/Footer'
-import Link from 'next/link'
-import MyAnnouncementCard from '@/app/components/MyAnnouncementCard'
+import type { Metadata } from 'next'
+import { Megaphone } from 'lucide-react'
+import { requireMemberPage } from '@/lib/auth/session'
+import { listAnnouncementsByAuthor } from '@/lib/data/announcements'
+import { Badge } from '@/app/components/ui/Badge'
+import { ButtonLink } from '@/app/components/ui/Button'
+import { EmptyState } from '@/app/components/ui/EmptyState'
+import { PageHero } from '@/app/components/site/PageHero'
+import { ItemActions } from '@/app/components/content/ItemActions'
+import { ANNOUNCEMENT_TYPES_META } from '@/app/components/announcements/meta'
 
-export const metadata = {
-  title: 'Mes annonces - Association VH Besançon',
-  description: 'Gérez vos annonces publiées',
-}
-
-interface Announcement {
-  _id: string
-  title: string
-  slug: {
-    current: string
-  }
-  type: string
-  company?: string
-  location?: string
-  status: string
-  publishedAt: string
-  expiresAt?: string
-}
+export const metadata: Metadata = { title: 'Mes annonces' }
 
 export default async function MyAnnouncementsPage() {
-  // Vérifier l'authentification
-  const session = await auth()
-
-  if (!session?.user?.id) {
-    redirect('/connexion?callbackUrl=/annonces/mes-annonces')
-  }
-
-  // Récupérer les annonces de l'utilisateur
-  const announcements: Announcement[] = await client.fetch(userAnnouncementsQuery, {
-    userId: session.user.id
-  })
-
-  const publishedAnnouncements = announcements.filter(a => a.status === 'published')
-  const draftAnnouncements = announcements.filter(a => a.status === 'draft')
-
+  const user = await requireMemberPage('/annonces/mes-annonces')
+  const announcements = await listAnnouncementsByAuthor(user.id)
   return (
     <>
-      <Header />
-
-      <main className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
-        <section className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-          <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Mes annonces</h1>
-              <p className="text-gray-600">Gérez vos annonces publiées</p>
-            </div>
-            <Link
-              href="/annonces/nouvelle"
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-900 hover:bg-blue-800 text-white font-medium rounded-lg transition shrink-0"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Nouvelle annonce
-            </Link>
-          </div>
-
+      <PageHero
+        size="sm"
+        eyebrow="Annonces"
+        title="Mes annonces"
+        actions={
+          <ButtonLink href="/annonces/nouvelle" icon={<Megaphone className="size-4" aria-hidden="true" />}>
+            Nouvelle annonce
+          </ButtonLink>
+        }
+      />
+      <div className="container-page py-10">
+        <div className="mx-auto max-w-4xl">
           {announcements.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
-              <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <p className="text-gray-900 font-medium text-lg mb-2">Aucune annonce</p>
-              <p className="text-gray-600 mb-6">Commencez par créer votre première annonce</p>
-              <Link
-                href="/annonces/nouvelle"
-                className="inline-flex items-center gap-2 px-6 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-lg transition"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Créer une annonce
-              </Link>
-            </div>
+            <EmptyState title="Aucune annonce" action={<ButtonLink href="/annonces/nouvelle">Créer une annonce</ButtonLink>}>
+              Commencez par créer votre première annonce.
+            </EmptyState>
           ) : (
-            <div className="space-y-6">
-              {/* Annonces publiées */}
-              {publishedAnnouncements.length > 0 && (
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                    Publiées ({publishedAnnouncements.length})
-                  </h2>
-                  <div className="space-y-4">
-                    {publishedAnnouncements.map((announcement) => (
-                      <MyAnnouncementCard key={announcement._id} announcement={announcement} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Brouillons */}
-              {draftAnnouncements.length > 0 && (
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                    Brouillons ({draftAnnouncements.length})
-                  </h2>
-                  <div className="space-y-4">
-                    {draftAnnouncements.map((announcement) => (
-                      <MyAnnouncementCard key={announcement._id} announcement={announcement} />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+            <ul className="space-y-4">
+              {announcements.map((announcement) => {
+                const meta = ANNOUNCEMENT_TYPES_META[announcement.type]
+                const expired = announcement.expiresAt && announcement.expiresAt.getTime() < Date.now()
+                return (
+                  <li key={announcement.id} className="rounded-[var(--radius-lg)] border border-line bg-paper-raised p-5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge tone={meta.tone}>{meta.label}</Badge>
+                      {announcement.status === 'draft' && <Badge tone="amber">Brouillon</Badge>}
+                      {announcement.status === 'archived' && <Badge tone="neutral">Archivée</Badge>}
+                      {expired && <Badge tone="red">Expirée</Badge>}
+                      <span className="text-sm text-ink-muted">Publiée le {announcement.publishedAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                    </div>
+                    <h2 className="mt-2 text-xl text-ink">{announcement.title}</h2>
+                    {(announcement.company || announcement.location) && <p className="text-sm text-ink-soft">{[announcement.company, announcement.location].filter(Boolean).join(' · ')}</p>}
+                    <div className="mt-4">
+                      <ItemActions
+                        compact
+                        endpoint={`/api/announcements/${announcement.id}`}
+                        viewHref={`/annonces/${announcement.slug}`}
+                        editHref={`/annonces/modifier/${announcement.slug}`}
+                        title={announcement.title}
+                      />
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
           )}
-        </section>
-      </main>
-
-      <Footer />
+        </div>
+      </div>
     </>
   )
 }

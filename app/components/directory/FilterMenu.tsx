@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { ChevronDown, X } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface FilterMenuProps {
   /** Intitulé du bouton, qui reprend la valeur choisie (« Promo 2019 ») */
@@ -58,33 +59,32 @@ export default function FilterMenu({ label, title, active, resultCount, children
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((value) => !value)}
-        className={`inline-flex items-center gap-1.5 h-10 pl-4 pr-3 rounded-full border text-sm font-medium whitespace-nowrap transition-colors ${
-          active
-            ? 'bg-blue-50 border-blue-500 text-blue-800'
-            : 'bg-white border-gray-200 text-gray-700 hover:border-gray-400'
-        }`}
+        className={cn(
+          'inline-flex h-10 items-center gap-1.5 rounded-full border pr-3 pl-4 text-sm font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:shadow-[var(--focus-ring)]',
+          active ? 'border-blue bg-blue-soft text-blue' : 'border-line-strong/50 bg-paper-raised text-ink-soft hover:border-ink'
+        )}
       >
         {label}
-        <ChevronDown className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
+        <ChevronDown className={cn('size-4 transition-transform', open && 'rotate-180')} aria-hidden="true" />
       </button>
 
       {open && (
         <>
           {/* Fond assombri, sur mobile seulement */}
-          <div className="fixed inset-0 z-40 bg-gray-900/40 sm:hidden" aria-hidden="true" onClick={() => setOpen(false)} />
+          <div className="fixed inset-0 z-40 bg-[rgb(10_12_25/0.5)] sm:hidden" aria-hidden="true" onClick={() => setOpen(false)} />
           <div
             id={panelId}
             role="dialog"
             aria-label={title}
-            className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:absolute sm:inset-x-auto sm:bottom-auto sm:left-0 sm:top-full sm:mt-2 sm:w-96 sm:max-w-[calc(100vw-2rem)] sm:max-h-[70vh] sm:rounded-2xl sm:border sm:border-gray-200 sm:p-4"
+            className="animate-rise fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-[var(--radius-lg)] border-t border-line bg-paper-raised p-5 shadow-[var(--shadow-lg)] sm:absolute sm:inset-x-auto sm:top-full sm:bottom-auto sm:left-0 sm:mt-2 sm:max-h-[70vh] sm:w-96 sm:max-w-[calc(100vw-2rem)] sm:rounded-[var(--radius-md)] sm:border sm:p-4"
           >
             <div className="flex items-center justify-between mb-4 sm:hidden">
-              <p className="text-lg font-semibold text-gray-900">{title}</p>
+              <p className="font-display text-xl text-ink">{title}</p>
               <button
                 type="button"
                 onClick={close}
                 aria-label="Fermer"
-                className="p-2 -mr-2 rounded-full text-gray-500 hover:bg-gray-100"
+                className="-mr-2 rounded-full p-2 text-ink-muted hover:bg-paper-sunken"
               >
                 <X className="w-5 h-5" aria-hidden="true" />
               </button>
@@ -95,7 +95,7 @@ export default function FilterMenu({ label, title, active, resultCount, children
             <button
               type="button"
               onClick={close}
-              className="mt-5 w-full py-3 rounded-xl bg-blue-600 text-white font-semibold sm:hidden"
+              className="mt-5 w-full rounded-[var(--radius-sm)] bg-blue py-3 font-semibold text-on-blue shadow-[0_3px_0_0_var(--blue-strong)] sm:hidden"
             >
               Voir {resultCount} membre{resultCount > 1 ? 's' : ''}
             </button>

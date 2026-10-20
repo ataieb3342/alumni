@@ -1,74 +1,61 @@
-import { redirect } from 'next/navigation'
-import { auth } from '@/lib/auth'
-import { client } from '@/sanity/lib/client'
-import { announcementsQuery } from '@/sanity/lib/queries'
-import AnnouncementFilters from '@/app/components/AnnouncementFilters'
-import Header from '@/app/components/Header'
-import Footer from '@/app/components/Footer'
-import HeroSection from '@/app/components/HeroSection'
+import type { Metadata } from 'next'
+import { Megaphone, NotebookPen } from 'lucide-react'
+import { requireMemberPage } from '@/lib/auth/session'
+import { loadPageContent } from '@/lib/content/page'
+import { listPublishedAnnouncements } from '@/lib/data/announcements'
+import { createEditor } from '@/app/components/edit/editor'
+import { EditableArea } from '@/app/components/edit/EditableArea'
+import { ButtonLink } from '@/app/components/ui/Button'
+import { EmptyState } from '@/app/components/ui/EmptyState'
+import { PageHero } from '@/app/components/site/PageHero'
+import { AnnouncementBrowser } from '@/app/components/announcements/AnnouncementBrowser'
 
-export const metadata = {
-  title: 'Forum des Annonces - Association VH Besançon',
-  description: 'Découvrez les offres d&apos;emploi, stages et opportunités partagées par les membres',
-}
-
-interface Announcement {
-  _id: string
-  title: string
-  slug: {
-    current: string
-  }
-  type: string
-  company?: string
-  location?: string
-  description: unknown[]
-  contactEmail?: string
-  externalLink?: string
-  publishedAt: string
-  expiresAt?: string
-  author: {
-    _id: string
-    firstName: string
-    lastName: string
-    userType: string
-    profileImage?: {
-      asset: {
-        _id: string
-        url: string
-      }
-    }
-  }
-}
+export const metadata: Metadata = { title: 'Annonces', description: "Offres d'emploi, stages et opportunités partagées par les membres" }
 
 export default async function AnnouncementsPage() {
-  // Vérifier l'authentification
-  const session = await auth()
-
-  if (!session) {
-    redirect('/connexion?callbackUrl=/annonces')
-  }
-
-  // Récupérer toutes les annonces
-  const announcements: Announcement[] = await client.fetch(announcementsQuery)
-
+  await requireMemberPage('/annonces')
+  const [announcements, page] = await Promise.all([listPublishedAnnouncements(), loadPageContent('announcements')])
+  const e = createEditor('content:announcements', page.data, page.editMode)
   return (
-    <>
-      <Header />
-
-      <main className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
-        {/* Hero Section */}
-        <HeroSection
-          title="Forum des Annonces"
-          subtitle="Découvrez les opportunités partagées par la communauté"
-        />
-
-        {/* Announcements Section */}
-        <section className="max-w-7xl mx-auto px-6 py-16">
-          <AnnouncementFilters announcements={announcements} />
-        </section>
-      </main>
-
-      <Footer />
-    </>
+    <EditableArea docs={[page.doc]}>
+      <PageHero
+        size="sm"
+        eyebrow="Le forum"
+        title={e.text('title', { label: 'Titre' })}
+        lead={e.text('lead', { as: 'p', label: 'Chapeau', multiline: true })}
+        actions={
+          <>
+            <ButtonLink href="/annonces/nouvelle" icon={<Megaphone className="size-4" aria-hidden="true" />}>
+              Publier une annonce
+            </ButtonLink>
+            <ButtonLink href="/annonces/mes-annonces" variant="secondary" icon={<NotebookPen className="size-4" aria-hidden="true" />}>
+              Mes annonces
+            </ButtonLink>
+          </>
+        }
+      />
+      <div className="container-page py-10 sm:py-14">
+        {announcements.length === 0 ? (
+          <EmptyState title="Aucune annonce en cours" action={<ButtonLink href="/annonces/nouvelle">Publier la première</ButtonLink>}>
+            Un stage, un job, un événement ? Partagez-le avec la communauté.
+          </EmptyState>
+        ) : (
+          <AnnouncementBrowser
+            announcements={announcements.map((a) => ({
+              id: a.id,
+              slug: a.slug,
+              title: a.title,
+              type: a.type,
+              company: a.company,
+              location: a.location,
+              description: a.description.slice(0, 400),
+              publishedAt: a.publishedAt,
+              eventDate: a.eventDate,
+              author: a.author ? { id: a.author.id, firstName: a.author.firstName, lastName: a.author.lastName, profileImage: a.author.profileImage } : null,
+            }))}
+          />
+        )}
+      </div>
+    </EditableArea>
   )
 }

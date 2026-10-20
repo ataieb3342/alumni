@@ -1,119 +1,64 @@
-import { redirect } from 'next/navigation'
-import { auth } from '@/lib/auth'
-import { client } from '@/sanity/lib/client'
-import { userTestimonialsQuery } from '@/sanity/lib/queries'
-import Header from '@/app/components/Header'
-import Footer from '@/app/components/Footer'
-import Link from 'next/link'
-import MyTestimonialCard from '@/app/components/MyTestimonialCard'
+import type { Metadata } from 'next'
+import { PenLine } from 'lucide-react'
+import { requireMemberPage } from '@/lib/auth/session'
+import { listTestimonialsByAuthor } from '@/lib/data/testimonials'
+import { TESTIMONIAL_TYPES_INFO } from '@/lib/testimonials'
+import { Badge } from '@/app/components/ui/Badge'
+import { ButtonLink } from '@/app/components/ui/Button'
+import { EmptyState } from '@/app/components/ui/EmptyState'
+import { PageHero } from '@/app/components/site/PageHero'
+import { ItemActions } from '@/app/components/content/ItemActions'
 
-export const metadata = {
-  title: 'Mes témoignages - Association VH Besançon',
-  description: 'Gérez vos témoignages publiés',
-}
+export const metadata: Metadata = { title: 'Mes témoignages' }
 
-interface Testimonial {
-  _id: string
-  title: string
-  slug: {
-    current: string
-  }
-  type: string
-  excerpt: string
-  status: string
-  publishedAt: string
-}
+const STATUS = { published: { label: 'Publié', tone: 'green' }, draft: { label: 'Brouillon', tone: 'amber' }, archived: { label: 'Archivé', tone: 'neutral' } } as const
 
 export default async function MyTestimonialsPage() {
-  // Vérifier l'authentification
-  const session = await auth()
-
-  if (!session?.user?.id) {
-    redirect('/connexion?callbackUrl=/temoignages/mes-temoignages')
-  }
-
-  // Récupérer les témoignages de l'utilisateur
-  const testimonials: Testimonial[] = await client.fetch(userTestimonialsQuery, {
-    userId: session.user.id
-  })
-
-  const publishedTestimonials = testimonials.filter(t => t.status === 'published')
-  const draftTestimonials = testimonials.filter(t => t.status === 'draft')
-
+  const user = await requireMemberPage('/temoignages/mes-temoignages')
+  const testimonials = await listTestimonialsByAuthor(user.id)
   return (
     <>
-      <Header />
-
-      <main className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
-        <section className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-          <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Mes témoignages</h1>
-              <p className="text-gray-600">Gérez vos témoignages publiés</p>
-            </div>
-            <Link
-              href="/temoignages/nouveau"
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-900 hover:bg-blue-800 text-white font-medium rounded-lg transition shrink-0"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Nouveau témoignage
-            </Link>
-          </div>
-
+      <PageHero
+        size="sm"
+        eyebrow="Témoignages"
+        title="Mes témoignages"
+        actions={
+          <ButtonLink href="/temoignages/nouveau" icon={<PenLine className="size-4" aria-hidden="true" />}>
+            Nouveau témoignage
+          </ButtonLink>
+        }
+      />
+      <div className="container-page py-10">
+        <div className="mx-auto max-w-4xl">
           {testimonials.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
-              <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <p className="text-gray-900 font-medium text-lg mb-2">Aucun témoignage</p>
-              <p className="text-gray-600 mb-6">Commencez par créer votre premier témoignage</p>
-              <Link
-                href="/temoignages/nouveau"
-                className="inline-flex items-center gap-2 px-6 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-lg transition"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Créer un témoignage
-              </Link>
-            </div>
+            <EmptyState title="Aucun témoignage" action={<ButtonLink href="/temoignages/nouveau">Écrire mon premier témoignage</ButtonLink>}>
+              Racontez une étape de votre parcours : une école, un stage, une expatriation…
+            </EmptyState>
           ) : (
-            <div className="space-y-6">
-              {/* Témoignages publiés */}
-              {publishedTestimonials.length > 0 && (
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                    Publiés ({publishedTestimonials.length})
-                  </h2>
-                  <div className="space-y-4">
-                    {publishedTestimonials.map((testimonial) => (
-                      <MyTestimonialCard key={testimonial._id} testimonial={testimonial} />
-                    ))}
+            <ul className="space-y-4">
+              {testimonials.map((testimonial) => (
+                <li key={testimonial.id} className="rounded-[var(--radius-lg)] border border-line bg-paper-raised p-5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge tone="blue">{TESTIMONIAL_TYPES_INFO[testimonial.type].short}</Badge>
+                    <Badge tone={STATUS[testimonial.status].tone}>{STATUS[testimonial.status].label}</Badge>
+                    {testimonial.publishedAt && <span className="text-sm text-ink-muted">Publié le {testimonial.publishedAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>}
                   </div>
-                </div>
-              )}
-
-              {/* Brouillons */}
-              {draftTestimonials.length > 0 && (
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                    Brouillons ({draftTestimonials.length})
-                  </h2>
-                  <div className="space-y-4">
-                    {draftTestimonials.map((testimonial) => (
-                      <MyTestimonialCard key={testimonial._id} testimonial={testimonial} />
-                    ))}
+                  <h2 className="mt-2 text-xl text-ink">{testimonial.title}</h2>
+                  <div className="mt-4">
+                    <ItemActions
+                      compact
+                      endpoint={`/api/testimonials/${testimonial.id}`}
+                      viewHref={`/temoignages/${testimonial.slug}`}
+                      editHref={`/temoignages/modifier/${testimonial.slug}`}
+                      title={testimonial.title}
+                    />
                   </div>
-                </div>
-              )}
-            </div>
+                </li>
+              ))}
+            </ul>
           )}
-        </section>
-      </main>
-
-      <Footer />
+        </div>
+      </div>
     </>
   )
 }
