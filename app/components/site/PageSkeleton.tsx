@@ -1,7 +1,11 @@
-import { Skeleton } from './components/ui/Spinner'
+import { Skeleton } from '@/app/components/ui/Spinner'
 
-/** Chargement sobre : la silhouette de la page plutôt qu'une animation plein écran */
-export default function Loading() {
+/**
+ * Chargement sobre : la silhouette de la page plutôt qu'une animation plein
+ * écran. Utilisé seulement par les pages membres (loading.tsx) : à la racine,
+ * il ferait répondre 200 aux pages introuvables (streaming avant le 404).
+ */
+export function PageSkeleton() {
   return (
     <div className="container-page py-12" aria-busy="true" aria-live="polite">
       <span className="sr-only">Chargement…</span>
