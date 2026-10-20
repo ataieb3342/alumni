@@ -54,9 +54,9 @@ export const transporter = {
     if (mode === 'smtp') return smtpTransport().sendMail(options)
 
     if (mode === 'outbox') {
-      const dir = path.resolve(process.env.EMAIL_OUTBOX_DIR ?? '.data/outbox')
+      const dir = path.resolve(/*turbopackIgnore: true*/ process.env.EMAIL_OUTBOX_DIR ?? '.data/outbox')
       fs.mkdirSync(dir, { recursive: true })
-      const file = path.join(dir, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.json`)
+      const file = path.join(/*turbopackIgnore: true*/ dir, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.json`)
       fs.writeFileSync(file, JSON.stringify({ to: options.to, subject: options.subject, html: options.html, text: options.text }, null, 2))
     }
     // Ni destinataire ni contenu dans le journal : seulement le sujet

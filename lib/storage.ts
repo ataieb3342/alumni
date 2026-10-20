@@ -22,7 +22,7 @@ export function storageDriver(): StorageDriver {
 }
 
 export function mediaDir(): string {
-  return path.resolve(process.env.MEDIA_DIR ?? '.data/media')
+  return path.resolve(/*turbopackIgnore: true*/ process.env.MEDIA_DIR ?? '.data/media')
 }
 
 /** Une clé ne contient que des segments sûrs : pas de remontée de répertoire */
@@ -47,7 +47,7 @@ export async function putObject(key: string, data: Buffer, contentType: string):
     })
     return { key: safeKey, url: blob.url }
   }
-  const file = path.join(mediaDir(), safeKey)
+  const file = path.join(/*turbopackIgnore: true*/ mediaDir(), safeKey)
   await fs.mkdir(path.dirname(file), { recursive: true })
   await fs.writeFile(file, data)
   return { key: safeKey, url: `/media/${safeKey}` }
@@ -65,7 +65,7 @@ export async function objectExists(key: string): Promise<boolean> {
     }
   }
   try {
-    await fs.access(path.join(mediaDir(), safeKey))
+    await fs.access(path.join(/*turbopackIgnore: true*/ mediaDir(), safeKey))
     return true
   } catch {
     return false
@@ -79,13 +79,13 @@ export async function deleteObject(key: string, url?: string): Promise<void> {
     await del(url ?? safeKey)
     return
   }
-  await fs.rm(path.join(mediaDir(), safeKey), { force: true })
+  await fs.rm(path.join(/*turbopackIgnore: true*/ mediaDir(), safeKey), { force: true })
 }
 
 /** Lecture locale (pilote fichiers uniquement), pour la route `/media` */
 export async function readLocalObject(key: string): Promise<Buffer | null> {
   try {
-    return await fs.readFile(path.join(mediaDir(), assertSafeKey(key)))
+    return await fs.readFile(path.join(/*turbopackIgnore: true*/ mediaDir(), assertSafeKey(key)))
   } catch {
     return null
   }
