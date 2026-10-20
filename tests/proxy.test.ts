@@ -63,6 +63,15 @@ describe('Proxy : accès aux pages', () => {
     expect(redirectedTo(await visit('/admin/utilisateurs'))).toBeNull()
   })
 
+  it('un membre actif qui ouvre l’accueil public arrive sur son accueil membre', async () => {
+    session = { user: { id: 'u1', role: 'member', accountStatus: 'active' } }
+    expect(redirectedTo(await visit('/'))).toBe('/accueil')
+    session = { user: { id: 'u2', role: 'admin', accountStatus: 'active' } }
+    expect(redirectedTo(await visit('/', 'edit_mode=1'))).toBeNull()
+    session = { user: { id: 'u3', accountStatus: 'pending' } }
+    expect(redirectedTo(await visit('/'))).toBeNull()
+  })
+
   it('les routes d’API ne sont pas redirigées : elles contrôlent elles-mêmes l’accès', async () => {
     expect(redirectedTo(await visit('/api/admin/users'))).toBeNull()
   })

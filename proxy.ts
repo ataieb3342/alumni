@@ -2,6 +2,7 @@ import NextAuth from 'next-auth'
 import { NextResponse } from 'next/server'
 import { authConfig } from '@/lib/auth.config'
 import { CSRF_COOKIE, generateCsrfToken } from '@/lib/security/csrf'
+import { EDIT_MODE_COOKIE } from '@/lib/edit-mode'
 
 // Proxy sans accès à la base : seul le jeton de session est lu ici. Les
 // droits d'écriture sont revérifiés en base par chaque route (lib/api.ts).
@@ -53,6 +54,14 @@ export default auth((req) => {
       const login = new URL('/connexion', req.url)
       if (pathname !== '/accueil') login.searchParams.set('callbackUrl', pathname + req.nextUrl.search)
       return NextResponse.redirect(login)
+    }
+
+    // Les membres ont leur propre accueil (sauf un administrateur qui modifie la page d'accueil publique).
+    // Redirigé ici plutôt que dans la page : app/loading.tsx y déclencherait un rafraîchissement côté client.
+    const isActiveMember = session?.user?.accountStatus === 'active' && !session.user.id?.startsWith('temp-')
+    const editingHome = session?.user?.role === 'admin' && req.cookies.get(EDIT_MODE_COOKIE)?.value === '1'
+    if (pathname === '/' && isActiveMember && !editingHome) {
+      return NextResponse.redirect(new URL('/accueil', req.url))
     }
 
     // L'administration est réservée aux administrateurs (revérifié en base dans les pages)

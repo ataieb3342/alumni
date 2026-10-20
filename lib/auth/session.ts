@@ -6,6 +6,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import { getUserById, type User } from '@/lib/data/users'
+import { EDIT_MODE_COOKIE } from '@/lib/edit-mode'
 
 export class HttpError extends Error {
   constructor(public status: number, message: string, public field?: string) {
@@ -51,7 +52,7 @@ export async function requireAdminPage(): Promise<User> {
   return user
 }
 
-export const EDIT_MODE_COOKIE = 'edit_mode'
+export { EDIT_MODE_COOKIE }
 
 /**
  * Contexte d'édition d'une page : l'interface d'édition et les brouillons ne
