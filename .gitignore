@@ -52,3 +52,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Migration hors Sanity : instantanés (données personnelles, hash) et base locale
+/.migration/
+/.data/
+/public/uploads/
+/docs/perf/*/
