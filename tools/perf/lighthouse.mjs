@@ -87,13 +87,14 @@ for (const page of PAGES) {
     if (samples.length === 0) continue
     const key = `${page.name}:${formFactor}`
     results[key] = {
-      path: page.path,
+      // Pas d'identifiant de membre dans les résultats versionnés
+      path: memberId ? page.path.replace(memberId, '[id]') : page.path,
       formFactor,
       runs: samples.length,
       ...Object.fromEntries(
         ['performance', 'accessibility', 'bestPractices', 'seo', 'lcp', 'cls', 'tbt'].map((metric) => [metric, median(samples.map((s) => s[metric]))])
       ),
-      finalUrl: samples[0].finalUrl,
+      finalUrl: memberId ? samples[0].finalUrl.replace(memberId, '[id]') : samples[0].finalUrl,
     }
     console.log(key, JSON.stringify(results[key]))
   }
