@@ -172,3 +172,45 @@ export class ContentError extends Error {
     super(message)
   }
 }
+
+/** Versions mises en forme pour l'interface (auteur, résumé lisible) */
+export async function listVersionsForUi(entityType: 'content' | 'post', entityId: string) {
+  const db = await getDb()
+  const { users } = await import('@/db/schema')
+  const rows = await db
+    .select({
+      id: contentVersions.id,
+      action: contentVersions.action,
+      createdAt: contentVersions.createdAt,
+      snapshot: contentVersions.snapshot,
+      firstName: users.firstName,
+      lastName: users.lastName,
+    })
+    .from(contentVersions)
+    .leftJoin(users, eq(users.id, contentVersions.createdBy))
+    .where(and(eq(contentVersions.entityType, entityType), eq(contentVersions.entityId, entityId)))
+    .orderBy(desc(contentVersions.createdAt))
+    .limit(MAX_VERSIONS)
+  return rows.map((row) => ({
+    id: row.id,
+    action: row.action,
+    createdAt: row.createdAt.toISOString(),
+    author: row.firstName ? `${row.firstName} ${row.lastName ?? ''}`.trim() : null,
+    summary: summarize(row.snapshot),
+  }))
+}
+
+/** Premier texte significatif d'une version, pour la reconnaître dans la liste */
+function summarize(snapshot: unknown): string {
+  const texts: string[] = []
+  const visit = (value: unknown) => {
+    if (texts.length >= 3) return
+    if (typeof value === 'string') {
+      const text = value.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+      if (text.length > 3 && !/^(\/|https?:|data:)/.test(text)) texts.push(text)
+    } else if (Array.isArray(value)) value.forEach(visit)
+    else if (value && typeof value === 'object') Object.values(value).forEach(visit)
+  }
+  visit(snapshot)
+  return texts.join(' · ').slice(0, 160)
+}

@@ -33,7 +33,11 @@ const id = z.string().min(1).max(40)
 export const imageSchema = z
   .object({
     mediaId: z.string().max(80).optional(),
-    url: z.string().max(1000).refine((value) => /^(\/|https:\/\/)/.test(value), 'URL d’image invalide'),
+    // Uniquement nos images : fichiers du site, médias téléversés, Vercel Blob
+    url: z
+      .string()
+      .max(1000)
+      .refine((value) => /^(\/images\/|\/media\/|https:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\/)/.test(value), 'URL d’image invalide'),
     alt: text(300).optional(),
     width: z.number().int().positive().optional(),
     height: z.number().int().positive().optional(),

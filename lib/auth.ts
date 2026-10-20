@@ -1,387 +1,260 @@
 // lib/auth.ts
-import NextAuth from "next-auth"
-import CredentialsProvider from "next-auth/providers/credentials"
-import GoogleProvider from "next-auth/providers/google"
-import LinkedInProvider from "next-auth/providers/linkedin"
-import { serverClient } from "@/sanity/lib/server-client"
-import bcrypt from "bcryptjs"
-import { logActivity } from "./activity-logger"
-import { logger } from "./logger"
+import NextAuth, { CredentialsSignin } from 'next-auth'
+import CredentialsProvider from 'next-auth/providers/credentials'
+import GoogleProvider from 'next-auth/providers/google'
+import LinkedInProvider from 'next-auth/providers/linkedin'
+import { authConfig } from './auth.config'
+import { logActivity, getClientIp } from './activity-logger'
+import { logger } from './logger'
+import { hashPassword, needsRehash, simulatePasswordCheck, verifyPassword } from './auth/password'
+import { getUserByEmail, getUserById, normalizeEmail, recordLogin, setPasswordHash, updateUser, type User } from './data/users'
+import { rateLimitKey } from './rate-limit'
 
 // Types pour les profils OAuth
 interface LinkedInProfile {
   given_name?: string
   family_name?: string
-  picture?: string
   profile?: string
 }
 
 interface GoogleProfile {
   given_name?: string
   family_name?: string
-  picture?: string
 }
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+/** Erreurs de connexion transmises au formulaire (`result.code`) */
+export class InvalidCredentialsError extends CredentialsSignin {
+  code = 'invalid_credentials'
+}
+export class NoPasswordError extends CredentialsSignin {
+  code = 'oauth_account'
+}
+export class PendingAccountError extends CredentialsSignin {
+  code = 'pending_validation'
+}
+export class DisabledAccountError extends CredentialsSignin {
+  code = 'account_disabled'
+}
+export class TooManyAttemptsError extends CredentialsSignin {
+  code = 'rate_limited'
+}
+
+/** Délai après lequel le jeton relit le compte (rôle, statut, nom, photo) */
+const REFRESH_MS = 5 * 60 * 1000
+
+function tokenFieldsFromUser(user: User) {
+  return {
+    id: user.id,
+    email: user.email,
+    userType: user.userType,
+    role: user.role,
+    accountStatus: user.accountStatus,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    picture: user.profileImage?.url ?? null,
+    isNewUser: false,
+    needsTypeSelection: false,
+    checkedAt: Date.now(),
+  }
+}
+
+/**
+ * Vérification e-mail / mot de passe, en un seul aller-retour.
+ * Les hash bcrypt migrés de Sanity sont vérifiés tels quels, puis recalculés
+ * au coût actuel si nécessaire (ré-hachage transparent).
+ */
+export async function authorizeCredentials(email: string, password: string, ip = 'unknown') {
+  if (!rateLimitKey(`login:${ip}`, { maxRequests: 5, windowMs: 60_000 }).success) {
+    throw new TooManyAttemptsError()
+  }
+  const user = await getUserByEmail(email)
+  if (!user) {
+    await simulatePasswordCheck(password)
+    throw new InvalidCredentialsError()
+  }
+  if (!user.passwordHash) {
+    await simulatePasswordCheck(password)
+    throw new NoPasswordError()
+  }
+  if (!(await verifyPassword(password, user.passwordHash))) {
+    throw new InvalidCredentialsError()
+  }
+  // Mot de passe correct : on peut révéler le statut sans fuite d'information
+  if (user.accountStatus === 'pending') throw new PendingAccountError()
+  if (user.accountStatus !== 'active') throw new DisabledAccountError()
+
+  if (needsRehash(user.passwordHash)) {
+    try {
+      await setPasswordHash(user.id, await hashPassword(password))
+    } catch (error) {
+      logger.error('Ré-hachage du mot de passe impossible', error)
+    }
+  }
+  await recordLogin(user.id)
+  return user
+}
+
+export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
+  ...authConfig,
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code"
-        }
-      }
-    }),
-    ...(process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET ? [
-      LinkedInProvider({
-        clientId: process.env.LINKEDIN_CLIENT_ID,
-        clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
-        authorization: {
-          params: {
-            // Scopes de base (toujours approuvés)
-            scope: 'openid profile email',
-            // Pour accéder à plus de données (nécessite approbation LinkedIn) :
-            // scope: 'openid profile email w_member_social r_basicprofile r_organization_social',
-          }
-        },
-        // LinkedIn v2 API endpoints
-        wellKnown: "https://www.linkedin.com/oauth/.well-known/openid-configuration",
-      })
-    ] : []),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            authorization: { params: { prompt: 'consent', access_type: 'offline', response_type: 'code' } },
+          }),
+        ]
+      : []),
+    ...(process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET
+      ? [
+          LinkedInProvider({
+            clientId: process.env.LINKEDIN_CLIENT_ID,
+            clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
+            authorization: { params: { scope: 'openid profile email' } },
+            wellKnown: 'https://www.linkedin.com/oauth/.well-known/openid-configuration',
+          }),
+        ]
+      : []),
     CredentialsProvider({
-      name: "Credentials",
+      name: 'Credentials',
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
       },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null
+      async authorize(credentials, request) {
+        const email = typeof credentials?.email === 'string' ? normalizeEmail(credentials.email) : ''
+        const password = typeof credentials?.password === 'string' ? credentials.password : ''
+        if (!email || !password) throw new InvalidCredentialsError()
+        const user = await authorizeCredentials(email, password, getClientIp(request))
+        return {
+          id: user.id,
+          email: user.email,
+          name: `${user.firstName} ${user.lastName}`,
+          userType: user.userType,
+          role: user.role,
+          accountStatus: user.accountStatus,
         }
-
-        try {
-          // Normaliser l'email en minuscules pour la comparaison
-          const normalizedEmail = (credentials.email as string).toLowerCase()
-
-          // Récupérer l'utilisateur depuis Sanity
-          const user = await serverClient.fetch(
-            `*[_type == "user" && email == $email][0]{
-              _id,
-              email,
-              firstName,
-              lastName,
-              password,
-              userType,
-              accountStatus
-            }`,
-            { email: normalizedEmail }
-          )
-
-          if (!user || !user.password) {
-            return null
-          }
-
-          // Vérifier le statut du compte
-          if (user.accountStatus !== 'active') {
-            // Retourner null pour bloquer la connexion
-            return null
-          }
-
-          // Vérifier le mot de passe
-          const isPasswordValid = await bcrypt.compare(
-            credentials.password as string,
-            user.password
-          )
-
-          if (!isPasswordValid) {
-            return null
-          }
-
-          // Retourner les infos utilisateur
-          return {
-            id: user._id,
-            email: user.email,
-            name: `${user.firstName} ${user.lastName}`,
-            userType: user.userType,
-          }
-        } catch (error) {
-          logger.error("Erreur d'authentification credentials", error)
-          return null
-        }
-      }
-    })
+      },
+    }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
-      // Connexion normale par credentials
-      if (account?.provider === "credentials") {
-        // Logger la connexion par credentials
+    ...authConfig.callbacks,
+    async signIn({ user, account }) {
+      if (account?.provider === 'credentials') {
         if (user?.id) {
-          await logActivity({
-            userId: user.id,
-            action: 'login',
-            details: 'Connexion par email/mot de passe',
-          })
+          await logActivity({ userId: user.id, action: 'login', details: 'Connexion par email/mot de passe' })
         }
         return true
       }
 
-      // Connexion OAuth (Google ou LinkedIn)
-      if (account && (account.provider === "google" || account.provider === "linkedin")) {
+      if (account && (account.provider === 'google' || account.provider === 'linkedin')) {
         try {
-          // Normaliser l'email en minuscules pour la comparaison
-          const normalizedEmail = user.email?.toLowerCase()
+          const email = user.email ? normalizeEmail(user.email) : ''
+          if (!email) return false
+          const existing = await getUserByEmail(email)
 
-          // Vérifier si l'utilisateur existe déjà
-          const existingUser = await serverClient.fetch(
-            `*[_type == "user" && email == $email][0]{
-              _id,
-              email,
-              firstName,
-              lastName,
-              userType,
-              accountStatus,
-              oauthProvider,
-              oauthId
-            }`,
-            { email: normalizedEmail }
-          )
-
-          if (existingUser) {
-            // Si l'utilisateur existe mais n'a pas de provider OAuth, on met à jour
-            if (!existingUser.oauthProvider) {
-              await serverClient
-                .patch(existingUser._id)
-                .set({
-                  oauthProvider: account.provider,
-                  oauthId: account.providerAccountId,
-                })
-                .commit()
+          if (existing) {
+            // Rattachement automatique par e-mail (comportement d'origine)
+            if (!existing.oauthProvider) {
+              await updateUser(existing.id, { oauthProvider: account.provider, oauthId: account.providerAccountId })
             }
-
-            // Stocker l'ID de l'utilisateur pour l'utiliser dans les callbacks jwt/session
-            // On le fait AVANT de vérifier le statut pour que la session soit créée correctement
-            user.id = existingUser._id
-            user.userType = existingUser.userType
-            user.accountStatus = existingUser.accountStatus
+            user.id = existing.id
+            user.userType = existing.userType
+            user.role = existing.role
+            user.accountStatus = existing.accountStatus
             user.isNewUser = false
-
-            // Vérifier le statut du compte
-            // Si le compte n'est pas actif, rediriger vers la page de validation en attente
-            if (existingUser.accountStatus !== 'active') {
-              return '/validation-en-cours'
-            }
-
-            // Logger la connexion OAuth
+            if (existing.accountStatus !== 'active') return '/validation-en-cours'
+            await recordLogin(existing.id)
             await logActivity({
-              userId: existingUser._id,
+              userId: existing.id,
               action: 'login',
               details: `Connexion via ${account.provider === 'google' ? 'Google' : 'LinkedIn'}`,
             })
-
             return true
           }
 
-          // Ne pas créer l'utilisateur dans Sanity tout de suite
-          // Les données seront stockées dans le token JWT via le callback jwt
-          // L'utilisateur sera créé dans Sanity après la sélection du type
-
-          user.id = 'temp-' + account.providerAccountId // ID temporaire
+          // Nouveau compte : créé seulement après le choix du type de membre (/choisir-type)
+          user.id = 'temp-' + account.providerAccountId
           user.isNewUser = true
-
-          logger.debug('Nouvel utilisateur OAuth détecté', {
-            email: normalizedEmail,
-            provider: account.provider,
-            tempId: user.id
-          })
-
-          // Le middleware se chargera de rediriger vers /choisir-type
           return true
         } catch (error) {
-          logger.error("Erreur lors de la connexion OAuth", error)
+          logger.error('Erreur lors de la connexion OAuth', error)
           return false
         }
       }
 
       return true
     },
-    async jwt({ token, user, account, trigger, profile }) {
+
+    async jwt({ token, user, account, profile, trigger }) {
       if (user) {
         token.id = user.id ?? ''
-        token.userType = user.userType ?? ''
-        token.isNewUser = user.isNewUser ?? false
         token.provider = account?.provider ?? ''
-        token.accountStatus = user.accountStatus ?? ''
+        token.isNewUser = user.isNewUser ?? false
 
-        // Si c'est une nouvelle inscription OAuth (ID temporaire), stocker toutes les données
         if (user.id?.startsWith('temp-') && account && profile) {
           token.needsTypeSelection = true
           token.oauthProvider = account.provider
           token.oauthId = account.providerAccountId
-          token.email = user.email
+          token.email = user.email ?? undefined
+          token.userType = ''
+          token.role = 'member'
+          token.accountStatus = 'pending'
 
-          // Extraire firstName et lastName du profil
-          let firstName = ""
-          let lastName = ""
-
-          if (account.provider === "linkedin") {
-            const linkedInProfile = profile as LinkedInProfile
-            firstName = linkedInProfile.given_name || ""
-            lastName = linkedInProfile.family_name || ""
-            token.linkedInUrl = linkedInProfile.profile || ""
-          } else if (account.provider === "google") {
-            const googleProfile = profile as GoogleProfile
-            firstName = googleProfile.given_name || ""
-            lastName = googleProfile.family_name || ""
+          let firstName = ''
+          let lastName = ''
+          if (account.provider === 'linkedin') {
+            const linkedIn = profile as LinkedInProfile
+            firstName = linkedIn.given_name || ''
+            lastName = linkedIn.family_name || ''
+            token.linkedInUrl = linkedIn.profile || ''
+          } else if (account.provider === 'google') {
+            const google = profile as GoogleProfile
+            firstName = google.given_name || ''
+            lastName = google.family_name || ''
           }
-
-          // Fallback sur le name
           if (!firstName && !lastName && user.name) {
-            const nameParts = user.name.split(' ')
-            firstName = nameParts[0] || ""
-            lastName = nameParts.slice(1).join(' ') || ""
+            const [first, ...rest] = user.name.split(' ')
+            firstName = first || ''
+            lastName = rest.join(' ')
           }
-
           token.firstName = firstName
           token.lastName = lastName
-          token.profileData = JSON.stringify(profile)
+          return token
         }
+
+        const dbUser = user.id ? await getUserById(user.id) : undefined
+        if (dbUser) Object.assign(token, tokenFieldsFromUser(dbUser))
+        return token
       }
 
-      // Si c'est une mise à jour de session, récupérer les dernières données
-      if (trigger === "update") {
-        // Si c'est un ID temporaire, chercher l'utilisateur par email
-        if (token.id?.startsWith('temp-')) {
-          const email = token.email
-          logger.debug('JWT Update: ID temporaire détecté', { email })
-          if (email) {
-            const newUser = await serverClient.fetch(
-              `*[_type == "user" && email == $email][0]{
-                _id,
-                email,
-                firstName,
-                lastName,
-                userType,
-                accountStatus
-              }`,
-              { email }
-            )
-
-            if (newUser) {
-              // Remplacer l'ID temporaire par le vrai ID Sanity
-              logger.debug('JWT Update: Remplacement du token temporaire', { userId: newUser._id })
-              token.id = newUser._id
-              token.userType = newUser.userType
-              token.accountStatus = newUser.accountStatus
-              token.firstName = newUser.firstName
-              token.lastName = newUser.lastName
-              token.isNewUser = false
-              token.needsTypeSelection = false
-            } else {
-              logger.warn('JWT Update: Utilisateur non trouvé', { email })
-            }
-          }
-        } else if (token.id) {
-          // Utilisateur existant, récupérer les données mises à jour
-          const updatedUser = await serverClient.fetch(
-            `*[_type == "user" && _id == $id][0]{
-              _id,
-              email,
-              firstName,
-              lastName,
-              userType,
-              accountStatus
-            }`,
-            { id: token.id }
-          )
-
-          if (updatedUser) {
-            token.userType = updatedUser.userType
-            token.accountStatus = updatedUser.accountStatus
-            token.isNewUser = false
-          }
+      // Compte OAuth en cours de création : rattacher le vrai compte dès qu'il existe
+      if (token.id?.startsWith('temp-')) {
+        if (trigger === 'update' && token.email) {
+          const created = await getUserByEmail(token.email)
+          if (created) Object.assign(token, tokenFieldsFromUser(created))
         }
+        return token
       }
 
+      // Relecture périodique : un compte suspendu, supprimé ou rétrogradé perd ses droits
+      if (token.id && (trigger === 'update' || !token.checkedAt || Date.now() - token.checkedAt > REFRESH_MS)) {
+        const dbUser = await getUserById(token.id)
+        if (!dbUser) return null
+        Object.assign(token, tokenFieldsFromUser(dbUser))
+      }
       return token
     },
-    async session({ session, token }) {
-      if (session.user && token.id) {
-        session.user.id = token.id as string
-        session.user.userType = token.userType as string
-        session.user.isNewUser = token.isNewUser as boolean
-        session.user.provider = token.provider as string
-        session.user.accountStatus = token.accountStatus as string
-        session.user.needsTypeSelection = token.needsTypeSelection as boolean
 
-        // Si c'est un ID temporaire, utiliser les données du token
-        if (token.id.startsWith('temp-')) {
-          session.user.firstName = token.firstName as string
-          session.user.lastName = token.lastName as string
-          session.user.name = `${token.firstName} ${token.lastName}`
-          session.user.email = token.email as string
-          session.user.linkedInUrl = token.linkedInUrl as string
-        } else {
-          // Sinon, récupérer les données depuis Sanity
-          const userData = await serverClient.fetch(
-            `*[_type == "user" && _id == $id][0]{
-              firstName,
-              lastName,
-              profileImage
-            }`,
-            { id: token.id }
-          )
-
-          if (userData) {
-            session.user.firstName = userData.firstName
-            session.user.lastName = userData.lastName
-            session.user.name = `${userData.firstName} ${userData.lastName}`
-            session.user.profileImage = userData.profileImage
-          }
-        }
-      }
-      return session
-    },
     async redirect({ url, baseUrl }) {
-      logger.debug('Redirect callback appelé', { url, baseUrl })
-
-      // Si l'URL est déjà une URL complète avec le baseUrl, l'utiliser telle quelle
-      if (url.startsWith(baseUrl)) {
-        logger.debug('Redirection vers URL complète', { url })
-        return url
-      }
-
-      // Si l'URL commence par "/", c'est un chemin relatif, l'ajouter au baseUrl
-      if (url.startsWith("/")) {
-        const finalUrl = `${baseUrl}${url}`
-        logger.debug('Redirection vers chemin relatif', { url, finalUrl })
-        return finalUrl
-      }
-
-      // Si l'URL est une URL externe, vérifier qu'elle provient du même domaine
+      if (url.startsWith('/')) return `${baseUrl}${url}`
       try {
-        const urlObj = new URL(url)
-        const baseUrlObj = new URL(baseUrl)
-        if (urlObj.origin === baseUrlObj.origin) {
-          logger.debug('Redirection vers URL même domaine', { url })
-          return url
-        }
+        if (new URL(url).origin === new URL(baseUrl).origin) return url
       } catch {
-        // URL invalide, ignorer
+        // URL invalide
       }
-
-      // Par défaut, rediriger vers la page d'accueil
-      logger.debug('Redirection par défaut vers baseUrl', { baseUrl })
       return baseUrl
-    }
-  },
-  pages: {
-    signIn: '/connexion',
-  },
-  session: {
-    strategy: "jwt",
+    },
   },
 })

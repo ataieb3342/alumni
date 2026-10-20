@@ -1,87 +1,20 @@
-import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
-import { serverClient } from '@/sanity/lib/server-client'
-import bcrypt from 'bcryptjs'
-import { logger } from '@/lib/logger'
+import { apiRoute } from '@/lib/api'
+import { HttpError } from '@/lib/auth/session'
+import { hashPassword, verifyPassword } from '@/lib/auth/password'
+import { setPasswordHash } from '@/lib/data/users'
+import { RateLimitPresets } from '@/lib/rate-limit'
+import { changePasswordSchema } from '@/lib/validations'
 
-export async function POST(request: Request) {
-  try {
-    // Vérifier l'authentification
-    const session = await auth()
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Non authentifié' },
-        { status: 401 }
-      )
+export const POST = apiRoute(
+  { auth: 'user', body: changePasswordSchema, rateLimit: { ...RateLimitPresets.auth, message: 'Trop de tentatives. Réessayez dans une minute.' } },
+  async ({ body, user }) => {
+    if (!user.passwordHash) {
+      throw new HttpError(400, "Votre compte n'a pas encore de mot de passe : utilisez « Mot de passe oublié » pour en définir un.")
     }
-
-    const { currentPassword, newPassword } = await request.json()
-
-    if (!currentPassword || !newPassword) {
-      return NextResponse.json(
-        { error: 'Mot de passe actuel et nouveau mot de passe requis' },
-        { status: 400 }
-      )
+    if (!(await verifyPassword(body.currentPassword, user.passwordHash))) {
+      throw new HttpError(400, 'Mot de passe actuel incorrect', 'currentPassword')
     }
-
-    if (newPassword.length < 12) {
-      return NextResponse.json(
-        { error: 'Le nouveau mot de passe doit contenir au moins 12 caractères' },
-        { status: 400 }
-      )
-    }
-
-    // Vérifier la complexité du mot de passe
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/
-    if (!passwordRegex.test(newPassword)) {
-      return NextResponse.json(
-        { error: 'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*?&)' },
-        { status: 400 }
-      )
-    }
-
-    // Récupérer l'utilisateur
-    const user = await serverClient.fetch(
-      `*[_type == "user" && _id == $userId][0]{ _id, password }`,
-      { userId: session.user.id }
-    )
-
-    if (!user || !user.password) {
-      return NextResponse.json(
-        { error: 'Utilisateur non trouvé' },
-        { status: 404 }
-      )
-    }
-
-    // Vérifier le mot de passe actuel
-    const isPasswordValid = await bcrypt.compare(currentPassword, user.password)
-
-    if (!isPasswordValid) {
-      return NextResponse.json(
-        { error: 'Mot de passe actuel incorrect' },
-        { status: 400 }
-      )
-    }
-
-    // Hasher le nouveau mot de passe
-    const hashedPassword = await bcrypt.hash(newPassword, 10)
-
-    // Mettre à jour le mot de passe
-    await serverClient
-      .patch(user._id)
-      .set({ password: hashedPassword })
-      .commit()
-
-    return NextResponse.json(
-      { message: 'Mot de passe modifié avec succès' },
-      { status: 200 }
-    )
-  } catch (error) {
-    logger.error('Erreur lors du changement de mot de passe:', error)
-    return NextResponse.json(
-      { error: 'Une erreur est survenue' },
-      { status: 500 }
-    )
+    await setPasswordHash(user.id, await hashPassword(body.newPassword))
+    return { message: 'Mot de passe modifié avec succès' }
   }
-}
+)

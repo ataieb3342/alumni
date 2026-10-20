@@ -1,4 +1,6 @@
-import { serverClient } from '@/sanity/lib/server-client'
+import { getDb } from '@/db'
+import { activityLogs } from '@/db/schema'
+import { newId } from '@/lib/ids'
 import { logger } from './logger'
 
 interface ActivityLogData {
@@ -13,27 +15,20 @@ interface ActivityLogData {
 
 export async function logActivity(data: ActivityLogData) {
   try {
-    const logEntry = {
-      _type: 'activityLog',
-      action: data.action,
-      timestamp: new Date().toISOString(),
-      ...(data.userId && {
-        user: {
-          _type: 'reference',
-          _ref: data.userId,
-        },
-      }),
-      ...(data.resource && { resource: data.resource }),
-      ...(data.resourceId && { resourceId: data.resourceId }),
-      ...(data.details && { details: data.details }),
-      ...(data.ipAddress && { ipAddress: data.ipAddress }),
-      ...(data.userAgent && { userAgent: data.userAgent }),
-    }
-
-    await serverClient.create(logEntry)
+    const db = await getDb()
+    await db.insert(activityLogs).values({
+      id: newId(),
+      userId: data.userId ?? null,
+      action: data.action.slice(0, 64),
+      resource: data.resource?.slice(0, 300) ?? null,
+      resourceId: data.resourceId?.slice(0, 100) ?? null,
+      details: data.details?.slice(0, 1000) ?? null,
+      ipAddress: data.ipAddress?.slice(0, 64) ?? null,
+      userAgent: data.userAgent?.slice(0, 400) ?? null,
+    })
     return { success: true }
   } catch (error) {
-    logger.error('Erreur lors de l\'enregistrement du log d\'activité', error)
+    logger.error("Erreur lors de l'enregistrement du log d'activité", error)
     return { success: false, error }
   }
 }

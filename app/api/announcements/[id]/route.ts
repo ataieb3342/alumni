@@ -1,124 +1,55 @@
-import { NextResponse } from 'next/server'
-import { logger } from '@/lib/logger'
-import { auth } from '@/lib/auth'
+import { z } from 'zod'
+import { revalidatePath } from 'next/cache'
+import { apiRoute } from '@/lib/api'
+import { HttpError } from '@/lib/auth/session'
+import { deleteAnnouncement, getAnnouncementById, updateAnnouncement } from '@/lib/data/announcements'
+import { logActivity } from '@/lib/activity-logger'
+import { CONTENT_STATUSES } from '@/db/schema'
 import { patchAnnouncementSchema } from '@/lib/validations'
-import { client } from '@/sanity/lib/client'
 
-// DELETE - Supprimer une annonce
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Non autorisé' },
-        { status: 401 }
-      )
-    }
-
-    const { id } = await params
-
-    // Vérifier que l'annonce appartient à l'utilisateur
-    const announcement = await client.fetch(
-      `*[_type == "announcement" && _id == $id][0] {
-        _id,
-        author->{_id}
-      }`,
-      { id }
-    )
-
-    if (!announcement) {
-      return NextResponse.json(
-        { error: 'Annonce non trouvée' },
-        { status: 404 }
-      )
-    }
-
-    if (announcement.author._id !== session.user.id) {
-      return NextResponse.json(
-        { error: 'Non autorisé à supprimer cette annonce' },
-        { status: 403 }
-      )
-    }
-
-    // Supprimer l'annonce
-    await client.delete(id)
-
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    logger.error('Erreur lors de la suppression:', error)
-    return NextResponse.json(
-      { error: 'Erreur lors de la suppression de l\'annonce' },
-      { status: 500 }
-    )
-  }
+/** Auteur ou administrateur ; toute autre personne reçoit 403, même en appelant l'API directement */
+async function editable(id: string, user: { id: string; role: string }) {
+  const announcement = await getAnnouncementById(id)
+  if (!announcement) throw new HttpError(404, 'Annonce non trouvée')
+  if (announcement.authorId !== user.id && user.role !== 'admin') throw new HttpError(403, 'Non autorisé à modifier cette annonce')
+  return announcement
 }
 
-// PATCH - Mettre à jour une annonce
-export async function PATCH(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Non autorisé' },
-        { status: 401 }
-      )
-    }
+const patchSchema = patchAnnouncementSchema.extend({
+  /** Réservé aux administrateurs (modération) */
+  status: z.enum(CONTENT_STATUSES).optional(),
+})
 
-    const { id } = await params
-    const body = await req.json()
-
-    // Valider et filtrer les champs modifiables (empêche l'écrasement de
-    // `author`, `status`, `slug`, etc. via le corps de la requête)
-    const validation = patchAnnouncementSchema.safeParse(body)
-    if (!validation.success) {
-      const firstError = validation.error.issues[0]
-      return NextResponse.json(
-        { error: firstError.message, field: firstError.path[0] },
-        { status: 400 }
-      )
-    }
-
-    // Vérifier que l'annonce appartient à l'utilisateur
-    const announcement = await client.fetch(
-      `*[_type == "announcement" && _id == $id][0] {
-        _id,
-        author->{_id}
-      }`,
-      { id }
-    )
-
-    if (!announcement) {
-      return NextResponse.json(
-        { error: 'Annonce non trouvée' },
-        { status: 404 }
-      )
-    }
-
-    if (announcement.author._id !== session.user.id) {
-      return NextResponse.json(
-        { error: 'Non autorisé à modifier cette annonce' },
-        { status: 403 }
-      )
-    }
-
-    // Mettre à jour l'annonce
-    const updatedAnnouncement = await client
-      .patch(id)
-      .set(validation.data)
-      .commit()
-
-    return NextResponse.json(updatedAnnouncement)
-  } catch (error) {
-    logger.error('Erreur lors de la mise à jour:', error)
-    return NextResponse.json(
-      { error: 'Erreur lors de la mise à jour de l\'annonce' },
-      { status: 500 }
-    )
+export const PATCH = apiRoute({ auth: 'user', body: patchSchema }, async ({ params, body, user }) => {
+  const current = await editable(params.id, user)
+  if (body.status && user.role !== 'admin') throw new HttpError(403, 'Seul un administrateur peut changer le statut')
+  const description = body.description
+  const updated = await updateAnnouncement(current.id, {
+    ...(body.title !== undefined ? { title: body.title } : {}),
+    ...(body.type !== undefined ? { type: body.type } : {}),
+    ...(description !== undefined ? { description } : {}),
+    ...(body.company !== undefined ? { company: body.company || null } : {}),
+    ...(body.location !== undefined ? { location: body.location || null } : {}),
+    ...(body.contactEmail !== undefined ? { contactEmail: body.contactEmail || null } : {}),
+    ...(body.contactPhone !== undefined ? { contactPhone: body.contactPhone || null } : {}),
+    ...(body.externalLink !== undefined ? { externalLink: body.externalLink || null } : {}),
+    ...(body.expiresAt !== undefined ? { expiresAt: body.expiresAt ? new Date(body.expiresAt) : null } : {}),
+    ...(body.eventDate !== undefined ? { eventDate: body.eventDate ? new Date(body.eventDate) : null } : {}),
+    ...(body.status ? { status: body.status } : {}),
+  })
+  if (user.role === 'admin' && current.authorId !== user.id) {
+    await logActivity({ userId: user.id, action: 'admin.announcement.update', resourceId: current.id })
   }
-}
+  revalidatePath('/annonces')
+  return updated
+})
+
+export const DELETE = apiRoute({ auth: 'user' }, async ({ params, user }) => {
+  const current = await editable(params.id, user)
+  await deleteAnnouncement(current.id)
+  if (user.role === 'admin' && current.authorId !== user.id) {
+    await logActivity({ userId: user.id, action: 'admin.announcement.delete', resourceId: current.id, details: current.title })
+  }
+  revalidatePath('/annonces')
+  return { success: true }
+})
