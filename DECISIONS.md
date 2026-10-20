@@ -81,7 +81,9 @@ démarrer plutôt que d'écrire dans une base locale éphémère.
   les visiteurs et la colonne `draft` (JSONB) contient les modifications en
   cours. Un nouvel article est un brouillon invisible (404 pour les visiteurs).
 - Historique : chaque enregistrement et chaque publication crée une version
-  (`content_versions`, 50 dernières conservées). « Restaurer » recopie une
+  (`content_versions`, 50 dernières conservées). Avant la première version,
+  l'état publié est conservé comme « Version d'origine » : on peut toujours
+  revenir au texte de départ, y compris pour les articles importés. « Restaurer » recopie une
   version **dans le brouillon** : rien n'est publié sans un clic sur
   « Publier ».
 - Valeurs par défaut : les textes codés en dur des anciennes pages sont repris
@@ -154,6 +156,14 @@ démarrer plutôt que d'écrire dans une base locale éphémère.
 | `/alumni`, `/qrcode` | redirigées vers la connexion | publiques | Ce sont les pages d'adhésion ouvertes par le QR code distribué au lycée. Un visiteur sans compte ne pouvait pas les lire. |
 | `/media/...` | — | publique | Images servies en local, équivalent du CDN Sanity |
 | Annuaire | comptes visibles, **quel que soit leur statut** | comptes **actifs** et visibles | Un compte en attente, refusé ou suspendu ne doit pas apparaître aux membres. |
+| `/inscription`, `/connexion` pour un membre connecté | formulaire affiché | renvoi vers `/accueil`, ou la page demandée si elle est sur le site | Un membre n'a plus à s'inscrire. Tous les liens d'inscription et de connexion sont masqués une fois connecté : contenus éditables, pied de page, pages de campagne (remplacés par « Mon espace membre »). Testé dans `tests/e2e/member.spec.ts`. |
+
+Une adresse inconnue en dehors des sections publiques renvoie un visiteur
+vers la connexion, comme avant : le proxy ne sait pas si la page existe. Sous
+une section publique (`/blog/...`) et pour un membre connecté, la réponse est
+un vrai **404**. L'écran de chargement (squelette) n'est utilisé que par les
+pages membres et l'administration : à la racine, il faisait répondre 200
+aux pages introuvables.
 
 ## 9. Corrections de comportement
 
@@ -209,7 +219,17 @@ Motif : `.env.local` contient les identifiants Gmail de l'association, et une
 action de test (valider un compte, publier une annonce) aurait écrit à de
 vrais membres.
 
-## 13. Outils de développement
+## 13. Mesures envoyées par le navigateur
+
+- Pages vues : journalisées par `/api/activity/log`, réservé aux membres et
+  protégé contre le CSRF comme toute écriture.
+- Web Vitals : `navigator.sendBeacon` ne peut pas joindre d'en-tête, donc
+  la route est publique et sans CSRF. En contrepartie, le corps est validé
+  (métrique connue, valeur bornée), le débit est limité et rien n'est écrit
+  en base. Seul le **chemin** de la page est envoyé, jamais la recherche :
+  `?q=` peut contenir le nom d'un membre.
+
+## 14. Outils de développement
 
 - `/api/dev-login` : connexion sans mot de passe aux comptes `@local.test`,
   pour vérifier les pages membres en local. Elle n'existe que si
@@ -221,16 +241,20 @@ vrais membres.
 - Tests de bout en bout sur un **build de production** avec des membres
   **fictifs** (`tools/e2e/seed.ts`), jamais sur la base migrée.
 
-## 14. Captures d'écran et dépôt public
+## 15. Captures d'écran et dépôt public
 
 Le dépôt GitHub est **public**. Les captures « avant » des pages réservées
 aux membres (annuaire, fiches, accueil membre, annonces, témoignages)
-montrent de vraies personnes : noms, photos, e-mails. Elles ne sont **pas
-versionnées** et restent en local dans `.data/private-screenshots/`. Les
-captures versionnées des pages membres sont prises sur la base de test
-fictive.
+montrent de vraies personnes : noms, photos, e-mails.
+- Les captures brutes ne sont **pas versionnées** et restent en local dans
+  `.data/private-screenshots/`.
+- Les captures « avant » versionnées des pages membres sont **floutées**
+  (textes et photos illisibles, mise en page visible) : option
+  `--blur-members` de `tools/perf/screenshots.mjs`.
+- Les captures « après » des pages membres sont prises sur la base de test,
+  peuplée de membres fictifs.
 
-## 15. Fusion dans `main`
+## 16. Fusion dans `main`
 
 Pas de fusion : seule une **PR vers `main`** est ouverte. Fusionner
 déclencherait un déploiement de production sans base PostgreSQL provisionnée,
