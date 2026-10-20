@@ -18,10 +18,43 @@ const schema = z
   .refine((data) => data.password === data.confirmPassword, { message: 'Les mots de passe ne correspondent pas', path: ['confirmPassword'] })
 
 /** Choix d'un nouveau mot de passe à partir d'un lien reçu par e-mail (réinitialisation ou invitation) */
-export function NewPasswordForm({ token, endpoint, successUrl, submitLabel }: { token: string; endpoint: string; successUrl: string; submitLabel: string }) {
+export function NewPasswordForm({
+  token,
+  endpoint,
+  successUrl,
+  submitLabel,
+  problem,
+  renew,
+}: {
+  token: string
+  endpoint: string
+  successUrl: string
+  submitLabel: string
+  /** Lien déjà vérifié côté serveur : expiré, ou inconnu / déjà utilisé */
+  problem?: 'invalid' | 'expired'
+  renew: { href: string; label: string }
+}) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const form = useForm(schema, { password: '', confirmPassword: '' })
+
+  if (token && problem) {
+    return (
+      <Alert tone="error" title={problem === 'expired' ? 'Ce lien a expiré' : 'Ce lien n’est plus valable'}>
+        {problem === 'expired' ? 'Pour votre sécurité, les liens reçus par e-mail ne durent pas.' : 'Il a déjà servi, ou un lien plus récent l’a remplacé.'}{' '}
+        {renew.href.startsWith('/') ? (
+          <Link href={renew.href} className="link-ink font-semibold">
+            {renew.label}
+          </Link>
+        ) : (
+          <a href={renew.href} className="link-ink font-semibold">
+            {renew.label}
+          </a>
+        )}
+        .
+      </Alert>
+    )
+  }
 
   if (!token) {
     return (
