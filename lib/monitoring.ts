@@ -36,7 +36,7 @@ export async function monitorDatabaseQuery<T>(
   fn: () => Promise<T>,
   options: MonitoringOptions
 ): Promise<T> {
-  const { operation, slowThreshold = 500, context } = options;
+  const { operation, context } = options;
 
   return await measurePerformance(
     `DB: ${operation}`,

@@ -99,7 +99,7 @@ export async function runImport(snapshotDir: string) {
       blurDataUrl: meta.lqip ?? null,
       sanityAssetId: asset._id,
       legacy: { assetId: asset.assetId, sha1hash: asset.sha1hash, path: asset.path, originalUrl: asset.url },
-      createdAt: new Date(String(asset._createdAt ?? Date.now())),
+      createdAt: typeof asset._createdAt === 'string' ? new Date(asset._createdAt) : new Date(),
     }
     mediaById.set(asset._id, row)
   }

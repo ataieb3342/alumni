@@ -2,9 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   registerSchema,
   createAnnouncementSchema,
-  updateAnnouncementSchema,
   createTestimonialSchema,
-  updateTestimonialSchema,
   updateProfileSchema,
   subscribeNewsletterSchema,
   forgotPasswordSchema,

@@ -48,9 +48,22 @@ export async function verify(snapshotDir: string) {
   const legacyUsers = await tableCount(schema.users, sql`${schema.users.legacy}->>'_type' = 'user'`)
   add('user', 'users', sanityCount('user'), legacyUsers, 'comptes issus de Sanity (hors comptes Studio créés)')
   add('post', 'posts', sanityCount('post'), await tableCount(schema.posts, sql`${schema.posts.legacy}->>'_type' = 'post'`))
-  add('announcement', 'announcements', sanityCount('announcement'), await tableCount(schema.announcements, sql`${schema.announcements.legacy}->>'_type' = 'announcement'`))
-  add('testimonial', 'testimonials', sanityCount('testimonial'), await tableCount(schema.testimonials, sql`${schema.testimonials.legacy}->>'_type' = 'testimonial'`))
-  add('newsletterSubscription', 'newsletter_subscriptions', sanityCount('newsletterSubscription'), await tableCount(schema.newsletterSubscriptions, sql`${schema.newsletterSubscriptions.legacy}->>'_type' = 'newsletterSubscription'`))
+  // Documents dont l'auteur n'existe plus : volontairement non importés (voir import.ts)
+  const sanityUserIds = new Set(docs.filter((d) => d._type === 'user').map((d) => d._id))
+  const orphaned = (type: string, field: string) =>
+    docs.filter((d) => {
+      if (d._type !== type || d._id.startsWith('drafts.')) return false
+      const ref = (d[field] as { _ref?: string } | undefined)?._ref
+      return field === 'user' ? !ref || !sanityUserIds.has(ref) : !!ref && !sanityUserIds.has(ref)
+    }).length
+  const addWithOrphans = async (type: string, table: string, field: string, after: number) => {
+    const excluded = orphaned(type, field)
+    const before = sanityCount(type)
+    checks.push({ type, table, before, after, ok: after === before - excluded, note: excluded ? `${excluded} sans auteur existant, non importé(s)` : undefined })
+  }
+  await addWithOrphans('announcement', 'announcements', 'author', await tableCount(schema.announcements, sql`${schema.announcements.legacy}->>'_type' = 'announcement'`))
+  await addWithOrphans('testimonial', 'testimonials', 'author', await tableCount(schema.testimonials, sql`${schema.testimonials.legacy}->>'_type' = 'testimonial'`))
+  await addWithOrphans('newsletterSubscription', 'newsletter_subscriptions', 'user', await tableCount(schema.newsletterSubscriptions, sql`${schema.newsletterSubscriptions.legacy}->>'_type' = 'newsletterSubscription'`))
   add('passwordResetToken', 'auth_tokens', sanityCount('passwordResetToken'), await tableCount(schema.authTokens, sql`${schema.authTokens.legacy}->>'_type' = 'passwordResetToken'`))
   const activityIds = new Set(docs.filter((d) => d._type === 'activityLog').map((d) => d._id))
   const importedActivity = (await db.select({ id: schema.activityLogs.id }).from(schema.activityLogs)).filter((r) => activityIds.has(r.id)).length

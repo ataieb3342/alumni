@@ -102,7 +102,7 @@ export function measureNavigation(from: string, to: string) {
 
   // Observer le prochain paint après la navigation
   const observer = new PerformanceObserver((list) => {
-    for (const entry of list.getEntries()) {
+    for (const _entry of list.getEntries()) {
       const duration = performance.now() - startTime;
 
       if (process.env.NODE_ENV === 'development') {

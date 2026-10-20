@@ -10,7 +10,7 @@ interface NewUserNotification {
 }
 
 export async function sendAdminNotificationEmail(userData: NewUserNotification) {
-  const { firstName, lastName, email, userType, userId } = userData
+  const { firstName, lastName, email, userType } = userData
   const adminUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.vh-besancon-alumni.fr'}/admin/utilisateurs?statut=pending`
 
   const userTypeLabels: Record<string, string> = {
