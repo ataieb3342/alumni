@@ -64,8 +64,9 @@ function sendToAnalytics(metric: WebVitalMetric) {
       name: metric.name,
       value: metric.value,
       rating: metric.rating,
-      url: window.location.href,
-      userAgent: navigator.userAgent,
+      // Chemin seulement : la recherche (?q=…) peut contenir des noms de membres
+      url: window.location.pathname.slice(0, 300),
+      userAgent: navigator.userAgent.slice(0, 300),
       timestamp: Date.now(),
     });
 

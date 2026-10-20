@@ -152,3 +152,13 @@ describe('Profil et compte', () => {
     expect(await getAnnouncementById(announcement.id)).toBeUndefined()
   })
 })
+
+describe('Mesures envoyées par le navigateur', () => {
+  it('web vitals : acceptées sans session ni jeton CSRF, mais validées', async () => {
+    const { POST } = await import('@/app/api/analytics/web-vitals/route')
+    const ok = await POST(apiRequest('/api/analytics/web-vitals', { body: { name: 'LCP', value: 1234, rating: 'good', url: '/accueil' }, csrf: false }), routeParams({}))
+    expect(ok.status).toBe(200)
+    const bad = await POST(apiRequest('/api/analytics/web-vitals', { body: { name: 'X'.repeat(5000), value: 'nope' }, csrf: false }), routeParams({}))
+    expect(bad.status).toBe(400)
+  })
+})

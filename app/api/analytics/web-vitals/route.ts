@@ -1,43 +1,25 @@
 /**
- * Endpoint pour recevoir les Web Vitals depuis le client
- * Optionnel - les métriques sont déjà envoyées à Sentry
+ * Réception des Web Vitals envoyés par le navigateur (navigator.sendBeacon,
+ * qui ne peut pas joindre d'en-tête CSRF). Rien n'est écrit en base : les
+ * mesures sont seulement journalisées, une fois validées et bornées.
  */
+import { z } from 'zod'
+import { apiRoute } from '@/lib/api'
+import { logger } from '@/lib/logger'
 
-import { NextRequest, NextResponse } from "next/server";
-import { logger } from "@/lib/logger";
+const schema = z.object({
+  name: z.enum(['CLS', 'FCP', 'FID', 'INP', 'LCP', 'TTFB']),
+  value: z.number().finite().min(0).max(600_000),
+  rating: z.enum(['good', 'needs-improvement', 'poor']).optional(),
+  url: z.string().max(300).optional(),
+  userAgent: z.string().max(300).optional(),
+  timestamp: z.number().optional(),
+})
 
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json();
-
-    const {
-      name,
-      value,
-      rating,
-      url,
-      userAgent,
-      timestamp,
-    } = body;
-
-    // Logger les Web Vitals
-    logger.info(`Web Vital: ${name}`, {
-      metric: name,
-      value,
-      rating,
-      url,
-      userAgent,
-      timestamp,
-    });
-
-    // Vous pouvez ici envoyer vers une base de données ou un service d'analytics
-    // Exemple : stockage dans Sanity, PostgreSQL, etc.
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    logger.error('Failed to process web vitals', error as Error);
-    return NextResponse.json(
-      { error: 'Failed to process metrics' },
-      { status: 500 }
-    );
+export const POST = apiRoute(
+  { auth: 'public', csrf: false, body: schema, rateLimit: { maxRequests: 60, windowMs: 60_000 } },
+  async ({ body }) => {
+    logger.info(`Web Vital: ${body.name}`, { metric: body.name, value: body.value, rating: body.rating, url: body.url })
+    return { success: true }
   }
-}
+)
