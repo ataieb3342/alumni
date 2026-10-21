@@ -210,8 +210,18 @@ cascade…) sont listés dans [DECISIONS.md](DECISIONS.md) § 8 et § 9.
   stockage : `/api/health` « healthy », images servies par Blob.
 - ✅ Fonctions Vercel déplacées à Francfort (`vercel.json`), à côté de la
   base.
-- Ensuite : fusion de la PR, vérification en production, puis invitation de
-  l'administrateur du Studio (`tools/admin/invite.ts`).
+- ✅ PR fusionnée et déployée : 14 contrôles sur 14 en ligne, `/api/health`
+  « healthy », fonctions servies depuis Francfort (`fra1`).
+- ⚠️ **Incident** : le premier déploiement a réutilisé le cache de build de
+  l'ancien site, et le cache Turbopack a servi l'ancienne feuille de style.
+  Le site est resté sans mise en page **environ 10 minutes**. Corrigé par un
+  redéploiement sans cache (`VERCEL_FORCE_NO_BUILD_CACHE=1`, retiré
+  ensuite). Les builds suivants repartent d'un cache de la refonte.
+- ✅ Administrateurs : **Adam Taieb** (`contact@ataieb-dev.fr`, mot de passe
+  et LinkedIn) et **Camille Schneider** (Google), nommés avec
+  `tools/admin/set-role.ts`. Le compte repris du Studio (même personne
+  qu'Adam, autre adresse) n'a pas été invité, puisqu'Adam est déjà
+  administrateur. Pour l'activer : `tools/admin/invite.ts`.
 
 Les étapes détaillées ci-dessous restent valables pour une nouvelle
 installation ou pour relancer l'import.
