@@ -11,7 +11,7 @@ import Header from './components/site/Header'
 import Footer from './components/site/Footer'
 import { THEME_SCRIPT } from './components/site/ThemeToggle'
 import { ConfirmProvider } from './components/ui/Dialog'
-import { EditorShell } from './components/edit/EditorShell'
+import { EditorShell } from './components/edit/lazy'
 import { EDIT_MODE_COOKIE } from '@/lib/auth/session'
 
 const text = Atkinson_Hyperlegible_Next({
@@ -23,10 +23,12 @@ const text = Atkinson_Hyperlegible_Next({
   fallback: ['ui-sans-serif', 'system-ui', 'Segoe UI', 'Roboto', 'Arial', 'sans-serif'],
 })
 
+// Titres : sous-ensemble latin (le français y est complet) et axes utiles
+// seulement — avec latin-ext et l'axe SOFT, 220 Ko préchargés au lieu de 65
 const serif = Fraunces({
-  subsets: ['latin', 'latin-ext'],
+  subsets: ['latin'],
   variable: '--font-serif',
-  axes: ['opsz', 'SOFT', 'WONK'],
+  axes: ['opsz', 'WONK'],
   display: 'swap',
 })
 

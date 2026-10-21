@@ -26,7 +26,7 @@ degré : la réglure est discrète (opacité 8–22 %), la typographie fait le t
 
 | Rôle | Police | Réglages |
 |---|---|---|
-| Titres, chiffres, citations | **Fraunces** (variable, axes `opsz`, `SOFT`, `WONK`) | 650, `opsz 96–144`, `SOFT 50–60` ; italique « wonky » pour les accents (`font-display-tight`) |
+| Titres, chiffres, citations | **Fraunces** (variable, axes `opsz` et `WONK`, sous-ensemble latin) | 650, `opsz 96–144` ; italique « wonky » pour les accents (`font-display-tight`). L'axe `SOFT` a été retiré : +52 Ko préchargés pour un effet à peine visible |
 | Texte et interface | **Atkinson Hyperlegible Next** | 400/600/700, 17 px de base, interligne 1,6 ; conçue pour la lisibilité (malvoyance, dyslexie) |
 | Annotations manuscrites | **Caveat** 600 | Décoratif uniquement (`font-hand`), jamais porteur d'information seul, non préchargée |
 

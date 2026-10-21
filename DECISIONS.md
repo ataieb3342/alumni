@@ -229,6 +229,14 @@ vrais membres.
   en base. Seul le **chemin** de la page est envoyé, jamais la recherche :
   `?q=` peut contenir le nom d'un membre.
 
+- **Sentry côté navigateur** : la configuration est déplacée dans
+  `instrumentation-client.ts`. Avec Turbopack (Next 16), l'ancien
+  `sentry.client.config.ts` n'était plus chargé : les erreurs du navigateur
+  ne remontaient pas. Session Replay n'est pas réactivé : il ne tournait
+  donc déjà plus, il ajoutait environ 50 Ko sur chaque page, et il
+  enregistrait des sessions de membres. Les erreurs et le suivi des
+  performances (10 %) restent actifs.
+
 ## 14. Outils de développement
 
 - `/api/dev-login` : connexion sans mot de passe aux comptes `@local.test`,

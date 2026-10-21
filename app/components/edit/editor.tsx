@@ -14,12 +14,8 @@ import type { ImageRef } from '@/db/schema'
 import { getAt } from '@/lib/content/path'
 import { cn } from '@/lib/utils'
 import { ContentIcon } from '@/app/components/ui/icons'
-import { EditableText } from './EditableText'
-import { EditableRichText } from './EditableRichText'
-import { EditableImage } from './EditableImage'
-import { EditableLink } from './EditableLink'
-import { EditableList } from './EditableList'
-import { EditableIcon } from './EditableIcon'
+// Chargés à la demande : un visiteur ne télécharge pas le code d'édition
+import { EditableIcon, EditableImage, EditableLink, EditableList, EditableRichText, EditableText } from './lazy'
 
 interface TextOptions {
   as?: string

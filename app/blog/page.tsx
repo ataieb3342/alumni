@@ -9,7 +9,7 @@ import { buttonClasses } from '@/app/components/ui/Button'
 import { EmptyState } from '@/app/components/ui/EmptyState'
 import { PageHero } from '@/app/components/site/PageHero'
 import { BlogBrowser, type BlogPostItem } from '@/app/components/blog/BlogBrowser'
-import { NewPostButton } from '@/app/components/blog/NewPostButton'
+import { NewPostButton } from '@/app/components/edit/lazy'
 
 export const metadata: Metadata = { title: 'Blog', description: "Actualités de l'association VH Besançon Alumni, événements et portraits" }
 

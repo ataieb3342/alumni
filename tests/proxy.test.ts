@@ -28,7 +28,7 @@ describe('Proxy : accès aux pages', () => {
   })
 
   it('les pages publiques restent ouvertes aux visiteurs', async () => {
-    for (const path of ['/', '/connexion', '/a-propos', '/blog/mon-article', '/mentions-legales', '/media/uploads/a.webp']) {
+    for (const path of ['/', '/connexion', '/a-propos', '/blog/mon-article', '/mentions-legales', '/media/uploads/a.webp', '/robots.txt', '/sitemap.xml']) {
       expect(redirectedTo(await visit(path)), path).toBeNull()
     }
     expect(isPublicPath('/annuaire')).toBe(false)

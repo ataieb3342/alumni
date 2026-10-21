@@ -7,7 +7,8 @@ import { Skeleton } from '@/app/components/ui/Spinner'
  */
 export function PageSkeleton() {
   return (
-    <div className="container-page py-12" aria-busy="true" aria-live="polite">
+    // Hauteur d'écran : le pied de page reste hors champ jusqu'à l'arrivée du contenu (pas de décalage visible)
+    <div className="container-page min-h-[100svh] py-12" aria-busy="true" aria-live="polite">
       <span className="sr-only">Chargement…</span>
       <Skeleton className="h-4 w-32" />
       <Skeleton className="mt-4 h-12 w-2/3 max-w-xl" />

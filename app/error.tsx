@@ -3,12 +3,12 @@
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { RotateCcw } from 'lucide-react'
-import * as Sentry from '@sentry/nextjs'
+import { loadSentry } from '@/lib/sentry-client'
 import { Button, buttonClasses } from './components/ui/Button'
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    Sentry.captureException(error)
+    void loadSentry()?.then((Sentry) => Sentry.captureException(error))
   }, [error])
 
   return (

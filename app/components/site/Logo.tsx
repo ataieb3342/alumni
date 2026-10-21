@@ -14,7 +14,7 @@ export function Logo({ href = '/', className, tone = 'ink' }: { href?: string; c
           'grid size-10 -rotate-3 place-items-center rounded-[10px] border-2 font-display text-[1.15rem] italic leading-none font-bold transition-transform duration-300 ease-[var(--ease-spring)] group-hover:rotate-0',
           tone === 'wash' ? 'border-on-wash text-on-wash' : 'border-blue text-blue'
         )}
-        style={{ fontVariationSettings: '"opsz" 144, "SOFT" 100, "WONK" 1' }}
+        style={{ fontVariationSettings: '"opsz" 144, "WONK" 1' }}
       >
         VH
       </span>

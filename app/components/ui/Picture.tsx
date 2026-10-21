@@ -32,7 +32,8 @@ export function Picture({
     src: image.url,
     alt: alt ?? image.alt ?? '',
     sizes,
-    priority,
+    // Image principale (LCP) : préchargée en priorité haute (`priority` est déprécié depuis Next 16)
+    ...(priority ? { preload: true, fetchPriority: 'high' as const, loading: 'eager' as const } : {}),
     className: cn('object-cover', className),
     style: position ? { objectPosition: position } : undefined,
     ...(image.blurDataUrl ? { placeholder: 'blur' as const, blurDataURL: image.blurDataUrl } : {}),

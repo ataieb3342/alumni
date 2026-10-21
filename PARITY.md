@@ -139,8 +139,8 @@ externes non disponibles en local (OAuth Google/LinkedIn, Sentry, Google Drive).
 - [x] K3. Menu mobile — E2E `parcours.spec`, `member.spec` (menu mobile)
 - [x] K4. Notifications toast (succès/erreur) — E2E (toasts de succès et d’erreur dans plusieurs parcours)
 - [x] K5. Journal des pages vues des membres (hors pages d'authentification) — alimente les statistiques — E2E `member.spec` (journal de la page vue : 200)
-- [ ] K6. Web Vitals envoyés à Sentry / `/api/analytics/web-vitals` — ⚠️ envoi vérifié (validation et limite : U `member-permissions.test`) ; réception Sentry non testée sans DSN
-- [ ] K7. Sentry (erreurs serveur et client) quand le DSN est configuré — ⚠️ configuration inchangée (`@sentry/nextjs`) ; non testée sans DSN
+- [ ] K6. Web Vitals envoyés à Sentry / `/api/analytics/web-vitals` — ⚠️ envoi validé et borné (U `member-permissions.test`) ; Sentry chargé à la demande, réception non testée sans DSN
+- [ ] K7. Sentry (erreurs serveur et client) quand le DSN est configuré — ⚠️ configuration navigateur déplacée dans `instrumentation-client.ts` (l'ancienne n'était plus chargée avec Turbopack) ; non testée sans DSN
 - [x] K8. Identifiant de corrélation et temps de réponse dans les en-têtes — lecture du code (`proxy.ts`) · M
 - [x] K9. `/api/health` — M (`/api/health` → 200)
 - [x] K10. `lang="fr"`, favicon, métadonnées de pages — lecture du code · M

@@ -11,7 +11,7 @@ import { EditableArea } from '@/app/components/edit/EditableArea'
 import { Alert } from '@/app/components/ui/Alert'
 import { Badge } from '@/app/components/ui/Badge'
 import { Picture } from '@/app/components/ui/Picture'
-import { PostSettings } from '@/app/components/blog/PostSettings'
+import { PostSettings } from '@/app/components/edit/lazy'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const post = await getPostBySlug((await params).slug)

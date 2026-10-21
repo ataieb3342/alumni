@@ -193,7 +193,7 @@
 
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    font-variation-settings: "opsz" 96, "SOFT" 50;
+    font-variation-settings: "opsz" 96;
     font-weight: 650;
     line-height: 1.12;
     letter-spacing: -0.015em;
@@ -366,7 +366,7 @@
 
 @layer utilities {
   .font-display-tight {
-    font-variation-settings: "opsz" 144, "SOFT" 60, "WONK" 1;
+    font-variation-settings: "opsz" 144, "WONK" 1;
     letter-spacing: -0.025em;
   }
   .scrollbar-none {

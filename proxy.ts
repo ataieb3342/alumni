@@ -25,6 +25,8 @@ export const PUBLIC_ROUTES = [
   '/alumni',
   '/qrcode',
   '/media',
+  '/robots.txt',
+  '/sitemap.xml',
 ]
 
 export function isPublicPath(pathname: string): boolean {

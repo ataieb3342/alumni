@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { EditRoot, type DocDescriptor } from './EditorShell'
+import type { DocDescriptor } from './EditorShell'
+import { EditRoot } from './lazy'
 
 /** Enveloppe une page : n'ajoute rien pour un visiteur, enregistre les documents en mode édition */
 export function EditableArea({ docs, children }: { docs: (DocDescriptor | null | undefined)[]; children: ReactNode }) {
