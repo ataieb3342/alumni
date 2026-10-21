@@ -140,6 +140,32 @@ describe('Profil et compte', () => {
     expect((await getUserById(author.id))?.firstName).not.toBe('Usurpé')
   })
 
+  it('enregistre ville et année malgré des formations et expériences reprises de Sanity', async () => {
+    // Forme réelle des données importées : null, année en texte, date ISO complète, LinkedIn en majuscules
+    const legacy = await createUser({
+      firstName: 'D’Artagnan',
+      lastName: 'de Batz',
+      linkedIn: 'https://www.LinkedIn.com/in/dartagnan',
+      education: [{ school: 'INSA', degree: 'Ingénieur', field: null, location: null, startYear: '2015', endYear: null, description: null }] as never,
+      experience: [{ company: 'Acme', position: 'Dev', startDate: '2020-09-01T00:00:00.000Z', endDate: null, current: true }] as never,
+    })
+    signInAs(legacy)
+    const { POST } = await import('@/app/api/profile/update/route')
+    const response = await POST(
+      apiRequest('/api/profile/update', {
+        body: { firstName: legacy.firstName, lastName: legacy.lastName, linkedIn: legacy.linkedIn, promotionYear: '2012', city: 'Lyon', education: legacy.education, experience: legacy.experience },
+      }),
+      routeParams({})
+    )
+    expect(response.status).toBe(200)
+    const after = await getUserById(legacy.id)
+    expect(after?.city).toBe('Lyon')
+    expect(after?.promotionYear).toBe(2012)
+    expect(after?.education[0]).toMatchObject({ school: 'INSA', startYear: 2015 })
+    expect(after?.education[0].endYear).toBeUndefined()
+    expect(after?.experience[0].startDate).toBe('2020-09-01')
+  })
+
   it('refuse une image de profil téléversée par quelqu’un d’autre', async () => {
     signInAs(other)
     const { POST } = await import('@/app/api/profile/update/route')

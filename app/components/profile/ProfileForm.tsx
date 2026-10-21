@@ -99,22 +99,21 @@ export function ProfileForm({ user }: { user: ProfileData }) {
     () => ({
       firstName: fields.firstName,
       lastName: fields.lastName,
+      // Seuls les champs affichés sont envoyés : une ancienne valeur invalide
+      // dans un champ masqué bloquerait l'enregistrement sans qu'on la voie.
       ...(isLyceen
         ? {}
         : {
-            promotionYear: fields.promotionYear,
-            currentStudies: fields.currentStudies,
-            linkedIn: fields.linkedIn.trim(),
             bio: fields.bio,
-            city: fields.city,
             subjects: fields.subjects,
             isVisibleInDirectory: fields.isVisibleInDirectory,
-            staffCategory: fields.staffCategory,
-            staffDetails: fields.staffDetails,
           }),
-      ...(fullProfile ? { education, experience } : {}),
+      ...(!isLyceen && !isStaff ? { promotionYear: fields.promotionYear, city: fields.city } : {}),
+      ...(!isLyceen && !fullProfile ? { currentStudies: fields.currentStudies } : {}),
+      ...(fullProfile ? { linkedIn: fields.linkedIn.trim(), education, experience } : {}),
+      ...(isStaff ? { staffCategory: fields.staffCategory, staffDetails: fields.staffDetails } : {}),
     }),
-    [fields, education, experience, isLyceen, fullProfile]
+    [fields, education, experience, isLyceen, isStaff, fullProfile]
   )
 
   const errors = useMemo(() => {
@@ -154,8 +153,16 @@ export function ProfileForm({ user }: { user: ProfileData }) {
     event.preventDefault()
     setSubmitted(true)
     setServerError(null)
-    if (Object.keys(errors).length > 0) {
-      toast.error(Object.values(errors)[0])
+    const firstError = Object.keys(errors)[0]
+    if (firstError) {
+      // Une erreur dans une formation ou une expérience repliée : on l'ouvre pour la montrer
+      const [kind, index] = firstError.split('.')
+      if ((kind === 'education' || kind === 'experience') && index !== undefined) {
+        setEditing({ kind, index: Number(index) })
+        toast.error(`${kind === 'education' ? 'Formation' : 'Expérience'} n°${Number(index) + 1} : ${errors[firstError]}`)
+      } else {
+        toast.error(errors[firstError])
+      }
       return
     }
     setLoading(true)

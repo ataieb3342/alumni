@@ -231,6 +231,29 @@ export const updateTestimonialSchema = createTestimonialSchema.partial().extend(
 // Schémas de validation pour les profils
 // ========================================
 
+/** Lettres de toutes langues, espaces, tirets, apostrophes (droite ou typographique) et points */
+const PROFILE_NAME = /^[\p{L}\p{M}\s\-'’.]+$/u
+
+// Les formations et expériences reprises de Sanity contiennent des `null`, des
+// années en texte ou des dates complètes : on les accepte et on les normalise,
+// sinon le profil entier ne peut plus être enregistré.
+const blankToUndefined = (value: unknown) => (value === null || value === '' ? undefined : value)
+
+const optionalText = (max: number, message: string) =>
+  z.preprocess(blankToUndefined, z.string().max(max, message).optional())
+
+const year = (message: string) =>
+  z.coerce.number({ error: message }).int(message).min(1950, message).max(new Date().getFullYear() + 10, message)
+const entryYear = (message: string) => z.preprocess(blankToUndefined, year(message))
+const optionalEntryYear = (message: string) => z.preprocess(blankToUndefined, year(message).optional())
+
+/** AAAA-MM ou AAAA-MM-JJ ; une date ISO complète est ramenée à AAAA-MM-JJ */
+const toMonth = (value: unknown) =>
+  typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(value) ? value.slice(0, 10) : blankToUndefined(value)
+const month = (message: string) => z.string({ error: message }).regex(/^\d{4}-\d{2}(-\d{2})?$/, message)
+const entryMonth = (message: string) => z.preprocess(toMonth, month(message))
+const optionalEntryMonth = (message: string) => z.preprocess(toMonth, month(message).optional())
+
 export const updateProfileSchema = z.object({
   /** Ignoré : le profil modifié est toujours celui de la session */
   userId: z.string().optional(),
@@ -238,13 +261,13 @@ export const updateProfileSchema = z.object({
     .trim()
     .min(2, 'Le prénom doit contenir au moins 2 caractères')
     .max(50, 'Le prénom est trop long')
-    .regex(/^[a-zA-ZÀ-ÿ\s\-']+$/, 'Le prénom contient des caractères invalides')
+    .regex(PROFILE_NAME, 'Le prénom contient des caractères invalides')
     .optional(),
   lastName: z.string()
     .trim()
     .min(2, 'Le nom doit contenir au moins 2 caractères')
     .max(50, 'Le nom est trop long')
-    .regex(/^[a-zA-ZÀ-ÿ\s\-']+$/, 'Le nom contient des caractères invalides')
+    .regex(PROFILE_NAME, 'Le nom contient des caractères invalides')
     .optional(),
   promotionYear: z.coerce.number()
     .int('L\'année doit être un nombre entier')
@@ -260,7 +283,7 @@ export const updateProfileSchema = z.object({
   linkedIn: z.string()
     .trim()
     .max(500, 'URL trop longue')
-    .regex(/linkedin\.com/, 'Indiquez l’adresse de votre profil LinkedIn (linkedin.com/in/…)')
+    .regex(/linkedin\.com/i, 'Indiquez l’adresse de votre profil LinkedIn (linkedin.com/in/…)')
     .optional()
     .or(z.literal('')),
   bio: z.string()
@@ -289,23 +312,23 @@ export const updateProfileSchema = z.object({
   // c'est ainsi que le lieu des expériences disparaissait à chaque enregistrement.
   education: z.array(z.object({
     _key: z.string().max(64).optional(),
-    school: z.string().trim().min(1, 'Indiquez l’école').max(200),
-    degree: z.string().trim().min(1, 'Indiquez le diplôme').max(200),
-    field: z.string().max(200).optional(),
-    location: z.string().max(100).optional(),
-    startYear: z.number().int().min(1950).max(new Date().getFullYear() + 10),
-    endYear: z.number().int().min(1950).max(new Date().getFullYear() + 10).optional(),
-    description: z.string().max(1000).optional(),
+    school: z.string({ error: 'Indiquez l’école' }).trim().min(1, 'Indiquez l’école').max(200, 'Nom d’école trop long'),
+    degree: z.string({ error: 'Indiquez le diplôme' }).trim().min(1, 'Indiquez le diplôme').max(200, 'Diplôme trop long'),
+    field: optionalText(200, 'Domaine trop long'),
+    location: optionalText(100, 'Ville trop longue'),
+    startYear: entryYear('Année de début invalide'),
+    endYear: optionalEntryYear('Année de fin invalide'),
+    description: optionalText(1000, 'Description trop longue (max 1000 caractères)'),
   })).max(30).optional(),
   experience: z.array(z.object({
     _key: z.string().max(64).optional(),
-    company: z.string().trim().min(1, 'Indiquez l’entreprise').max(200),
-    position: z.string().trim().min(1, 'Indiquez le poste').max(200),
-    location: z.string().max(100).optional(),
-    description: z.string().max(1000).optional(),
-    startDate: z.string().regex(/^\d{4}-\d{2}(-\d{2})?$/, 'Date de début invalide'),
-    endDate: z.string().regex(/^\d{4}-\d{2}(-\d{2})?$/, 'Date de fin invalide').optional(),
-    current: z.boolean().optional(),
+    company: z.string({ error: 'Indiquez l’entreprise' }).trim().min(1, 'Indiquez l’entreprise').max(200, 'Nom d’entreprise trop long'),
+    position: z.string({ error: 'Indiquez le poste' }).trim().min(1, 'Indiquez le poste').max(200, 'Intitulé de poste trop long'),
+    location: optionalText(100, 'Lieu trop long'),
+    description: optionalText(1000, 'Description trop longue (max 1000 caractères)'),
+    startDate: entryMonth('Date de début invalide'),
+    endDate: optionalEntryMonth('Date de fin invalide'),
+    current: z.boolean().nullish().transform((value) => value ?? undefined),
   })).max(30).optional(),
   /** Identifiant d'un média téléversé par le membre ; null pour retirer la photo */
   profileImageId: z.string().max(64).nullable().optional(),
