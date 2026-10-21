@@ -236,6 +236,12 @@ vrais membres.
   donc déjà plus, il ajoutait environ 50 Ko sur chaque page, et il
   enregistrait des sessions de membres. Les erreurs et le suivi des
   performances (10 %) restent actifs.
+- Le projet Vercel n'a **aucun DSN Sentry** : Sentry ne recevait donc
+  rien en production. Le plugin de build Sentry (`withSentryConfig`)
+  injectait pourtant environ 70 Ko de JavaScript dans chaque page. Il
+  n'est désormais branché que si `NEXT_PUBLIC_SENTRY_DSN` ou `SENTRY_DSN`
+  est défini. Il suffit de les ajouter pour réactiver Sentry, côté
+  serveur comme côté navigateur.
 
 ## 14. Outils de développement
 

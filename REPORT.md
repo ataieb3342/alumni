@@ -176,7 +176,7 @@ Le détail ligne par ligne est dans [PARITY.md](PARITY.md).
 | Fonctionnalité | Écart | Justification / suite |
 |---|---|---|
 | A11–A13 Connexion Google et LinkedIn, création de compte OAuth | Non testée de bout en bout | Code repris (rattachement par e-mail, choix du type, compte en attente). Nécessite les vrais fournisseurs : à vérifier sur le déploiement de prévisualisation, avec les URL de rappel autorisées chez Google et LinkedIn. |
-| K6–K7 Sentry | Non testé | Configuration `@sentry/nextjs` inchangée (import mis à jour) ; sans DSN en local. Les Web Vitals sont désormais validés et bornés. |
+| K6–K7 Sentry | Non testé | Aucun DSN n'est défini sur le projet Vercel : Sentry ne recevait déjà rien en production. La configuration navigateur est corrigée (`instrumentation-client.ts`) et le plugin ne s'active qu'avec un DSN. Il suffit d'ajouter `NEXT_PUBLIC_SENTRY_DSN` et `SENTRY_DSN` pour le réactiver. |
 | L1 Export quotidien vers Google Drive | Non testé | Code inchangé ; identifiants Google Drive absents en local. L'export CSV, lui, est testé. |
 | M10 Consulter les jetons de réinitialisation | Retiré | Les jetons sont désormais stockés hachés : les afficher n'a plus de sens. Un administrateur peut envoyer un lien de réinitialisation depuis la fiche du membre. Le journal d'activité reste consultable. |
 | M13 Requêtes GROQ libres (Vision) | Pas d'équivalent | Couvert par l'export CSV, les statistiques et la console SQL de l'hébergeur (Neon) pour un besoin technique ponctuel. |
@@ -247,6 +247,19 @@ créés entre-temps sur l'ancien site.
 > migrations SQL ont été vérifiées sur PGlite (moteur PostgreSQL 17).
 
 ### 4. Vérifier le déploiement de prévisualisation
+Constat sur le projet Vercel (lecture du 21/10) : Git relié à
+`ataieb3342/alumni`, branche de production `main`, Node 22, aucun stockage,
+aucune `DATABASE_URL`, aucun DSN Sentry, et des variables de
+*Preview* identiques à celles de production. Avant de tester la
+prévisualisation :
+- *Preview* › `DATABASE_URL` : une **branche Neon** (copie de la base), jamais
+  la base de production ;
+- *Preview* › `EMAIL_TRANSPORT=log` : la branche contient les vrais membres,
+  et valider un compte de test leur écrirait vraiment ;
+- *Preview* › retirer `NEXTAUTH_URL` et définir `AUTH_TRUST_HOST=true`, pour
+  que la connexion reste sur l'URL de prévisualisation au lieu de renvoyer
+  vers le site de production.
+
 Sur l'URL de prévisualisation de la PR :
 - se connecter avec un compte existant ;
 - ouvrir l'annuaire et une fiche ;

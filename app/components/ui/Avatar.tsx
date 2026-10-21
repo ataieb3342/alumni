@@ -5,7 +5,7 @@ import { Picture } from './Picture'
 // Teintes d'initiales : variées pour éviter un mur de pastilles identiques
 const TINTS = [
   'bg-blue-soft text-blue',
-  'bg-red-soft text-red',
+  'bg-red-soft text-red-strong',
   'bg-success-soft text-success',
   'bg-warning-soft text-warning',
   'bg-highlight-soft text-ink',

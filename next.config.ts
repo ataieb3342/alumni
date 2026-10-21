@@ -23,4 +23,8 @@ const sentryOptions = {
   tunnelRoute: "/monitoring",
 };
 
-export default withSentryConfig(nextConfig, sentryOptions);
+// Sentry n'est branché que s'il est configuré : sinon son plugin injecte quand
+// même ~70 Ko de JavaScript dans chaque page (aucun DSN sur le projet aujourd'hui)
+const sentryEnabled = Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN);
+
+export default sentryEnabled ? withSentryConfig(nextConfig, sentryOptions) : nextConfig;

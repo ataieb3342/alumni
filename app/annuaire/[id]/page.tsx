@@ -96,12 +96,13 @@ export default async function MemberPage({ params }: { params: Promise<{ id: str
             {facts.length > 0 && (
               <dl className="mt-6 space-y-3 border-t border-line pt-5">
                 {facts.map(({ label, value, icon: Icon }) => (
-                  <div key={label} className="flex gap-3">
-                    <Icon className="mt-0.5 size-5 shrink-0 text-blue" aria-hidden="true" />
-                    <div className="min-w-0">
-                      <dt className="text-xs font-semibold text-ink-muted">{label}</dt>
-                      <dd className="font-semibold break-words text-ink">{value}</dd>
-                    </div>
+                  // dl > div > dt + dd uniquement : l'icône est placée dans le dt
+                  <div key={label} className="relative min-w-0 pl-8">
+                    <dt className="text-xs font-semibold text-ink-muted">
+                      <Icon className="absolute top-0.5 left-0 size-5 text-blue" aria-hidden="true" />
+                      {label}
+                    </dt>
+                    <dd className="font-semibold break-words text-ink">{value}</dd>
                   </div>
                 ))}
               </dl>
