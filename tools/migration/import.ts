@@ -9,7 +9,7 @@
  * - Les comptes du Studio Sanity (e-mail + rôle) deviennent des comptes
  *   administrateurs sans mot de passe, à inviter (voir REPORT.md).
  *
- * Variables : DATABASE_URL, BLOB_READ_WRITE_TOKEN (sinon stockage fichiers
+ * Variables : DATABASE_URL, BLOB_STORE_ID + VERCEL_OIDC_TOKEN ou BLOB_READ_WRITE_TOKEN (sinon stockage fichiers
  * dans MEDIA_DIR), ADMIN_EMAILS (optionnel, e-mails à promouvoir admin).
  *
  * Usage : npm run migrate:import [-- --snapshot .migration/snapshot]

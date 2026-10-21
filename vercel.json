@@ -1,5 +1,8 @@
 {
   "buildCommand": "npm run test -- --run && npm run build",
+  "regions": [
+    "fra1"
+  ],
   "crons": [
     {
       "path": "/api/cron/sync-newsletters",

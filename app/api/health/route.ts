@@ -18,7 +18,7 @@ export async function GET() {
     },
     storage: async () => {
       if (process.env.NODE_ENV === 'production' && process.env.VERCEL && storageDriver() !== 'blob') {
-        throw new Error('BLOB_READ_WRITE_TOKEN manquant : les images téléversées ne seraient pas conservées')
+        throw new Error('Aucun magasin Vercel Blob relié (BLOB_STORE_ID ou BLOB_READ_WRITE_TOKEN) : les images téléversées ne seraient pas conservées')
       }
     },
     email: async () => {

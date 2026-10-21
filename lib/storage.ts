@@ -1,8 +1,10 @@
 /**
  * Stockage des images téléversées.
  *
- * - Vercel Blob (public) quand `BLOB_READ_WRITE_TOKEN` est défini : URL
- *   publiques servies par le CDN de Vercel ;
+ * - Vercel Blob (public) quand le projet est relié à un magasin Blob :
+ *   `BLOB_STORE_ID` (identifiants OIDC, mode par défaut des nouveaux magasins)
+ *   ou `BLOB_READ_WRITE_TOKEN` (jeton classique). URL publiques servies par
+ *   le CDN de Vercel ;
  * - sinon système de fichiers (`MEDIA_DIR`, par défaut `.data/media`), servi
  *   par la route `/media/[...key]` : développement local, tests, VPS.
  */
@@ -18,7 +20,7 @@ export type StorageDriver = 'blob' | 'fs'
 
 export function storageDriver(): StorageDriver {
   if (process.env.STORAGE_DRIVER === 'fs') return 'fs'
-  return process.env.BLOB_READ_WRITE_TOKEN ? 'blob' : 'fs'
+  return process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID ? 'blob' : 'fs'
 }
 
 export function mediaDir(): string {
