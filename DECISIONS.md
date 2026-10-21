@@ -161,9 +161,11 @@ démarrer plutôt que d'écrire dans une base locale éphémère.
 Une adresse inconnue en dehors des sections publiques renvoie un visiteur
 vers la connexion, comme avant : le proxy ne sait pas si la page existe. Sous
 une section publique (`/blog/...`) et pour un membre connecté, la réponse est
-un vrai **404**. L'écran de chargement (squelette) n'est utilisé que par les
-pages membres et l'administration : à la racine, il faisait répondre 200
-aux pages introuvables.
+un vrai **404**. L'écran de chargement (squelette) n'est utilisé que par
+l'administration. À la racine, il faisait répondre 200 aux pages
+introuvables. Sur les pages membres, il doublait le DOM et retardait
+l'affichage, alors que le serveur répond en moins de 100 ms (accueil membre
+sur mobile : 76 → 88).
 
 ## 9. Corrections de comportement
 

@@ -2,8 +2,11 @@ import { Skeleton } from '@/app/components/ui/Spinner'
 
 /**
  * Chargement sobre : la silhouette de la page plutôt qu'une animation plein
- * écran. Utilisé seulement par les pages membres (loading.tsx) : à la racine,
- * il ferait répondre 200 aux pages introuvables (streaming avant le 404).
+ * écran. Réservé à l'administration (requêtes plus lourdes). Ailleurs, le
+ * serveur répond assez vite : le squelette suivi du contenu « streamé »
+ * doublait le DOM et retardait l'affichage (accueil membre : 76 → 88 sur
+ * mobile sans lui), et à la racine il faisait répondre 200 aux pages
+ * introuvables.
  */
 export function PageSkeleton() {
   return (
