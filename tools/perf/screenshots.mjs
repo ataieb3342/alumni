@@ -23,11 +23,12 @@ const outDir = path.join(process.cwd(), 'docs', 'screenshots', label)
 fs.mkdirSync(outDir, { recursive: true })
 const memberId = args['member-id']
 const only = args.only
+// Textes remplacés par des barres floues et images floutées : rien ne doit rester lisible
 const BLUR_CSS = `
-  main img, main picture, main svg image, main [style*="background-image"] { filter: blur(16px) !important; }
-  main :is(h1, h2, h3, h4, p, a, span, li, dd, dt, td, th, label, strong, em, small, figcaption, blockquote, button) {
-    color: transparent !important; text-shadow: 0 0 10px rgba(40, 40, 60, 0.8) !important;
-  }
+  main img, main picture, main svg image, main [style*="background-image"] { filter: blur(24px) !important; }
+  main * { color: transparent !important; text-shadow: 0 0 18px rgba(40, 40, 60, 0.9) !important; }
+  main :is(h1, h2, h3, h4, p, a, span, li, dd, dt, td, th, label, strong, em, small, time, figcaption, blockquote, button) { filter: blur(4px) !important; }
+  main input::placeholder { color: transparent !important; }
 `
 
 const PAGES = [

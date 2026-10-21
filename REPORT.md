@@ -15,7 +15,7 @@ d'origine), [PARITY.md](PARITY.md) (checklist vérifiée),
 | Zéro régression fonctionnelle | 116 fonctionnalités sur 125 vérifiées ; 9 écarts signalés et justifiés (§ 6), dont 6 dépendent de services externes absents en local |
 | Comptes et mots de passe conservés | Fait : 100 comptes, 62 hash bcrypt recopiés à l'identique, vérifiés octet par octet ; rehash transparent à la connexion |
 | Build, lint, typecheck, tests | Tous au vert (§ 2) |
-| Performance | Accessibilité en hausse ; **performance mobile en baisse, à corriger** (§ 4) |
+| Performance | Mobile 89 → 90, ordinateur 99 → 100, accessibilité 93 → 100 (§ 4) |
 | Mise en production | **Pas faite** : elle demande une base et un stockage de production, et votre feu vert (§ 7) |
 
 ## 2. Vérifications
@@ -25,8 +25,8 @@ d'origine), [PARITY.md](PARITY.md) (checklist vérifiée),
 | `npm run typecheck` | 0 erreur |
 | `npm run lint` | 0 erreur, 0 avertissement |
 | `npm run build` | OK (aucun avertissement de traçage de fichiers) |
-| `npm test -- --run` (Vitest) | 20 fichiers, tous au vert |
-| `npm run test:e2e` (Playwright, build de production) | 35 scénarios, tous au vert |
+| `npm test -- --run` (Vitest) | 334 tests, tous au vert |
+| `npm run test:e2e` (Playwright, build de production) | 36 scénarios, tous au vert |
 
 **Ce que couvrent les tests**
 - **Authentification** : connexion avec un hash d'origine `$2b$10$`, rehash
@@ -63,6 +63,9 @@ d'origine), [PARITY.md](PARITY.md) (checklist vérifiée),
 | Administration qui débordait sur mobile | Défilement horizontal |
 | E-mails réellement envoyés depuis l'environnement local (identifiants Gmail dans `.env.local`) | Un test aurait écrit à de vrais membres |
 | Build qui embarquait tout le dépôt dans le code serveur | Déploiement plus lent et plus lourd |
+| Boucle de redirections pour un membre supprimé ou suspendu pendant sa session | Page inaccessible (« trop de redirections ») |
+| Configuration Sentry du navigateur plus chargée avec Turbopack (déjà le cas sur `main`) | Erreurs du navigateur jamais remontées |
+| Code d'édition et schémas Zod téléchargés par chaque visiteur | Performance mobile en baisse (81 au lieu de 89) |
 
 ## 3. Migration des données
 
@@ -100,9 +103,9 @@ une invitation », lien à usage unique valable 7 jours).
 
 ## 4. Lighthouse avant / après
 
-Mesures locales : ancien site (`main`, données Sanity) et nouveau site
-(build de production, base migrée, mêmes volumes), Lighthouse 13.5.0, mêmes
-pages, même compte membre fictif. Résultats bruts :
+Mesures locales de l'ancien site (`main`, données Sanity) et du nouveau
+(build de production, base migrée, mêmes volumes), avec Lighthouse 13.5.0,
+sur les mêmes pages et avec un compte membre. Résultats bruts :
 [docs/perf/before.json](docs/perf/before.json) et
 [docs/perf/after.json](docs/perf/after.json) ; tableau généré par
 `node tools/perf/compare.mjs`.
@@ -111,63 +114,69 @@ pages, même compte membre fictif. Résultats bruts :
 
 | Page | Performance | Accessibilité | Bonnes pratiques | SEO | LCP | CLS |
 |---|---|---|---|---|---|---|
-| Accueil (visiteur) | 94 → **81** (-13) | 95 → **100** (+5) | 96 → **100** (+4) | 92 → **92** (=) | 3.1 → **4.9** s | 0 → **0** |
-| À propos | 87 → **80** (-7) | 96 → **100** (+4) | 96 → **100** (+4) | 92 → **92** (=) | 4.0 → **5.2** s | 0 → **0** |
-| Connexion | 90 → **84** (-6) | 91 → **100** (+9) | 96 → **100** (+4) | 92 → **91** (-1) | 3.6 → **4.4** s | 0 → **0** |
-| Accueil membre | 87 → **77** (-10) | 97 → **96** (-1) | 100 → **100** (=) | 100 → **100** (=) | 3.9 → **5.8** s | 0 → **0** |
-| Annuaire | 88 → **78** (-10) | 93 → **97** (+4) | 100 → **100** (=) | 100 → **100** (=) | 3.8 → **5.3** s | 0 → **0** |
-| Fiche membre | 89 → **86** (-3) | 95 → **93** (-2) | 100 → **100** (=) | 100 → **63** (-37) | 3.8 → **4.3** s | 0 → **0** |
-| Annonces | 88 → **81** (-7) | 95 → **98** (+3) | 100 → **100** (=) | 100 → **100** (=) | 3.9 → **4.9** s | 0 → **0** |
-| Témoignages | 88 → **81** (-7) | 95 → **98** (+3) | 100 → **100** (=) | 100 → **100** (=) | 3.9 → **4.9** s | 0 → **0** |
-| Blog | 87 → **78** (-9) | 84 → **100** (+16) | 100 → **100** (=) | 100 → **100** (=) | 4.1 → **5.6** s | 0 → **0** |
-| **Moyenne** | 89 → **81** (-8) | 93 → **98** (+5) | 99 → **100** (+1) | 97 → **93** (-4) | | |
+| Accueil (visiteur) | 94 → **90** (-4) | 95 → **100** (+5) | 96 → **100** (+4) | 92 → **100** (+8) | 3.1 → **3.5** s | 0 → **0** |
+| À propos | 87 → **91** (+4) | 96 → **100** (+4) | 96 → **100** (+4) | 92 → **100** (+8) | 4.0 → **3.5** s | 0 → **0** |
+| Connexion | 90 → **91** (+1) | 91 → **100** (+9) | 96 → **100** (+4) | 92 → **100** (+8) | 3.6 → **3.4** s | 0 → **0** |
+| Accueil membre | 87 → **88** (+1) | 97 → **100** (+3) | 100 → **100** (=) | 100 → **100** (=) | 3.9 → **3.7** s | 0 → **0** |
+| Annuaire | 88 → **88** (=) | 93 → **100** (+7) | 100 → **100** (=) | 100 → **100** (=) | 3.8 → **3.7** s | 0 → **0** |
+| Fiche membre | 89 → **92** (+3) | 95 → **100** (+5) | 100 → **100** (=) | 100 → **66** (-34) | 3.8 → **3.3** s | 0 → **0** |
+| Annonces | 88 → **91** (+3) | 95 → **98** (+3) | 100 → **100** (=) | 100 → **100** (=) | 3.9 → **3.4** s | 0 → **0** |
+| Témoignages | 88 → **91** (+3) | 95 → **98** (+3) | 100 → **100** (=) | 100 → **100** (=) | 3.9 → **3.5** s | 0 → **0** |
+| Blog | 87 → **88** (+1) | 84 → **100** (+16) | 100 → **100** (=) | 100 → **100** (=) | 4.1 → **3.9** s | 0 → **0** |
+| **Moyenne** | 89 → **90** (+1) | 93 → **100** (+7) | 99 → **100** (+1) | 97 → **96** (-1) | | |
 
 **Ordinateur** (médiane de 3 passages)
 
 | Page | Performance | Accessibilité | Bonnes pratiques | SEO | LCP | CLS |
 |---|---|---|---|---|---|---|
-| Accueil (visiteur) | 99 → **99** (=) | 94 → **100** (+6) | 96 → **100** (+4) | 92 → **92** (=) | 0.9 → **0.9** s | 0 → **0** |
-| À propos | 99 → **99** (=) | 96 → **100** (+4) | 96 → **100** (+4) | 92 → **92** (=) | 0.8 → **1.0** s | 0 → **0** |
-| Connexion | 100 → **99** (-1) | 91 → **100** (+9) | 96 → **100** (+4) | 92 → **91** (-1) | 0.6 → **0.9** s | 0 → **0** |
-| Accueil membre | 99 → **82** (-17) | 97 → **96** (-1) | 100 → **100** (=) | 100 → **100** (=) | 1.0 → **1.2** s | 0 → **0.31** |
-| Annuaire | 99 → **98** (-1) | 93 → **97** (+4) | 100 → **100** (=) | 100 → **100** (=) | 0.9 → **1.1** s | 0 → **0** |
-| Fiche membre | 100 → **100** (=) | 95 → **93** (-2) | 100 → **100** (=) | 100 → **63** (-37) | 0.8 → **0.8** s | 0 → **0** |
-| Annonces | 99 → **99** (=) | 95 → **98** (+3) | 100 → **100** (=) | 100 → **100** (=) | 1.0 → **1.0** s | 0 → **0** |
-| Témoignages | 98 → **99** (+1) | 95 → **98** (+3) | 100 → **100** (=) | 100 → **100** (=) | 1.0 → **1.0** s | 0 → **0** |
-| Blog | 99 → **99** (=) | 88 → **100** (+12) | 100 → **100** (=) | 100 → **100** (=) | 0.9 → **1.0** s | 0 → **0** |
-| **Moyenne** | 99 → **97** (-2) | 94 → **98** (+4) | 99 → **100** (+1) | 97 → **93** (-4) | | |
+| Accueil (visiteur) | 99 → **100** (+1) | 94 → **100** (+6) | 96 → **100** (+4) | 92 → **100** (+8) | 0.9 → **0.7** s | 0 → **0** |
+| À propos | 99 → **100** (+1) | 96 → **100** (+4) | 96 → **100** (+4) | 92 → **100** (+8) | 0.8 → **0.8** s | 0 → **0** |
+| Connexion | 100 → **100** (=) | 91 → **100** (+9) | 96 → **100** (+4) | 92 → **100** (+8) | 0.6 → **0.8** s | 0 → **0** |
+| Accueil membre | 99 → **100** (+1) | 97 → **100** (+3) | 100 → **100** (=) | 100 → **100** (=) | 1.0 → **0.8** s | 0 → **0** |
+| Annuaire | 99 → **99** (=) | 93 → **100** (+7) | 100 → **100** (=) | 100 → **100** (=) | 0.9 → **0.8** s | 0 → **0** |
+| Fiche membre | 100 → **100** (=) | 95 → **100** (+5) | 100 → **100** (=) | 100 → **66** (-34) | 0.8 → **0.7** s | 0 → **0** |
+| Annonces | 99 → **100** (+1) | 95 → **98** (+3) | 100 → **100** (=) | 100 → **100** (=) | 1.0 → **0.8** s | 0 → **0** |
+| Témoignages | 98 → **99** (+1) | 95 → **98** (+3) | 100 → **100** (=) | 100 → **100** (=) | 1.0 → **0.8** s | 0 → **0** |
+| Blog | 99 → **99** (=) | 88 → **100** (+12) | 100 → **100** (=) | 100 → **100** (=) | 0.9 → **0.9** s | 0 → **0** |
+| **Moyenne** | 99 → **100** (+1) | 94 → **100** (+6) | 99 → **100** (+1) | 97 → **96** (-1) | | |
 
 
-**Lecture honnête**
-- **En hausse** : accessibilité (93 → 98 en moyenne), bonnes pratiques
-  (→ 100). Sur ordinateur, la performance reste à 97-100, sauf pour l'accueil
-  membre.
-- **À corriger avant la bascule** :
-  - **Performance mobile en baisse** (89 → 81 de moyenne). Le rendu réel est
-    rapide (≈ 0,5 s sans bridage), mais la simulation 4G pénalise le poids des
-    ressources critiques : polices 274 Ko au lieu de 51 Ko (Fraunces avec les
-    axes `opsz`, `SOFT`, `WONK` en deux sous-ensembles), JavaScript 316 Ko au
-    lieu de 200 Ko (dont environ 120 Ko inutilisés à l'ouverture : Zod côté
-    client, Sentry Replay). Pistes : Fraunces limitée au sous-ensemble latin
-    sans axes décoratifs, Sentry Replay chargé à la demande, Zod hors du
-    bundle des pages publiques, `priority` sur l'image principale.
-  - **CLS 0,31 sur l'accueil membre** (ordinateur) : le squelette de
-    chargement, plus court que la page, fait sauter le pied de page. Piste :
-    donner au squelette la hauteur de l'écran.
-  - **robots.txt** absent (déjà le cas avant) : ajouter `app/robots.ts` et
-    un plan du site pour les pages publiques.
+**Lecture**
+- **Accessibilité 93 → 100**, bonnes pratiques et SEO à 100 sur toutes les
+  pages publiques (`robots.txt` et plan du site ajoutés).
+- **Performance** : ordinateur 99 → 100, mobile 89 → 90 en moyenne ; huit
+  pages sur neuf sont égales ou meilleures. Seul l'accueil visiteur sur
+  mobile est légèrement en dessous (94 → 90), à cause de la photo
+  principale, plus grande, et des polices de la nouvelle identité.
+- **Ce qui a été corrigé pour y arriver** (premières mesures : mobile 81) :
+  - code d'édition et schémas chargés à la demande ;
+  - Fraunces limitée au sous-ensemble latin et aux axes utiles (220 → 65 Ko) ;
+  - plugin Sentry seulement avec un DSN ;
+  - image principale en priorité haute ;
+  - plus de squelette de chargement sur les pages membres (DOM doublé).
 - **Voulu** : la fiche d'un membre est marquée `noindex` (données
-  personnelles), d'où son score SEO de 63. Elle reste de toute façon
+  personnelles), d'où son score SEO de 66. Elle reste de toute façon
   réservée aux membres connectés.
-
 
 ## 5. Captures d'écran
 
-Captures « avant » des pages publiques dans
-[docs/screenshots/before](docs/screenshots/before). Les captures « avant »
-floutées des pages membres et toutes les captures « après » restent **à
-produire** (`tools/perf/screenshots.mjs --blur-members` pour l'ancien site,
-base de test fictive pour le nouveau).
+Le dépôt étant public, aucune donnée de membre n'y figure :
+- **avant, pages membres** : vraies données Sanity, **textes et photos
+  floutés** (seule la mise en page reste visible) ;
+- **après, pages membres** : base de test peuplée de **membres fictifs** ;
+- **pages publiques** : contenus déjà publics, sans flou.
+
+| Page | Avant (mobile) | Après (mobile) | Ordinateur |
+|---|---|---|---|
+| Accueil visiteur | ![avant](docs/screenshots/before/accueil-visiteur-mobile.jpg) | ![après](docs/screenshots/after/accueil-visiteur-mobile.jpg) | [avant](docs/screenshots/before/accueil-visiteur-desktop.jpg) · [après](docs/screenshots/after/accueil-visiteur-desktop.jpg) |
+| À propos | ![avant](docs/screenshots/before/a-propos-mobile.jpg) | ![après](docs/screenshots/after/a-propos-mobile.jpg) | [avant](docs/screenshots/before/a-propos-desktop.jpg) · [après](docs/screenshots/after/a-propos-desktop.jpg) |
+| Connexion | ![avant](docs/screenshots/before/connexion-mobile.jpg) | ![après](docs/screenshots/after/connexion-mobile.jpg) | [avant](docs/screenshots/before/connexion-desktop.jpg) · [après](docs/screenshots/after/connexion-desktop.jpg) |
+| Accueil membre | ![avant](docs/screenshots/before/accueil-membre-mobile.jpg) | ![après](docs/screenshots/after/accueil-membre-mobile.jpg) | [avant](docs/screenshots/before/accueil-membre-desktop.jpg) · [après](docs/screenshots/after/accueil-membre-desktop.jpg) |
+| Annuaire | ![avant](docs/screenshots/before/annuaire-mobile.jpg) | ![après](docs/screenshots/after/annuaire-mobile.jpg) | [avant](docs/screenshots/before/annuaire-desktop.jpg) · [après](docs/screenshots/after/annuaire-desktop.jpg) |
+| Fiche membre | ![avant](docs/screenshots/before/fiche-membre-mobile.jpg) | ![après](docs/screenshots/after/fiche-membre-mobile.jpg) | [avant](docs/screenshots/before/fiche-membre-desktop.jpg) · [après](docs/screenshots/after/fiche-membre-desktop.jpg) |
+| Annonces | ![avant](docs/screenshots/before/annonces-mobile.jpg) | ![après](docs/screenshots/after/annonces-mobile.jpg) | [avant](docs/screenshots/before/annonces-desktop.jpg) · [après](docs/screenshots/after/annonces-desktop.jpg) |
+| Témoignages | ![avant](docs/screenshots/before/temoignages-mobile.jpg) | ![après](docs/screenshots/after/temoignages-mobile.jpg) | [avant](docs/screenshots/before/temoignages-desktop.jpg) · [après](docs/screenshots/after/temoignages-desktop.jpg) |
+| Blog | ![avant](docs/screenshots/before/blog-mobile.jpg) | ![après](docs/screenshots/after/blog-mobile.jpg) | [avant](docs/screenshots/before/blog-desktop.jpg) · [après](docs/screenshots/after/blog-desktop.jpg) |
 
 ## 6. Parité : écarts justifiés
 
