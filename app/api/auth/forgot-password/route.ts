@@ -1,91 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { serverClient } from '@/sanity/lib/server-client'
+import { apiRoute } from '@/lib/api'
+import { HttpError } from '@/lib/auth/session'
+import { getUserByEmail } from '@/lib/data/users'
+import { issueToken } from '@/lib/data/tokens'
 import { sendUserPasswordReset } from '@/lib/emails'
-import crypto from 'crypto'
-import { logger } from '@/lib/logger'
-import { rateLimit, RateLimitPresets } from '@/lib/rate-limit'
+import { RateLimitPresets } from '@/lib/rate-limit'
 import { forgotPasswordSchema } from '@/lib/validations'
 
-export async function POST(request: NextRequest) {
-  // Rate limiting
-  const rateLimitResult = rateLimit(request, RateLimitPresets.email)
-  if (!rateLimitResult.success) {
-    return rateLimitResult.response
-  }
-  try {
-    const body = await request.json()
+const GENERIC = { message: 'Si cet email existe, un lien de réinitialisation a été envoyé.' }
 
-    // Valider les données avec Zod
-    const validation = forgotPasswordSchema.safeParse(body)
-    if (!validation.success) {
-      const firstError = validation.error.issues[0]
-      return NextResponse.json(
-        { error: firstError.message },
-        { status: 400 }
-      )
-    }
-
-    const { email } = validation.data
-    const normalizedEmail = email
-
-    // Vérifier si l'utilisateur existe
-    const user = await serverClient.fetch(
-      `*[_type == "user" && email == $email][0]`,
-      { email: normalizedEmail }
-    )
-
-    // Pour des raisons de sécurité, on renvoie toujours un message de succès
-    // même si l'utilisateur n'existe pas (pour éviter l'énumération d'emails)
-    if (!user) {
-      return NextResponse.json(
-        { message: 'Si cet email existe, un lien de réinitialisation a été envoyé.' },
-        { status: 200 }
-      )
-    }
-
-    // Générer un token sécurisé
-    const token = crypto.randomBytes(32).toString('hex')
-    const expiresAt = new Date(Date.now() + 3600000) // 1 heure
-
-    // Invalider les anciens tokens pour cet email
-    const oldTokens = await serverClient.fetch(
-      `*[_type == "passwordResetToken" && email == $email && used == false]`,
-      { email: normalizedEmail }
-    )
-
-    for (const oldToken of oldTokens) {
-      await serverClient.patch(oldToken._id).set({ used: true }).commit()
-    }
-
-    // Créer un nouveau token dans Sanity
-    await serverClient.create({
-      _type: 'passwordResetToken',
-      email: normalizedEmail,
-      token,
-      expiresAt: expiresAt.toISOString(),
-      used: false,
-      createdAt: new Date().toISOString(),
-    })
-
-    // Envoyer l'email
-    const emailResult = await sendUserPasswordReset(normalizedEmail, token)
-
-    if (!emailResult.success) {
-      return NextResponse.json(
-        { error: 'Erreur lors de l\'envoi de l\'email' },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json(
-      { message: 'Si cet email existe, un lien de réinitialisation a été envoyé.' },
-      { status: 200 }
-    )
-  } catch (error) {
-    logger.error('Erreur lors de la demande de réinitialisation:', error)
-    return NextResponse.json(
-      { error: 'Une erreur est survenue' },
-      { status: 500 }
-    )
-  }
-}
+/** Même réponse que le compte existe ou non (pas d'énumération) */
+export const POST = apiRoute({ auth: 'public', body: forgotPasswordSchema, rateLimit: RateLimitPresets.email }, async ({ body }) => {
+  const user = await getUserByEmail(body.email)
+  if (!user) return GENERIC
+  const token = await issueToken(user.email, 'reset')
+  const result = await sendUserPasswordReset(user.email, token)
+  if (!result.success) throw new HttpError(500, "Erreur lors de l'envoi de l'email")
+  return GENERIC
+})

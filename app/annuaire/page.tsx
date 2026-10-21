@@ -1,50 +1,32 @@
-import { auth } from '@/lib/auth'
-import { redirect } from 'next/navigation'
-import { client } from '@/sanity/lib/client'
-import { directoryUsersQuery } from '@/sanity/lib/queries'
-import Header from '../components/Header'
-import Footer from '../components/Footer'
-import DirectoryList from '../components/DirectoryList'
-import HeroSection from '../components/HeroSection'
-import type { DirectoryUser } from '../components/DirectoryCard'
+import type { Metadata } from 'next'
+import { requireMemberPage } from '@/lib/auth/session'
+import { loadPageContent } from '@/lib/content/page'
+import { withCount } from '@/lib/content/merge'
+import { listDirectoryMembers } from '@/lib/data/users'
+import { toCardUser } from '@/app/components/directory/toCardUser'
+import { createEditor } from '@/app/components/edit/editor'
+import { EditableArea } from '@/app/components/edit/EditableArea'
+import { PageHero } from '@/app/components/site/PageHero'
+import DirectoryList from '@/app/components/directory/DirectoryList'
 
-export default async function AnnuairePage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>
-}) {
-  const session = await auth()
+export const metadata: Metadata = { title: 'Annuaire' }
 
-  if (!session?.user?.email) {
-    redirect('/connexion')
-  }
-
-  // Les lycéens ne sont pas remontés par la requête (profil restreint)
-  const [members, params] = await Promise.all([
-    client.fetch<DirectoryUser[]>(directoryUsersQuery),
-    searchParams,
-  ])
-  const currentUserId = members.find((member) => member.email === session.user?.email)?._id
+export default async function DirectoryPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const user = await requireMemberPage('/annuaire')
+  const [members, params, page] = await Promise.all([listDirectoryMembers(), searchParams, loadPageContent('directory')])
+  const e = createEditor('content:directory', page.data, page.editMode)
 
   return (
-    <>
-      <Header />
-
-      <main className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
-        {/* Hero Section avec image en background */}
-        <HeroSection
-          compact
-          title="Annuaire"
-          subtitle={`${members.length} anciens élèves, prépas et personnels du lycée Victor Hugo : trouvez un parcours qui vous inspire`}
-        />
-
-        {/* Directory Section */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-0 pb-16 -mt-12 relative z-10">
-          <DirectoryList members={members} currentUserId={currentUserId} initialParams={params} />
-        </section>
-      </main>
-
-      <Footer />
-    </>
+    <EditableArea docs={[page.doc]}>
+      <PageHero
+        size="sm"
+        eyebrow="Le cœur du réseau"
+        title={e.text('title', { label: 'Titre' })}
+        lead={e.text('lead', { as: 'p', label: 'Chapeau ({count} = nombre de membres)', multiline: true, display: (value) => withCount(value, members.length) })}
+      />
+      <div className="container-page relative pb-16 sm:-mt-6">
+        <DirectoryList members={members.map(toCardUser)} currentUserId={user.id} initialParams={params} />
+      </div>
+    </EditableArea>
   )
 }

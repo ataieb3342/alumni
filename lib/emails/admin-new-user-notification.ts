@@ -9,9 +9,17 @@ interface NewUserNotification {
   userId: string
 }
 
+function escapeHtml(text: string) {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
 export async function sendAdminNewUserNotification(userData: NewUserNotification) {
-  const { firstName, lastName, email, userType, userId } = userData
-  const sanityUrl = `https://www.vh-besancon-alumni.fr/studio/structure/user;${userId}`
+  // Noms issus d'OAuth non filtrés : échappés avant insertion dans le HTML
+  const firstName = escapeHtml(userData.firstName)
+  const lastName = escapeHtml(userData.lastName)
+  const email = escapeHtml(userData.email)
+  const { userType } = userData
+  const adminUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.vh-besancon-alumni.fr'}/admin/utilisateurs?statut=pending`
 
   const userTypeLabels: Record<string, string> = {
     lyceen: 'Lycéen',
@@ -91,16 +99,16 @@ export async function sendAdminNewUserNotification(userData: NewUserNotification
                 <p><strong>Type de membre :</strong> ${userTypeLabels[userType] || userType}</p>
               </div>
 
-              <p>Pour valider ou rejeter cette inscription, connectez-vous à Sanity Studio :</p>
+              <p>Pour valider ou refuser cette inscription, ouvrez l'administration du site :</p>
 
               <div style="text-align: center;">
-                <a href="${sanityUrl}" class="button">Voir le profil sur Sanity</a>
+                <a href="${adminUrl}" class="button">Voir les demandes en attente</a>
               </div>
 
-              <p><strong>Actions à effectuer dans Sanity :</strong></p>
+              <p><strong>Dans l'administration :</strong></p>
               <ol>
                 <li>Vérifiez les informations du profil</li>
-                <li>Changez le statut du compte de "En attente de validation" à "Actif"</li>
+                <li>Cliquez sur « Valider » : le membre reçoit automatiquement un e-mail de confirmation</li>
                 <li>L'utilisateur pourra alors se connecter</li>
               </ol>
             </div>
@@ -121,9 +129,9 @@ export async function sendAdminNewUserNotification(userData: NewUserNotification
       Type de membre : ${userTypeLabels[userType] || userType}
 
       Pour valider cette inscription :
-      1. Connectez-vous à Sanity Studio : ${sanityUrl}
+      1. Ouvrez l'administration : ${adminUrl}
       2. Vérifiez les informations
-      3. Changez le statut du compte à "Actif"
+      3. Cliquez sur « Valider »
     `,
   }
 

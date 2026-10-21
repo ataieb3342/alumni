@@ -1,48 +1,30 @@
 import type { NextConfig } from "next";
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 const nextConfig: NextConfig = {
+  // Pilotes de base de données et traitement d'images : chargés depuis node_modules, pas empaquetés
+  serverExternalPackages: ["@electric-sql/pglite", "postgres", "sharp"],
   images: {
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'cdn.sanity.io',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'vh-besancon-alumni.fr',
-        port: '',
-        pathname: '/**',
-      },
+      // Images téléversées (Vercel Blob, magasin public)
+      { protocol: "https", hostname: "*.public.blob.vercel-storage.com", pathname: "/**" },
     ],
   },
 };
 
 // Configuration Sentry
 const sentryOptions = {
-  // Pour plus d'options : https://github.com/getsentry/sentry-webpack-plugin#options
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
-
   // Seul le code déployé en production aura les source maps uploadées
   silent: !process.env.CI,
-
-  // Upload des source maps
   widenClientFileUpload: true,
-
   // Route les logs Sentry via un tunnel pour éviter les ad-blockers
   tunnelRoute: "/monitoring",
-
-  // Cache les source maps des dossiers de build
-  hideSourceMaps: true,
-
-  // Désactiver automatiquement l'upload des source maps en dev
-  disableLogger: true,
-
-  // Génération automatique des release
-  automaticVercelMonitors: true,
 };
 
-export default withSentryConfig(nextConfig, sentryOptions);
+// Sentry n'est branché que s'il est configuré : sinon son plugin injecte quand
+// même ~70 Ko de JavaScript dans chaque page (aucun DSN sur le projet aujourd'hui)
+const sentryEnabled = Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN);
+
+export default sentryEnabled ? withSentryConfig(nextConfig, sentryOptions) : nextConfig;

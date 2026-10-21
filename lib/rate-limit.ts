@@ -27,7 +27,7 @@ const requestStore = new Map<string, number[]>()
 /**
  * Nettoie les anciennes entrées du store toutes les 60 secondes
  */
-setInterval(() => {
+const cleanup = setInterval(() => {
   const now = Date.now()
   for (const [ip, timestamps] of requestStore.entries()) {
     // Garder seulement les timestamps des 24 dernières heures
@@ -39,6 +39,7 @@ setInterval(() => {
     }
   }
 }, 60 * 1000)
+cleanup.unref?.()
 
 /**
  * Extrait l'adresse IP de la requête
@@ -91,48 +92,51 @@ export type RateLimitResult =
 
 export function rateLimit(
   request: NextRequest,
-  config: RateLimitConfig
+  config: RateLimitConfig,
+  /** Compteur distinct par route : une page très consultée n'épuise pas le quota de connexion */
+  scope: string = new URL(request.url).pathname
 ): RateLimitResult {
-  const ip = getClientIp(request)
-  const now = Date.now()
-  const windowStart = now - config.windowMs
-
-  // Récupérer les tentatives existantes pour cette IP
-  let attempts = requestStore.get(ip) || []
-
-  // Filtrer les tentatives dans la fenêtre de temps actuelle
-  attempts = attempts.filter(timestamp => timestamp > windowStart)
-
-  // Vérifier si la limite est dépassée
-  if (attempts.length >= config.maxRequests) {
-    const oldestAttempt = Math.min(...attempts)
-    const resetTime = oldestAttempt + config.windowMs
-    const retryAfter = Math.ceil((resetTime - now) / 1000)
-
-    return {
-      success: false,
-      response: NextResponse.json(
-        {
-          error: config.message || 'Trop de requêtes. Veuillez réessayer plus tard.',
-          retryAfter,
+  const result = rateLimitKey(`${scope}:${getClientIp(request)}`, config)
+  if (result.success) return { success: true }
+  return {
+    success: false,
+    response: NextResponse.json(
+      {
+        error: config.message || 'Trop de requêtes. Veuillez réessayer plus tard.',
+        retryAfter: result.retryAfter,
+      },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': result.retryAfter.toString(),
+          'X-RateLimit-Limit': config.maxRequests.toString(),
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': new Date(result.resetTime).toISOString(),
         },
-        {
-          status: 429,
-          headers: {
-            'Retry-After': retryAfter.toString(),
-            'X-RateLimit-Limit': config.maxRequests.toString(),
-            'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': new Date(resetTime).toISOString(),
-          },
-        }
-      ),
-    }
+      }
+    ),
+  }
+}
+
+/**
+ * Limiteur à fenêtre glissante sur une clé quelconque (IP, e-mail…).
+ * En mémoire : chaque instance du serveur a son propre compteur.
+ */
+export function rateLimitKey(
+  key: string,
+  config: Pick<RateLimitConfig, 'maxRequests' | 'windowMs'>
+): { success: true } | { success: false; retryAfter: number; resetTime: number } {
+  const now = Date.now()
+  const attempts = (requestStore.get(key) || []).filter((timestamp) => timestamp > now - config.windowMs)
+
+  if (attempts.length >= config.maxRequests) {
+    const resetTime = Math.min(...attempts) + config.windowMs
+    requestStore.set(key, attempts)
+    return { success: false, retryAfter: Math.max(1, Math.ceil((resetTime - now) / 1000)), resetTime }
   }
 
-  // Ajouter la nouvelle tentative
   attempts.push(now)
-  requestStore.set(ip, attempts)
-
+  requestStore.set(key, attempts)
   return { success: true }
 }
 
@@ -197,20 +201,16 @@ export const RateLimitPresets = {
  */
 export function getRateLimitStats(ip?: string) {
   if (ip) {
-    const attempts = requestStore.get(ip) || []
-    return {
-      ip,
-      attempts: attempts.length,
-      timestamps: attempts,
-    }
+    // Les compteurs sont par route (« /chemin:IP ») : on cumule ceux de l'IP
+    const timestamps = [...requestStore.entries()]
+      .filter(([key]) => key === ip || key.endsWith(`:${ip}`))
+      .flatMap(([, attempts]) => attempts)
+    return { ip, attempts: timestamps.length, timestamps }
   }
 
   return {
     totalIps: requestStore.size,
-    totalAttempts: Array.from(requestStore.values()).reduce(
-      (sum, attempts) => sum + attempts.length,
-      0
-    ),
+    totalAttempts: Array.from(requestStore.values()).reduce((sum, attempts) => sum + attempts.length, 0),
   }
 }
 

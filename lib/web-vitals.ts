@@ -12,7 +12,7 @@
  * @see https://web.dev/vitals/
  */
 
-import * as Sentry from "@sentry/nextjs";
+import { loadSentry } from "@/lib/sentry-client";
 
 export interface WebVitalMetric {
   name: string;
@@ -36,8 +36,8 @@ function sendToAnalytics(metric: WebVitalMetric) {
     );
   }
 
-  // En production, envoyer à Sentry
-  if (process.env.NODE_ENV === 'production') {
+  // En production, envoyer à Sentry (SDK chargé à la demande)
+  loadSentry()?.then((Sentry) => {
     Sentry.setMeasurement(metric.name, metric.value, 'millisecond');
 
     // Envoyer les métriques critiques comme événements
@@ -56,7 +56,8 @@ function sendToAnalytics(metric: WebVitalMetric) {
         },
       });
     }
-  }
+  });
+
 
   // Envoyer à votre propre API analytics (optionnel)
   if (typeof window !== 'undefined' && 'navigator' in window && navigator.sendBeacon) {
@@ -64,8 +65,9 @@ function sendToAnalytics(metric: WebVitalMetric) {
       name: metric.name,
       value: metric.value,
       rating: metric.rating,
-      url: window.location.href,
-      userAgent: navigator.userAgent,
+      // Chemin seulement : la recherche (?q=…) peut contenir des noms de membres
+      url: window.location.pathname.slice(0, 300),
+      userAgent: navigator.userAgent.slice(0, 300),
       timestamp: Date.now(),
     });
 
@@ -90,134 +92,4 @@ export function reportWebVitals() {
     onTTFB(sendToAnalytics);
     onINP(sendToAnalytics);
   });
-}
-
-/**
- * Mesurer les performances d'une navigation côté client
- */
-export function measureNavigation(from: string, to: string) {
-  if (typeof window === 'undefined') return;
-
-  const startTime = performance.now();
-
-  // Observer le prochain paint après la navigation
-  const observer = new PerformanceObserver((list) => {
-    for (const entry of list.getEntries()) {
-      const duration = performance.now() - startTime;
-
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`🚀 [Navigation] ${from} → ${to}: ${Math.round(duration)}ms`);
-      }
-
-      // Envoyer à Sentry
-      Sentry.addBreadcrumb({
-        category: 'navigation',
-        message: `Navigated from ${from} to ${to}`,
-        level: 'info',
-        data: {
-          duration,
-          from,
-          to,
-        },
-      });
-
-      // Alerter si navigation lente
-      if (duration > 2000) {
-        Sentry.captureMessage(`Slow navigation: ${from} → ${to}`, {
-          level: 'warning',
-          tags: {
-            from,
-            to,
-          },
-          contexts: {
-            performance: {
-              duration,
-            },
-          },
-        });
-      }
-    }
-    observer.disconnect();
-  });
-
-  observer.observe({ entryTypes: ['paint'] });
-}
-
-/**
- * Mesurer une action utilisateur personnalisée
- */
-export function measureUserAction(actionName: string, metadata?: Record<string, unknown>) {
-  if (typeof window === 'undefined') return;
-
-  const startTime = performance.now();
-
-  return {
-    end: () => {
-      const duration = performance.now() - startTime;
-
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`⚡ [Action] ${actionName}: ${Math.round(duration)}ms`, metadata);
-      }
-
-      // Envoyer à Sentry
-      Sentry.addBreadcrumb({
-        category: 'user.action',
-        message: actionName,
-        level: 'info',
-        data: {
-          duration,
-          ...metadata,
-        },
-      });
-
-      // Alerter si action lente
-      if (duration > 1000) {
-        Sentry.captureMessage(`Slow action: ${actionName}`, {
-          level: 'warning',
-          tags: {
-            action: actionName,
-          },
-          contexts: {
-            performance: {
-              duration,
-              ...metadata,
-            },
-          },
-        });
-      }
-
-      return duration;
-    },
-  };
-}
-
-/**
- * Hook pour mesurer le temps de montage d'un composant React
- */
-export function useMeasureComponentMount(componentName: string) {
-  if (typeof window === 'undefined') return;
-
-  const mountTime = performance.now();
-
-  return () => {
-    const duration = performance.now() - mountTime;
-
-    if (process.env.NODE_ENV === 'development' && duration > 100) {
-      console.warn(`🐌 [Component] ${componentName} took ${Math.round(duration)}ms to mount`);
-    }
-
-    if (duration > 500) {
-      Sentry.captureMessage(`Slow component mount: ${componentName}`, {
-        level: 'warning',
-        tags: {
-          component: componentName,
-        },
-        contexts: {
-          performance: {
-            duration,
-          },
-        },
-      });
-    }
-  };
 }

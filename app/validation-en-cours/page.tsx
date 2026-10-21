@@ -1,70 +1,58 @@
-import { auth } from '@/lib/auth'
-import { redirect } from 'next/navigation'
-import PublicHeader from '../components/PublicHeader'
-import Footer from '../components/Footer'
+import type { Metadata } from 'next'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { Hourglass, MailCheck } from 'lucide-react'
+import { auth } from '@/lib/auth'
+import { buttonClasses } from '@/app/components/ui/Button'
 
-export default async function ValidationEnCoursPage() {
+export const metadata: Metadata = { title: 'Validation en cours' }
+
+export default async function ValidationPendingPage() {
   const session = await auth()
-
-  // Si connecté et compte actif, rediriger vers l'accueil
-  if (session?.user?.accountStatus === 'active') {
-    redirect('/accueil')
-  }
+  if (session?.user?.accountStatus === 'active' && !session.user.id?.startsWith('temp-')) redirect('/accueil')
+  const disabled = session?.user?.accountStatus === 'suspended' || session?.user?.accountStatus === 'inactive'
 
   return (
-    <>
-      <PublicHeader />
-
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
-        <div className="max-w-md w-full">
-          <div className="bg-white rounded-lg shadow-xl p-8 text-center">
-            <div className="mb-6">
-              <div className="mx-auto w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
-              Validation en cours
-            </h1>
-
-            <p className="text-gray-600 mb-6">
-              Votre compte a bien été créé ! Un administrateur va examiner votre demande d&apos;inscription.
+    <div className="bg-seyes">
+      <div className="container-page py-16 sm:py-24">
+        <div className="mx-auto max-w-xl rounded-[var(--radius-lg)] border border-line bg-paper-raised p-8 text-center shadow-[var(--shadow-md)] sm:p-12">
+          <span className="mx-auto grid size-16 place-items-center rounded-full bg-highlight text-on-highlight">
+            <Hourglass className="size-8" aria-hidden="true" />
+          </span>
+          <h1 className="mt-6 font-display-tight text-4xl text-ink">{disabled ? 'Compte désactivé' : 'Validation en cours'}</h1>
+          <p className="mt-4 text-lg text-ink-soft">
+            {disabled
+              ? 'Ce compte a été désactivé par un administrateur. Écrivez-nous si vous pensez que c’est une erreur.'
+              : 'Votre compte a bien été créé ! Un membre du bureau va examiner votre demande d’inscription.'}
+          </p>
+          {!disabled && (
+            <p className="mt-6 inline-flex items-center gap-2 rounded-[var(--radius-md)] bg-blue-soft px-4 py-3 text-ink">
+              <MailCheck className="size-5 shrink-0 text-blue" aria-hidden="true" />
+              Vous recevrez un e-mail dès que votre compte sera validé.
             </p>
-
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-blue-800">
-                📧 Vous recevrez un email de confirmation dès que votre compte sera validé.
-              </p>
-            </div>
-
-            {session?.user ? (
-              <div className="space-y-3">
-                <p className="text-sm text-gray-500">
-                  Inscrit en tant que : <strong>{session.user.name}</strong>
-                </p>
-                <p className="text-sm text-gray-500">
-                  Email : <strong>{session.user.email}</strong>
-                </p>
+          )}
+          {session?.user && (
+            <dl className="mt-6 space-y-1 text-sm text-ink-muted">
+              <div>
+                <dt className="inline">Inscrit en tant que : </dt>
+                <dd className="inline font-semibold text-ink">{session.user.name}</dd>
               </div>
-            ) : null}
-
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <Link
-                href="/connexion"
-                className="text-blue-900 hover:underline text-sm font-medium"
-              >
-                Retour à la page de connexion
-              </Link>
-            </div>
+              <div>
+                <dt className="inline">E-mail : </dt>
+                <dd className="inline font-semibold text-ink">{session.user.email}</dd>
+              </div>
+            </dl>
+          )}
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Link href="/connexion" className={buttonClasses('primary')}>
+              Retour à la connexion
+            </Link>
+            <a href="mailto:contact@vh-besancon-alumni.fr" className={buttonClasses('secondary')}>
+              Nous écrire
+            </a>
           </div>
         </div>
-      </main>
-
-      <Footer />
-    </>
+      </div>
+    </div>
   )
 }

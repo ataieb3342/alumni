@@ -1,12 +1,12 @@
-import AlumniContent from './AlumniContent'
+import type { Metadata } from 'next'
+import { CampaignPage } from '@/app/components/site/CampaignPage'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Rejoins VH Besançon Alumni',
   description: 'Retrouve tes anciens camarades de Victor Hugo et développe ton réseau professionnel',
 }
 
-export default async function AlumniPage() {
-  // Page autonome accessible à tous (connectés ou non)
-  // Utilisée pour la campagne email alumni
-  return <AlumniContent />
+// Page de la campagne e-mail adressée aux anciens
+export default function AlumniPage() {
+  return <CampaignPage contentKey="alumni" />
 }

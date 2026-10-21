@@ -8,7 +8,7 @@ interface AccountValidatedNotification {
 }
 
 export async function sendUserAccountValidated(userData: AccountValidatedNotification) {
-  const { firstName, lastName, email } = userData
+  const { firstName, email } = userData
   const loginUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/connexion`
 
   const mailOptions = {

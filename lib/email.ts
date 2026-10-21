@@ -10,8 +10,8 @@ interface NewUserNotification {
 }
 
 export async function sendAdminNotificationEmail(userData: NewUserNotification) {
-  const { firstName, lastName, email, userType, userId } = userData
-  const sanityUrl = `${process.env.SANITY_STUDIO_URL || 'https://mon-site.sanity.studio'}/structure/user;${userId}`
+  const { firstName, lastName, email, userType } = userData
+  const adminUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.vh-besancon-alumni.fr'}/admin/utilisateurs?statut=pending`
 
   const userTypeLabels: Record<string, string> = {
     lyceen: 'Lycéen',
@@ -91,16 +91,16 @@ export async function sendAdminNotificationEmail(userData: NewUserNotification) 
                 <p><strong>Type de membre :</strong> ${userTypeLabels[userType] || userType}</p>
               </div>
 
-              <p>Pour valider ou rejeter cette inscription, connectez-vous à Sanity Studio :</p>
+              <p>Pour valider ou refuser cette inscription, ouvrez l'administration du site :</p>
 
               <div style="text-align: center;">
-                <a href="${sanityUrl}" class="button">Voir le profil sur Sanity</a>
+                <a href="${adminUrl}" class="button">Voir les demandes en attente</a>
               </div>
 
-              <p><strong>Actions à effectuer dans Sanity :</strong></p>
+              <p><strong>Dans l'administration :</strong></p>
               <ol>
                 <li>Vérifiez les informations du profil</li>
-                <li>Changez le statut du compte de "En attente de validation" à "Actif"</li>
+                <li>Cliquez sur « Valider » : le membre reçoit automatiquement un e-mail de confirmation</li>
                 <li>L'utilisateur pourra alors se connecter</li>
               </ol>
             </div>
@@ -121,9 +121,9 @@ export async function sendAdminNotificationEmail(userData: NewUserNotification) 
       Type de membre : ${userTypeLabels[userType] || userType}
 
       Pour valider cette inscription :
-      1. Connectez-vous à Sanity Studio : ${sanityUrl}
+      1. Ouvrez l'administration : ${adminUrl}
       2. Vérifiez les informations
-      3. Changez le statut du compte à "Actif"
+      3. Cliquez sur « Valider »
     `,
   }
 
@@ -136,10 +136,14 @@ export async function sendAdminNotificationEmail(userData: NewUserNotification) 
   }
 }
 
+function escapeHtml(text: string) {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
 export async function sendAnnouncementNotificationEmail(
   subscriberEmail: string,
-  subscriberName: string,
-  announcement: {
+  rawSubscriberName: string,
+  rawAnnouncement: {
     title: string
     type: string
     company?: string
@@ -147,6 +151,14 @@ export async function sendAnnouncementNotificationEmail(
     slug: string
   }
 ) {
+  // Textes saisis par les membres : échappés avant insertion dans le HTML
+  const subscriberName = escapeHtml(rawSubscriberName)
+  const announcement = {
+    ...rawAnnouncement,
+    title: escapeHtml(rawAnnouncement.title),
+    company: rawAnnouncement.company ? escapeHtml(rawAnnouncement.company) : undefined,
+    location: rawAnnouncement.location ? escapeHtml(rawAnnouncement.location) : undefined,
+  }
   const announcementUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/annonces/${announcement.slug}`
 
   const typeLabels: Record<string, string> = {
@@ -161,7 +173,7 @@ export async function sendAnnouncementNotificationEmail(
   const mailOptions = {
     from: `"Association VH Besançon" <${process.env.EMAIL_USER}>`,
     to: subscriberEmail,
-    subject: `Nouvelle annonce : ${announcement.title}`,
+    subject: `Nouvelle annonce : ${rawAnnouncement.title}`,
     html: `
       <!DOCTYPE html>
       <html>

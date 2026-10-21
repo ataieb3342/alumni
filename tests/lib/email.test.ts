@@ -5,6 +5,7 @@ const { mockSendMail, mockLogger } = vi.hoisted(() => ({
   mockSendMail: vi.fn(),
   mockLogger: {
     error: vi.fn(),
+    info: vi.fn(),
   },
 }))
 
@@ -27,27 +28,56 @@ import {
   sendAnnouncementNotificationEmail,
   sendPasswordResetEmail,
 } from '@/lib/email'
+import { emailTransportMode } from '@/lib/emails/config'
 
-// Avant les autres blocs : leur beforeEach efface les appels enregistrés à l'import
 describe('Transporteur email', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   it('envoie par Gmail et renvoie les réponses vers la boîte contact', async () => {
+    process.env.EMAIL_TRANSPORT = 'smtp'
+    await sendPasswordResetEmail('membre@example.test', 'jeton-fictif')
     const nodemailer = (await import('nodemailer')).default
-    expect(nodemailer.createTransport).toHaveBeenCalledTimes(1)
     expect(nodemailer.createTransport).toHaveBeenCalledWith(
       expect.objectContaining({ host: 'smtp.gmail.com' }),
       { replyTo: '"Association VH Besançon" <contact@vh-besancon-alumni.fr>' }
     )
+    expect(mockSendMail).toHaveBeenCalledTimes(1)
+  })
+
+  it('n’envoie rien hors production ni sur une base locale', async () => {
+    const env = process.env as Record<string, string | undefined>
+    const saved = { NODE_ENV: env.NODE_ENV, DATABASE_URL: env.DATABASE_URL }
+    delete env.EMAIL_TRANSPORT
+    try {
+      env.NODE_ENV = 'development'
+      env.DATABASE_URL = 'postgres://u@h/db'
+      expect(emailTransportMode()).toBe('log')
+      env.NODE_ENV = 'production'
+      env.DATABASE_URL = 'pglite:./.data/pglite'
+      expect(emailTransportMode()).toBe('log')
+      env.DATABASE_URL = 'postgres://u@h/db'
+      expect(emailTransportMode()).toBe('smtp')
+      env.NODE_ENV = 'test'
+      env.DATABASE_URL = saved.DATABASE_URL
+      const result = await sendPasswordResetEmail('membre@example.test', 'jeton-fictif')
+      expect(result.success).toBe(true)
+      expect(mockSendMail).not.toHaveBeenCalled()
+    } finally {
+      Object.assign(env, saved)
+    }
   })
 })
 
 describe('Email Functions', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    process.env.EMAIL_TRANSPORT = 'smtp'
     process.env.EMAIL_USER = 'test@example.com'
     process.env.EMAIL_PASSWORD = 'password123'
     process.env.ADMIN_EMAIL = 'admin@example.com'
     process.env.NEXT_PUBLIC_BASE_URL = 'http://localhost:3000'
-    process.env.SANITY_STUDIO_URL = 'https://test.sanity.studio'
   })
 
   describe('sendAdminNotificationEmail', () => {
@@ -86,13 +116,14 @@ describe('Email Functions', () => {
       expect(call.text).toContain('Jean Dupont')
     })
 
-    it('should include Sanity URL in email', async () => {
+    it("renvoie vers les demandes en attente de l'administration du site (plus de Sanity)", async () => {
       mockSendMail.mockResolvedValue({ messageId: 'test-message-id' })
 
       await sendAdminNotificationEmail(userData)
 
       const call = mockSendMail.mock.calls[0][0]
-      expect(call.html).toContain('https://test.sanity.studio/structure/user;user-123')
+      expect(call.html).toContain('/admin/utilisateurs?statut=pending')
+      expect(call.html).not.toMatch(/sanity/i)
     })
 
     it('should handle different user types', async () => {

@@ -10,3 +10,4 @@ export { sendMarketingCommunityInvitationAlumni } from './marketing-community-in
 export { sendMarketingCommunityInvitationStudents } from './marketing-community-invitation-students'
 export { sendMarketingMigratedUsersWelcome } from './marketing-migrated-users-welcome'
 export { sendMarketingMembersCreateAccount } from './marketing-members-create-account'
+export { sendUserInvitation } from './user-invitation'

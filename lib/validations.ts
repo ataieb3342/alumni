@@ -1,5 +1,16 @@
 import { z } from 'zod'
 import { MAX_SUBJECTS, SUBJECT_VALUES } from './subjects'
+import { passwordIsValid } from './password-rules'
+
+const PASSWORD_MESSAGE =
+  'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*?&)'
+
+/** 12 caractères minimum, majuscule, minuscule, chiffre et caractère spécial parmi @$!%*?& */
+export const passwordSchema = z
+  .string()
+  .min(12, 'Le mot de passe doit contenir au moins 12 caractères')
+  .max(200, 'Le mot de passe est trop long')
+  .refine(passwordIsValid, PASSWORD_MESSAGE)
 
 // ========================================
 // Schémas de validation pour les utilisateurs
@@ -17,12 +28,7 @@ export const registerSchema = z.object({
   email: z.string()
     .email('Email invalide')
     .toLowerCase(),
-  password: z.string()
-    .min(12, 'Le mot de passe doit contenir au moins 12 caractères')
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
-      'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*?&)'
-    ),
+  password: passwordSchema,
   userType: z.enum(['lyceen', 'bts', 'prepa', 'alumni', 'staff'], {
     message: 'Type d\'utilisateur invalide'
   }),
@@ -32,7 +38,7 @@ export const registerSchema = z.object({
 // Schémas de validation pour les annonces
 // ========================================
 
-// Mêmes valeurs que le schéma Sanity (sanity/schemaTypes/announcement.ts) et le formulaire
+// Mêmes valeurs que le schéma de la base (db/schema.ts) et le formulaire
 const ANNOUNCEMENT_TYPES = ['job_offer', 'internship', 'opportunity', 'event', 'school_supplies', 'other'] as const
 
 export const createAnnouncementSchema = z.object({
@@ -73,8 +79,8 @@ export const createAnnouncementSchema = z.object({
     .datetime('Date de l\'événement invalide')
     .optional()
     .or(z.literal('')),
-  userId: z.string()
-    .min(1, 'ID utilisateur requis'),
+  /** Ignoré : l'auteur est toujours le membre connecté */
+  userId: z.string().optional(),
 }).refine(
   (data) => data.contactEmail || data.contactPhone || data.externalLink,
   {
@@ -85,26 +91,6 @@ export const createAnnouncementSchema = z.object({
 
 export const updateAnnouncementSchema = createAnnouncementSchema.partial().extend({
   id: z.string().min(1, 'ID de l\'annonce requis'),
-})
-
-// Bloc Portable Text tel que produit par le formulaire d'édition et par la
-// route de création (voir app/api/announcements/create/route.ts).
-const portableTextSpanSchema = z.object({
-  _type: z.literal('span'),
-  _key: z.string().optional(),
-  text: z.string(),
-  marks: z.array(z.string()).optional(),
-})
-
-const portableTextBlockSchema = z.object({
-  _type: z.literal('block'),
-  _key: z.string().optional(),
-  style: z.enum(['normal', 'h3', 'h4']).optional(),
-  listItem: z.enum(['bullet', 'number']).optional(),
-  level: z.number().int().min(1).max(10).optional(),
-  children: z.array(portableTextSpanSchema)
-    .min(1, 'La description ne peut pas être vide'),
-  markDefs: z.array(z.object({ _type: z.string(), _key: z.string() }).loose()).optional(),
 })
 
 /**
@@ -124,8 +110,9 @@ export const patchAnnouncementSchema = z.object({
   type: z.enum(ANNOUNCEMENT_TYPES, {
     message: 'Type d\'annonce invalide'
   }).optional(),
-  description: z.array(portableTextBlockSchema)
-    .min(1, 'La description est requise')
+  description: z.string()
+    .min(10, 'La description doit contenir au moins 10 caractères')
+    .max(5000, 'La description est trop longue (max 5000 caractères)')
     .optional(),
   company: z.string()
     .max(100, 'Le nom de l\'entreprise est trop long')
@@ -245,14 +232,16 @@ export const updateTestimonialSchema = createTestimonialSchema.partial().extend(
 // ========================================
 
 export const updateProfileSchema = z.object({
-  userId: z.string()
-    .min(1, 'ID utilisateur requis'),
+  /** Ignoré : le profil modifié est toujours celui de la session */
+  userId: z.string().optional(),
   firstName: z.string()
+    .trim()
     .min(2, 'Le prénom doit contenir au moins 2 caractères')
     .max(50, 'Le prénom est trop long')
     .regex(/^[a-zA-ZÀ-ÿ\s\-']+$/, 'Le prénom contient des caractères invalides')
     .optional(),
   lastName: z.string()
+    .trim()
     .min(2, 'Le nom doit contenir au moins 2 caractères')
     .max(50, 'Le nom est trop long')
     .regex(/^[a-zA-ZÀ-ÿ\s\-']+$/, 'Le nom contient des caractères invalides')
@@ -262,15 +251,16 @@ export const updateProfileSchema = z.object({
     .min(1950, 'Année invalide')
     .max(new Date().getFullYear() + 10, 'Année invalide')
     .optional()
-    .or(z.literal('').transform(() => undefined)),
+    .or(z.literal('').transform(() => undefined))
+    .or(z.null().transform(() => undefined)),
   currentStudies: z.string()
     .max(200, 'Les études actuelles sont trop longues')
     .optional()
     .or(z.literal('')),
   linkedIn: z.string()
-    .url('URL LinkedIn invalide')
+    .trim()
     .max(500, 'URL trop longue')
-    .regex(/linkedin\.com/, 'URL LinkedIn invalide')
+    .regex(/linkedin\.com/, 'Indiquez l’adresse de votre profil LinkedIn (linkedin.com/in/…)')
     .optional()
     .or(z.literal('')),
   bio: z.string()
@@ -299,32 +289,27 @@ export const updateProfileSchema = z.object({
   // c'est ainsi que le lieu des expériences disparaissait à chaque enregistrement.
   education: z.array(z.object({
     _key: z.string().max(64).optional(),
-    school: z.string().max(200),
-    degree: z.string().max(200),
+    school: z.string().trim().min(1, 'Indiquez l’école').max(200),
+    degree: z.string().trim().min(1, 'Indiquez le diplôme').max(200),
     field: z.string().max(200).optional(),
     location: z.string().max(100).optional(),
     startYear: z.number().int().min(1950).max(new Date().getFullYear() + 10),
     endYear: z.number().int().min(1950).max(new Date().getFullYear() + 10).optional(),
     description: z.string().max(1000).optional(),
-  })).optional(),
+  })).max(30).optional(),
   experience: z.array(z.object({
     _key: z.string().max(64).optional(),
-    company: z.string().max(200),
-    position: z.string().max(200),
+    company: z.string().trim().min(1, 'Indiquez l’entreprise').max(200),
+    position: z.string().trim().min(1, 'Indiquez le poste').max(200),
     location: z.string().max(100).optional(),
     description: z.string().max(1000).optional(),
-    startDate: z.string(),
-    endDate: z.string().optional(),
+    startDate: z.string().regex(/^\d{4}-\d{2}(-\d{2})?$/, 'Date de début invalide'),
+    endDate: z.string().regex(/^\d{4}-\d{2}(-\d{2})?$/, 'Date de fin invalide').optional(),
     current: z.boolean().optional(),
-  })).optional(),
-  profileImageAssetId: z.string()
-    .optional(),
-  deleteProfileImage: z.boolean()
-    .optional(),
-  coverImageAssetId: z.string()
-    .optional(),
-  deleteCoverImage: z.boolean()
-    .optional(),
+  })).max(30).optional(),
+  /** Identifiant d'un média téléversé par le membre ; null pour retirer la photo */
+  profileImageId: z.string().max(64).nullable().optional(),
+  coverImageId: z.string().max(64).nullable().optional(),
 })
 
 // ========================================
@@ -358,21 +343,11 @@ export const forgotPasswordSchema = z.object({
 export const resetPasswordSchema = z.object({
   token: z.string()
     .min(1, 'Token requis'),
-  password: z.string()
-    .min(12, 'Le mot de passe doit contenir au moins 12 caractères')
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
-      'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*?&)'
-    ),
+  password: passwordSchema,
 })
 
 export const changePasswordSchema = z.object({
   currentPassword: z.string()
     .min(1, 'Mot de passe actuel requis'),
-  newPassword: z.string()
-    .min(12, 'Le nouveau mot de passe doit contenir au moins 12 caractères')
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
-      'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*?&)'
-    ),
+  newPassword: passwordSchema,
 })

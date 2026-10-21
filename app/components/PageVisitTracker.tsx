@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import { api } from '@/lib/client/api'
 
 export default function PageVisitTracker() {
   const pathname = usePathname()
@@ -33,16 +34,9 @@ export default function PageVisitTracker() {
     // Logger la visite de la page
     const logPageVisit = async () => {
       try {
-        await fetch('/api/activity/log', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            action: 'page_visit',
-            resource: pathname,
-            details: `Visite de la page ${pathname}`,
-          }),
+        // api() joint le jeton CSRF exigé par toute écriture
+        await api('/api/activity/log', {
+          body: { action: 'page_visit', resource: pathname, details: `Visite de la page ${pathname}` },
         })
       } catch (error) {
         // Échec silencieux pour ne pas affecter l'expérience utilisateur

@@ -1,144 +1,40 @@
-import { NextResponse } from 'next/server'
-import { logger } from '@/lib/logger'
-import { serverClient } from '@/sanity/lib/server-client'
-import { auth } from '@/lib/auth'
+import { eq } from 'drizzle-orm'
+import { getDb } from '@/db'
+import { media } from '@/db/schema'
+import { apiRoute } from '@/lib/api'
+import { HttpError } from '@/lib/auth/session'
+import { toImageRef } from '@/lib/data/media'
+import { updateUser } from '@/lib/data/users'
 import { updateProfileSchema } from '@/lib/validations'
 
-// Pas de node:crypto ici : son import fait échouer les tests sur la machine
-// de build Vercel. Une clé Sanity doit seulement être unique dans son tableau.
 function withKeys<T extends { _key?: string }>(items: T[]) {
   return items.map((item) => ({ ...item, _key: item._key ?? Math.random().toString(36).slice(2, 14) }))
 }
 
-export async function POST(request: Request) {
-  try {
-    const session = await auth()
-    
-    if (!session?.user?.email) {
-      return NextResponse.json(
-        { error: 'Non authentifié' },
-        { status: 401 }
-      )
-    }
-
-    const body = await request.json()
-
-    // Valider les données avec Zod
-    const validation = updateProfileSchema.safeParse(body)
-    if (!validation.success) {
-      const firstError = validation.error.issues[0]
-      return NextResponse.json(
-        { error: firstError.message, field: firstError.path[0] },
-        { status: 400 }
-      )
-    }
-
-    const {
-      userId,
-      firstName,
-      lastName,
-      promotionYear,
-      currentStudies,
-      linkedIn,
-      bio,
-      city,
-      subjects,
-      isVisibleInDirectory,
-      staffCategory,
-      staffDetails,
-      education,
-      experience,
-      profileImageAssetId,
-      deleteProfileImage,
-      coverImageAssetId,
-      deleteCoverImage
-    } = validation.data
-
-    // Vérifier que l'utilisateur modifie bien son propre profil
-    const user = await serverClient.fetch(
-      `*[_type == "user" && _id == $userId && email == $email][0]`,
-      { userId, email: session.user.email }
-    )
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Utilisateur non trouvé ou non autorisé' },
-        { status: 403 }
-      )
-    }
-
-    // Préparer les données de mise à jour
-    const updateData: Record<string, unknown> = {
-      firstName,
-      lastName,
-      promotionYear, // Déjà validé et transformé par Zod
-      currentStudies,
-      linkedIn,
-      bio,
-      city,
-      subjects,
-      isVisibleInDirectory,
-      staffCategory,
-      staffDetails,
-    }
-
-    // Ajouter les formations et expériences si fournies (uniquement pour alumni et staff).
-    // Sanity exige une _key par élément de tableau ; les éléments ajoutés depuis
-    // le formulaire n'en ont pas encore.
-    if (education !== undefined) {
-      updateData.education = withKeys(education)
-    }
-    if (experience !== undefined) {
-      updateData.experience = withKeys(experience)
-    }
-
-    // Ajouter l'image de profil si fournie
-    if (profileImageAssetId) {
-      updateData.profileImage = {
-        _type: 'image',
-        asset: {
-          _type: 'reference',
-          _ref: profileImageAssetId,
-        },
-      }
-    }
-
-    // Ajouter l'image de couverture si fournie
-    if (coverImageAssetId) {
-      updateData.coverImage = {
-        _type: 'image',
-        asset: {
-          _type: 'reference',
-          _ref: coverImageAssetId,
-        },
-      }
-    }
-
-    // Construire la requête de patch
-    let patchQuery = serverClient.patch(userId).set(updateData)
-
-    // Si l'utilisateur veut supprimer l'image de profil
-    if (deleteProfileImage && !profileImageAssetId) {
-      patchQuery = patchQuery.unset(['profileImage'])
-    }
-
-    // Si l'utilisateur veut supprimer l'image de couverture
-    if (deleteCoverImage && !coverImageAssetId) {
-      patchQuery = patchQuery.unset(['coverImage'])
-    }
-
-    // Mettre à jour l'utilisateur
-    await patchQuery.commit()
-
-    return NextResponse.json(
-      { message: 'Profil mis à jour avec succès' },
-      { status: 200 }
-    )
-  } catch (error) {
-    logger.error('Erreur lors de la mise à jour du profil:', error)
-    return NextResponse.json(
-      { error: 'Erreur lors de la mise à jour du profil' },
-      { status: 500 }
-    )
-  }
+/** Une image de profil doit être un média téléversé par le membre lui-même */
+async function ownImage(mediaId: string, userId: string) {
+  const db = await getDb()
+  const item = await db.query.media.findFirst({ where: eq(media.id, mediaId) })
+  if (!item || item.uploadedBy !== userId) throw new HttpError(400, 'Image introuvable')
+  return toImageRef(item)
 }
+
+/** Mise à jour de son propre profil (jamais celui d'un autre : l'identifiant vient de la session) */
+export const POST = apiRoute({ auth: 'user', body: updateProfileSchema }, async ({ body, user }) => {
+  const { userId: _ignored, education, experience, profileImageId, coverImageId, ...fields } = body
+  const patch: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(fields)) {
+    if (value === undefined) continue
+    patch[key] = value === '' ? null : value
+  }
+  if (fields.promotionYear === undefined && 'promotionYear' in body) patch.promotionYear = null
+  if (education !== undefined) patch.education = withKeys(education)
+  if (experience !== undefined) patch.experience = withKeys(experience)
+  if (profileImageId !== undefined) patch.profileImage = profileImageId ? await ownImage(profileImageId, user.id) : null
+  if (coverImageId !== undefined) patch.coverImage = coverImageId ? await ownImage(coverImageId, user.id) : null
+  // Le prénom et le nom restent obligatoires
+  if (patch.firstName === null) delete patch.firstName
+  if (patch.lastName === null) delete patch.lastName
+  await updateUser(user.id, patch)
+  return { message: 'Profil mis à jour avec succès' }
+})

@@ -2,52 +2,34 @@
  * Health check endpoint
  * Vérifie l'état de santé de l'application et de ses dépendances
  */
+import { NextResponse } from 'next/server'
+import { sql } from 'drizzle-orm'
+import { getDb } from '@/db'
+import { performHealthCheck } from '@/lib/monitoring'
+import { storageDriver } from '@/lib/storage'
 
-import { NextResponse } from "next/server";
-import { performHealthCheck } from "@/lib/monitoring";
-import { createClient } from "@sanity/client";
-
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   const result = await performHealthCheck({
-    // Check Sanity
-    sanity: async () => {
-      const client = createClient({
-        projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
-        dataset: process.env.NEXT_PUBLIC_SANITY_DATASET!,
-        apiVersion: process.env.NEXT_PUBLIC_SANITY_API_VERSION!,
-        useCdn: false,
-      });
-
-      // Requête simple pour vérifier la connectivité
-      await client.fetch('*[_type == "user"][0]');
-    },
-
-    // Check Database/Storage
     database: async () => {
-      // Simuler un check DB si vous avez une base de données
-      // Pour l'instant, on vérifie juste que l'env est configurée
-      if (!process.env.NEXT_PUBLIC_SANITY_PROJECT_ID) {
-        throw new Error('Sanity project ID not configured');
+      const db = await getDb()
+      await db.execute(sql`select 1`)
+    },
+    storage: async () => {
+      if (process.env.NODE_ENV === 'production' && process.env.VERCEL && storageDriver() !== 'blob') {
+        throw new Error('Aucun magasin Vercel Blob relié (BLOB_STORE_ID ou BLOB_READ_WRITE_TOKEN) : les images téléversées ne seraient pas conservées')
       }
     },
-
-    // Check Email service
     email: async () => {
       if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-        throw new Error('Email service not configured');
+        throw new Error('Email service not configured')
       }
       // L'envoi passe par le SMTP de Gmail (voir lib/emails/config.ts)
       if (!process.env.EMAIL_USER.endsWith('@gmail.com')) {
-        throw new Error('EMAIL_USER doit être l\'adresse Gmail de l\'association');
+        throw new Error("EMAIL_USER doit être l'adresse Gmail de l'association")
       }
-      // On ne teste pas l'envoi réel pour éviter de spammer
     },
-  });
-
-  // Retourner le status HTTP approprié
-  const statusCode = result.status === 'healthy' ? 200 : result.status === 'degraded' ? 503 : 503;
-
-  return NextResponse.json(result, { status: statusCode });
+  })
+  return NextResponse.json(result, { status: result.status === 'healthy' ? 200 : 503 })
 }

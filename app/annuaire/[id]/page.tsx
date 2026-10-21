@@ -1,553 +1,236 @@
-import { auth } from '@/lib/auth'
-import { redirect, notFound } from 'next/navigation'
-import { client } from '@/sanity/lib/client'
-import { userByIdQuery, userPublishedTestimonialsQuery } from '@/sanity/lib/queries'
-import { getImageProps } from '@/sanity/lib/image'
-import { getMostRecentActivity } from '@/lib/userUtils'
-import { getCurrentCity } from '@/lib/directorySearch'
-import { getSubject } from '@/lib/subjects'
-import Header from '@/app/components/Header'
-import Footer from '@/app/components/Footer'
-import TestimonialCard from '@/app/components/TestimonialCard'
+import type { Metadata } from 'next'
 import Link from 'next/link'
-import Image from 'next/image'
+import { notFound } from 'next/navigation'
+import { ArrowLeft, Briefcase, GraduationCap, Mail, MapPin, PenLine, Plus } from 'lucide-react'
+import { requireMemberPage } from '@/lib/auth/session'
+import { getMemberProfile } from '@/lib/data/users'
+import { listPublishedTestimonialsByAuthor } from '@/lib/data/testimonials'
+import { getCurrentCity } from '@/lib/directorySearch'
+import { getMostRecentActivity } from '@/lib/userUtils'
+import { getSubject } from '@/lib/subjects'
+import { formatLinkedInUrl, USER_TYPE_LABELS } from '@/lib/utils'
+import { Avatar } from '@/app/components/ui/Avatar'
+import { Picture } from '@/app/components/ui/Picture'
+import { SubjectIcon } from '@/app/components/ui/icons'
+import { buttonClasses } from '@/app/components/ui/Button'
+import { TestimonialCard } from '@/app/components/testimonials/TestimonialCard'
+import { toCardUser } from '@/app/components/directory/toCardUser'
 
-export default async function MemberDetailPage({
-  params
-}: {
-  params: Promise<{ id: string }>
-}) {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const member = await getMemberProfile((await params).id)
+  return { title: member ? `${member.firstName} ${member.lastName}` : 'Membre introuvable', robots: { index: false } }
+}
+
+function monthYear(date: string) {
+  const parsed = new Date(date)
+  return Number.isNaN(parsed.getTime()) ? '' : parsed.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })
+}
+
+export default async function MemberPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const session = await auth()
+  const viewer = await requireMemberPage(`/annuaire/${id}`)
+  const member = await getMemberProfile(id)
+  if (!member) notFound()
+  const testimonials = await listPublishedTestimonialsByAuthor(member.id)
+  const isOwn = viewer.id === member.id
 
-  if (!session?.user?.email) {
-    redirect('/connexion')
-  }
+  const { currentJob, company, currentCity: field, isEducation } = getMostRecentActivity(member)
+  const isStaff = member.userType === 'staff'
+  const city = getCurrentCity(toCardUser(member))
+  const facts = [
+    member.promotionYear && { label: 'Promotion', value: String(member.promotionYear), icon: GraduationCap },
+    (isStaff ? member.staffDetails : currentJob) && {
+      label: isStaff ? 'Fonction' : isEducation ? 'Formation actuelle' : 'Poste actuel',
+      value: (isStaff ? member.staffDetails : currentJob)!,
+      icon: isStaff || isEducation ? GraduationCap : Briefcase,
+    },
+    (isStaff || company) && { label: isStaff ? 'Établissement' : isEducation ? 'École' : 'Entreprise', value: isStaff ? 'Lycée Victor Hugo' : company!, icon: isStaff || isEducation ? GraduationCap : Briefcase },
+    city && { label: isStaff ? 'Ville' : 'Ville actuelle', value: city, icon: MapPin },
+    !isStaff && isEducation && field && { label: 'Domaine', value: field, icon: GraduationCap },
+    member.currentStudies && { label: 'Études actuelles', value: member.currentStudies, icon: GraduationCap },
+  ].filter(Boolean) as { label: string; value: string; icon: typeof MapPin }[]
 
-  const user = await client.fetch(userByIdQuery, { userId: id })
-
-  // Vérifier si l'utilisateur connecté regarde son propre profil
-  const isOwnProfile = session.user.email === user?.email
-
-  if (!user) {
-    notFound()
-  }
-
-  // Récupérer les témoignages publiés de l'utilisateur
-  const testimonials = await client.fetch(userPublishedTestimonialsQuery, { userId: id })
-
-  // Extraire les infos les plus récentes (expérience ou formation)
-  const { currentJob, company, currentCity, isEducation } = getMostRecentActivity(user)
-
-  // Pour le personnel, utiliser les infos spécifiques
-  const isStaff = user.userType === 'staff'
-  const displayJob = isStaff ? user.staffDetails : currentJob
-  const displayCompany = isStaff ? 'Lycée Victor Hugo' : company
-  // Pour une formation, getMostRecentActivity range le domaine d'études dans currentCity
-  const displayField = !isStaff && isEducation ? currentCity : undefined
-  const displayCity = getCurrentCity(user)
-  const subjects = ((user.subjects ?? []) as string[]).map(getSubject).filter((t) => t !== undefined)
-
-  const userTypeLabels: Record<string, string> = {
-    lyceen: 'Lycéen',
-    bts: 'BTS',
-    prepa: 'Prépa',
-    alumni: 'Ancien élève',
-    staff: 'Personnel',
-  }
-
-  const formatLinkedInUrl = (url: string | undefined) => {
-    if (!url) return ''
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url
-    }
-    return `https://${url}`
-  }
+  const subjects = member.subjects.map(getSubject).filter((subject) => subject !== undefined)
+  const experience = [...member.experience].sort((a, b) => {
+    const date = (exp: typeof a) => (exp.current ? Date.now() : new Date(exp.endDate || exp.startDate).getTime())
+    return date(b) - date(a)
+  })
+  const education = [...member.education].sort((a, b) => (b.endYear ?? 9999) - (a.endYear ?? 9999) || b.startYear - a.startYear)
 
   return (
-    <>
-      <Header />
+    <div>
+      {/* Couverture */}
+      <div className="relative h-44 overflow-hidden sm:h-64">
+        {member.coverImage ? <Picture image={member.coverImage} alt="" sizes="100vw" priority /> : <div className="bg-wash absolute inset-0" />}
+      </div>
 
-      <main className="min-h-screen bg-gray-50">
-        {/* Photo de couverture */}
-        {user.coverImage ? (
-          <div className="w-full h-64 overflow-hidden relative">
-            <Image
-              {...getImageProps(user.coverImage, 1920, 640)}
-              alt="Photo de couverture"
-              width={1920}
-              height={640}
-              className="object-cover w-full h-full"
-              priority
-            />
-          </div>
-        ) : (
-          <div className="w-full h-64 bg-gradient-to-br from-blue-600 to-blue-700"></div>
-        )}
+      <div className="container-page relative -mt-20 pb-16 sm:-mt-24">
+        <Link href="/annuaire" className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-paper-raised px-3 py-1.5 text-sm font-semibold text-ink shadow-[var(--shadow-md)] hover:text-blue">
+          <ArrowLeft className="size-4" aria-hidden="true" /> Retour à l’annuaire
+        </Link>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-40 relative z-10 pb-16">
-          {/* Breadcrumb */}
-          <nav className="mb-6">
-            <Link
-              href="/annuaire"
-              className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200 hover:border-blue-200"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Retour à l&apos;annuaire
-            </Link>
-          </nav>
-
-          {/* Layout 2 colonnes */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Colonne gauche - Carte profil */}
-            <div className="lg:col-span-4">
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden sticky top-20">
-                {/* Photo de profil */}
-                <div className="px-6 pt-6 pb-5 text-center">
-                  {user.profileImage ? (
-                    <div className="w-32 h-32 mx-auto rounded-full overflow-hidden ring-4 ring-blue-600 shadow-lg mb-4">
-                      <Image
-                        {...getImageProps(user.profileImage, 400, 400)}
-                        alt={`${user.firstName} ${user.lastName}`}
-                        width={128}
-                        height={128}
-                        className="object-cover w-full h-full"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-32 h-32 mx-auto rounded-full bg-blue-600 flex items-center justify-center ring-4 ring-blue-600/30 shadow-lg mb-4">
-                      <div className="text-3xl font-bold text-white">
-                        {user.firstName.charAt(0)}{user.lastName.charAt(0)}
-                      </div>
-                    </div>
-                  )}
-
-                  <h1 className="text-lg font-bold text-gray-900 mb-2">
-                    {user.firstName} {user.lastName}
-                  </h1>
-
-                  <span className="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-xs font-semibold rounded-full">
-                    {userTypeLabels[user.userType]}
-                  </span>
-
-                  {subjects.length > 0 && (
-                    <ul className="mt-4 flex flex-wrap justify-center gap-1.5" aria-label="Matières">
-                      {subjects.map((subject) => (
-                        <li key={subject.value}>
-                          <Link
-                            href={`/annuaire?matiere=${subject.value}`}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
-                          >
-                            <span aria-hidden="true">{subject.emoji}</span>
-                            {subject.label}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                <div className="border-t border-gray-100"></div>
-
-                {/* Informations rapides */}
-                <div className="px-6 py-4 space-y-3">
-                  {user.promotionYear && (
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-500">Promotion</p>
-                        <p className="text-sm font-semibold text-gray-900">{user.promotionYear}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {displayJob && (
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          {isStaff || isEducation ? (
-                            <>
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                            </>
-                          ) : (
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                          )}
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-500">
-                          {isStaff ? 'Fonction' : isEducation ? 'Formation actuelle' : 'Poste actuel'}
-                        </p>
-                        <p className="text-sm font-semibold text-gray-900">{displayJob}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {displayCompany && (
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          {isStaff || isEducation ? (
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                          ) : (
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                          )}
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-500">
-                          {isStaff ? 'Établissement' : isEducation ? 'École' : 'Entreprise'}
-                        </p>
-                        <p className="text-sm font-semibold text-gray-900">{displayCompany}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {displayCity && (
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-500">
-                          {isStaff ? 'Ville' : 'Ville actuelle'}
-                        </p>
-                        <p className="text-sm font-semibold text-gray-900">{displayCity}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {displayField && (
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-500">
-                          Domaine
-                        </p>
-                        <p className="text-sm font-semibold text-gray-900">{displayField}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {user.currentStudies && (
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-500">Études actuelles</p>
-                        <p className="text-sm font-semibold text-gray-900">{user.currentStudies}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-gray-500">Email</p>
-                      <a href={`mailto:${user.email}`} className="text-sm font-semibold text-blue-600 hover:underline break-all">
-                        {user.email}
-                      </a>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                {(isOwnProfile || user.linkedIn) && (
-                  <>
-                    <div className="border-t border-gray-100"></div>
-                    <div className="px-6 py-5 space-y-3">
-                      {isOwnProfile && (
-                        <Link
-                          href="/profil"
-                          className="group flex items-center justify-center gap-2 w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all shadow-sm hover:shadow-md transform hover:scale-[1.02]"
-                        >
-                          <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                          Modifier mon profil
-                        </Link>
-                      )}
-                      {user.linkedIn && (
-                        <a
-                          href={formatLinkedInUrl(user.linkedIn)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group flex items-center justify-center gap-2 w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all shadow-sm hover:shadow-md transform hover:scale-[1.02]"
-                        >
-                          <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-                          </svg>
-                          Voir le profil LinkedIn
-                        </a>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
+        <div className="grid gap-6 lg:grid-cols-[22rem_1fr]">
+          <aside className="self-start rounded-[var(--radius-lg)] border border-line bg-paper-raised p-6 shadow-[var(--shadow-md)] lg:sticky lg:top-20">
+            <div className="text-center">
+              <Avatar firstName={member.firstName} lastName={member.lastName} image={member.profileImage} seed={member.id} size="xl" className="ring-4 ring-paper-raised" decorative={false} />
+              <h1 className="mt-4 font-display-tight text-3xl text-ink">
+                {member.firstName} {member.lastName}
+              </h1>
+              <p className="mt-1 font-semibold text-red-strong">{USER_TYPE_LABELS[member.userType] ?? 'Membre'}</p>
+              {subjects.length > 0 && (
+                <ul className="mt-4 flex flex-wrap justify-center gap-1.5" aria-label="Matières">
+                  {subjects.map((subject) => (
+                    <li key={subject.value}>
+                      <Link
+                        href={`/annuaire?matiere=${subject.value}`}
+                        className="inline-flex items-center gap-1 rounded-full bg-paper-sunken px-2.5 py-1 text-xs font-semibold text-ink-soft hover:bg-highlight hover:text-on-highlight"
+                      >
+                        <SubjectIcon value={subject.value} className="size-3.5" />
+                        {subject.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
+            {facts.length > 0 && (
+              <dl className="mt-6 space-y-3 border-t border-line pt-5">
+                {facts.map(({ label, value, icon: Icon }) => (
+                  // dl > div > dt + dd uniquement : l'icône est placée dans le dt
+                  <div key={label} className="relative min-w-0 pl-8">
+                    <dt className="text-xs font-semibold text-ink-muted">
+                      <Icon className="absolute top-0.5 left-0 size-5 text-blue" aria-hidden="true" />
+                      {label}
+                    </dt>
+                    <dd className="font-semibold break-words text-ink">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+            <div className="mt-6 space-y-2.5 border-t border-line pt-5">
+              <a href={`mailto:${member.email}`} className={buttonClasses('primary', 'md', 'w-full')}>
+                <Mail className="size-4" aria-hidden="true" /> Écrire à {member.firstName}
+              </a>
+              {member.linkedIn && (
+                <a href={formatLinkedInUrl(member.linkedIn)} target="_blank" rel="noopener noreferrer" className={buttonClasses('secondary', 'md', 'w-full')}>
+                  Profil LinkedIn <span className="sr-only">(nouvel onglet)</span>
+                </a>
+              )}
+              {isOwn && (
+                <Link href="/profil" className={buttonClasses('ghost', 'md', 'w-full')}>
+                  <PenLine className="size-4" aria-hidden="true" /> Modifier mon profil
+                </Link>
+              )}
+              <p className="text-center text-xs text-ink-muted break-all">{member.email}</p>
+            </div>
+          </aside>
 
-            {/* Colonne droite - Parcours */}
-            <div className="lg:col-span-8 space-y-6">
-              {/* À propos */}
-              {user.bio && (
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
-                  <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
-                    À propos
-                  </h2>
-                  <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                    {user.bio}
-                  </p>
+          <div className="space-y-6">
+            {member.bio && (
+              <section className="rounded-[var(--radius-lg)] border border-line bg-paper-raised p-6 sm:p-8" aria-labelledby="bio">
+                <h2 id="bio" className="text-2xl text-ink">
+                  À propos
+                </h2>
+                <p className="mt-3 whitespace-pre-line text-ink-soft">{member.bio}</p>
+              </section>
+            )}
+
+            <Timeline
+              title="Expérience professionnelle"
+              empty="Aucune expérience professionnelle pour le moment"
+              addLabel={isOwn ? 'Ajouter une expérience' : undefined}
+              items={experience.map((exp, index) => ({
+                key: exp._key ?? String(index),
+                title: exp.position,
+                meta: [exp.company, exp.location].filter(Boolean).join(' · '),
+                period: `${monthYear(exp.startDate)} – ${exp.current ? 'aujourd’hui' : exp.endDate ? monthYear(exp.endDate) : ''}`,
+                current: !!exp.current,
+                description: exp.description,
+              }))}
+            />
+            <Timeline
+              title="Formation"
+              empty="Aucune formation pour le moment"
+              addLabel={isOwn ? 'Ajouter une formation' : undefined}
+              items={education.map((edu, index) => ({
+                key: edu._key ?? String(index),
+                title: edu.degree,
+                meta: [edu.school, edu.location, edu.field].filter(Boolean).join(' · '),
+                period: `${edu.startYear} – ${edu.endYear ?? 'en cours'}`,
+                current: !edu.endYear,
+                description: edu.description,
+              }))}
+            />
+
+            <section className="rounded-[var(--radius-lg)] border border-line bg-paper-raised p-6 sm:p-8" aria-labelledby="temoignages">
+              <h2 id="temoignages" className="flex items-center gap-2 text-2xl text-ink">
+                Témoignages de {member.firstName}
+                {testimonials.length > 0 && <span className="rounded-full bg-blue-soft px-2.5 py-0.5 font-sans text-sm font-bold text-blue">{testimonials.length}</span>}
+              </h2>
+              {testimonials.length > 0 ? (
+                <ul className="mt-5 grid gap-4 md:grid-cols-2">
+                  {testimonials.map((testimonial) => (
+                    <li key={testimonial.id}>
+                      <TestimonialCard testimonial={testimonial} />
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="mt-4 text-ink-muted">
+                  Aucun témoignage pour le moment.
+                  {isOwn && (
+                    <Link href="/temoignages/nouveau" className="link-ink ml-2 font-semibold">
+                      Écrire un témoignage
+                    </Link>
+                  )}
                 </div>
               )}
-
-              {/* Expériences professionnelles */}
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
-                <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                  <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
-                  Expérience professionnelle
-                </h2>
-                {user.experience && user.experience.length > 0 ? (
-                  <div className="space-y-6">
-                    {[...user.experience]
-                      .sort((a, b) => {
-                        const dateA = a.current ? new Date() : (a.endDate ? new Date(a.endDate) : new Date(a.startDate))
-                        const dateB = b.current ? new Date() : (b.endDate ? new Date(b.endDate) : new Date(b.startDate))
-                        return dateB.getTime() - dateA.getTime()
-                      })
-                      .map((exp: {
-                        company: string
-                        position: string
-                        location?: string
-                        startDate: string
-                        endDate?: string
-                        current?: boolean
-                        description?: string
-                      }, index: number, arr: unknown[]) => (
-                        <div key={index} className="relative pl-6 border-l-2 border-gray-200">
-                          <div className="absolute left-0 top-0 -translate-x-[9px] w-4 h-4 rounded-full bg-blue-600 border-2 border-white"></div>
-                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-4 mb-1">
-                            <h3 className="text-base font-bold text-gray-900 break-words min-w-0">{exp.position}</h3>
-                            <div className="text-xs text-gray-500 whitespace-nowrap shrink-0">
-                              {new Date(exp.startDate).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}
-                              {' - '}
-                              {exp.current ? 'Présent' : exp.endDate ? new Date(exp.endDate).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' }) : ''}
-                            </div>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2">
-                            <p className="text-sm text-gray-700 font-medium">{exp.company}</p>
-                            {exp.location && (
-                              <>
-                                <span className="text-gray-400">•</span>
-                                <p className="text-sm text-gray-500">{exp.location}</p>
-                              </>
-                            )}
-                          </div>
-                          {exp.description && (
-                            <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
-                              {exp.description}
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <p className="text-gray-500 mb-4">Aucune expérience professionnelle pour le moment</p>
-                    {isOwnProfile && (
-                      <Link
-                        href="/profil"
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        Ajouter une expérience
-                      </Link>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Formations */}
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
-                <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                  <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
-                  Formation
-                </h2>
-                {user.education && user.education.length > 0 ? (
-                  <div className="space-y-6">
-                    {[...user.education]
-                      .sort((a, b) => {
-                        const currentYear = new Date().getFullYear()
-                        const yearA = a.endYear || currentYear
-                        const yearB = b.endYear || currentYear
-                        if (yearA === yearB) {
-                          return (b.startYear || 0) - (a.startYear || 0)
-                        }
-                        return yearB - yearA
-                      })
-                      .map((edu: {
-                        school: string
-                        degree: string
-                        field?: string
-                        location?: string
-                        startYear: number
-                        endYear?: number
-                        description?: string
-                      }, index: number, arr: unknown[]) => {
-                        return (
-                          <div key={index} className="relative pl-6 border-l-2 border-gray-200">
-                            <div className="absolute left-0 top-0 -translate-x-[9px] w-4 h-4 rounded-full bg-blue-600 border-2 border-white"></div>
-                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-4 mb-1">
-                              <h3 className="text-base font-bold text-gray-900 break-words min-w-0">{edu.degree}</h3>
-                              <div className="text-xs text-gray-500 whitespace-nowrap shrink-0">
-                                {edu.startYear} - {edu.endYear || 'En cours'}
-                              </div>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2">
-                              <p className="text-sm text-gray-700 font-medium">{edu.school}</p>
-                              {edu.location && (
-                                <>
-                                  <span className="text-gray-400">•</span>
-                                  <p className="text-sm text-gray-500">{edu.location}</p>
-                                </>
-                              )}
-                              {edu.field && (
-                                <>
-                                  <span className="text-gray-400">•</span>
-                                  <p className="text-sm text-gray-500">{edu.field}</p>
-                                </>
-                              )}
-                            </div>
-                            {edu.description && (
-                              <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
-                                {edu.description}
-                              </p>
-                            )}
-                          </div>
-                        )
-                      })}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                      </svg>
-                    </div>
-                    <p className="text-gray-500 mb-4">Aucune formation pour le moment</p>
-                    {isOwnProfile && (
-                      <Link
-                        href="/profil"
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        Ajouter une formation
-                      </Link>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Section Témoignages */}
-            <div className="lg:col-span-12">
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                    <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
-                    Témoignages de {user.firstName}
-                    {testimonials && testimonials.length > 0 && (
-                      <span className="ml-2 inline-flex items-center justify-center px-2.5 py-0.5 bg-blue-100 text-blue-700 text-sm font-semibold rounded-full">
-                        {testimonials.length}
-                      </span>
-                    )}
-                  </h2>
-                </div>
-                {testimonials && testimonials.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {testimonials.map((testimonial: {
-                      _id: string
-                      title: string
-                      slug: { current: string }
-                      type: string
-                      excerpt: string
-                      rating?: number
-                      likes?: number
-                      tags?: string[]
-                      publishedAt: string
-                      featuredImage?: { asset: { _id: string; url: string } }
-                      author: {
-                        _id: string
-                        firstName: string
-                        lastName: string
-                        userType: string
-                        promotionYear?: string
-                        profileImage?: { asset: { _id: string; url: string } }
-                      }
-                    }) => (
-                      <TestimonialCard key={testimonial._id} testimonial={testimonial} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                      </svg>
-                    </div>
-                    <p className="text-gray-500 mb-4">Aucun témoignage pour le moment</p>
-                    {isOwnProfile && (
-                      <Link
-                        href="/temoignages/nouveau"
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        Ajouter un témoignage
-                      </Link>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
+            </section>
           </div>
         </div>
-      </main>
+      </div>
+    </div>
+  )
+}
 
-      <Footer />
-    </>
+function Timeline({
+  title,
+  empty,
+  addLabel,
+  items,
+}: {
+  title: string
+  empty: string
+  addLabel?: string
+  items: { key: string; title: string; meta: string; period: string; current: boolean; description?: string }[]
+}) {
+  return (
+    <section className="rounded-[var(--radius-lg)] border border-line bg-paper-raised p-6 sm:p-8">
+      <h2 className="text-2xl text-ink">{title}</h2>
+      {items.length > 0 ? (
+        <ol className="relative mt-6 space-y-7 border-l-2 border-red/40 pl-6">
+          {items.map((item) => (
+            <li key={item.key} className="relative">
+              <span aria-hidden="true" className={`absolute top-1.5 -left-[31px] size-3.5 rounded-full border-2 border-paper-raised ${item.current ? 'bg-red' : 'bg-line-strong'}`} />
+              <div className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+                <h3 className="font-sans text-lg font-bold break-words text-ink">{item.title}</h3>
+                <p className="shrink-0 text-sm text-ink-muted">{item.period}</p>
+              </div>
+              {item.meta && <p className="font-semibold text-ink-soft">{item.meta}</p>}
+              {item.description && <p className="mt-2 whitespace-pre-line text-sm text-ink-soft">{item.description}</p>}
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="mt-3 text-ink-muted">
+          {empty}
+          {addLabel && (
+            <Link href="/profil" className="link-ink ml-2 inline-flex items-center gap-1 font-semibold">
+              <Plus className="size-4" aria-hidden="true" /> {addLabel}
+            </Link>
+          )}
+        </p>
+      )}
+    </section>
   )
 }
