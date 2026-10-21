@@ -5,7 +5,9 @@ import path from 'path'
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: 'happy-dom',
+    // Tests de logique serveur : environnement Node. Sous happy-dom, Vercel
+    // (NODE_ENV=production pendant le build) refuse les modules `node:`.
+    environment: 'node',
     globals: true,
     setupFiles: ['./tests/setup.ts'],
     exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**', '**/*.spec.ts'],

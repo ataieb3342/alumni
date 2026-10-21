@@ -95,9 +95,11 @@ export async function verify(snapshotDir: string) {
   add('user.email', 'users.email', emailsBefore.size, emailsBefore.size - missingEmails)
 
   // Rôles et statuts
-  const statusBefore = Object.groupBy(sanityUsers, (u) => String(u.accountStatus))
+  // Pas d'Object.groupBy : le CI GitHub tourne encore sous Node 20
+  const statusBefore: Record<string, SanityDoc[]> = {}
+  for (const user of sanityUsers) (statusBefore[String(user.accountStatus)] ??= []).push(user)
   for (const [status, list] of Object.entries(statusBefore)) {
-    add(`user.accountStatus=${status}`, 'users.account_status', list!.length, await tableCount(schema.users, sql`${schema.users.accountStatus} = ${status} and ${schema.users.legacy}->>'_type' = 'user'`))
+    add(`user.accountStatus=${status}`, 'users.account_status', list.length, await tableCount(schema.users, sql`${schema.users.accountStatus} = ${status} and ${schema.users.legacy}->>'_type' = 'user'`))
   }
   const boardBefore = sanityUsers.filter((u) => Array.isArray(u.roleAssociation) && u.roleAssociation.length > 0).length
   add('user.roleAssociation (bureau)', 'users.role_association', boardBefore, await tableCount(schema.users, sql`cardinality(${schema.users.roleAssociation}) > 0`))
