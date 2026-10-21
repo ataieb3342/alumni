@@ -27,6 +27,7 @@ export interface E2EAccounts {
   student: { email: string; password: string; name: string }
   leaving: { email: string; password: string; name: string }
   changer: { email: string; password: string; name: string }
+  ghost: { email: string; password: string; name: string }
 }
 
 async function main() {
@@ -53,6 +54,7 @@ async function main() {
     student: { email: 'zoe.lyceenne@e2e.test', password: password(), name: 'Zoé Lycéenne' },
     leaving: { email: 'marc.depart@e2e.test', password: password(), name: 'Marc Départ' },
     changer: { email: 'nina.change@e2e.test', password: password(), name: 'Nina Change' },
+    ghost: { email: 'gaspard.fantome@e2e.test', password: password(), name: 'Gaspard Fantôme' },
   }
 
   const insert = async (values: Omit<NewUser, 'id' | 'userType'> & { userType?: UserType; password?: string }) => {
@@ -80,6 +82,7 @@ async function main() {
   await insert({ email: accounts.student.email, password: accounts.student.password, firstName: 'Zoé', lastName: 'Lycéenne', userType: 'lyceen', promotionYear: 2027 })
   const leaving = await insert({ email: accounts.leaving.email, password: accounts.leaving.password, firstName: 'Marc', lastName: 'Départ', promotionYear: 2011, city: 'Nancy', subjects: ['economie'] })
   await insert({ email: accounts.changer.email, password: accounts.changer.password, firstName: 'Nina', lastName: 'Change', promotionYear: 2013, city: 'Rennes' })
+  await insert({ email: accounts.ghost.email, password: accounts.ghost.password, firstName: 'Gaspard', lastName: 'Fantôme', promotionYear: 2009, city: 'Metz' })
 
   const lea = await insert({
     email: 'lea.bernard@e2e.test',

@@ -29,6 +29,15 @@ export async function requireUser(): Promise<User> {
   return user
 }
 
+/** Compte actif relu en base, ou null (sans redirection ni erreur) */
+export async function getActiveUser(): Promise<User | null> {
+  try {
+    return await requireUser()
+  } catch {
+    return null
+  }
+}
+
 /** Administrateur actif, ou erreur 401/403 — quelle que soit l'interface qui appelle */
 export async function requireAdmin(): Promise<User> {
   const user = await requireUser()

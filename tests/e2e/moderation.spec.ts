@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import { expect, statePath, test } from './support'
+import { accounts, expect, login, statePath, test } from './support'
 
 test.use({ storageState: statePath('admin') })
 
@@ -17,6 +17,31 @@ test.describe('Administration : membres et modération', () => {
     await expect(memberPage.getByRole('heading', { name: 'Aucun membre ne correspond' })).toBeVisible()
     await expect(memberPage.getByRole('link', { name: /Yanis Roux/ })).toHaveCount(0)
     await member.close()
+  })
+
+  test('un membre supprimé pendant sa session retombe sur la connexion, sans boucle', async ({ page, browser }) => {
+    const ghost = accounts().ghost
+    const memberContext = await browser.newContext({ storageState: { cookies: [], origins: [] }, extraHTTPHeaders: { 'x-forwarded-for': '10.77.1.1' } })
+    const memberPage = await memberContext.newPage()
+    await login(memberPage, ghost.email, ghost.password)
+    await expect(memberPage).toHaveURL(/\/accueil$/)
+
+    await page.goto('/admin/utilisateurs')
+    await page.getByRole('button', { name: 'Actions pour Gaspard Fantôme' }).click()
+    await page.getByRole('button', { name: 'Supprimer le compte…' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Supprimer le compte de Gaspard Fantôme ?' })
+    await dialog.getByRole('textbox').fill('SUPPRIMER')
+    await dialog.getByRole('button', { name: 'Supprimer définitivement' }).click()
+    await expect(page.getByText('Compte supprimé')).toBeVisible()
+
+    // Son jeton paraît encore valide, mais le compte n'existe plus : connexion, pas de boucle
+    await memberPage.goto('/connexion')
+    await expect(memberPage.getByRole('heading', { name: 'Connexion' })).toBeVisible()
+    await memberPage.goto('/accueil')
+    await expect(memberPage).toHaveURL(/\/connexion/)
+    await memberPage.goto('/inscription')
+    await expect(memberPage.getByRole('heading', { name: 'Adhérer au réseau' })).toBeVisible()
+    await memberContext.close()
   })
 
   test('modifier la fiche d’un membre et le nommer au bureau', async ({ page, browser }) => {

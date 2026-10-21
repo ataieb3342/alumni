@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { auth } from '@/lib/auth'
+import { getActiveUser } from '@/lib/auth/session'
 import { safeCallbackUrl } from '@/lib/utils'
 import { AuthLayout } from '@/app/components/auth/AuthLayout'
 import { availableProviders } from '@/lib/auth/providers'
@@ -10,9 +10,9 @@ export const metadata: Metadata = { title: 'Connexion' }
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const params = await searchParams
-  const session = await auth()
   const callbackUrl = safeCallbackUrl(params.callbackUrl)
-  if (session?.user?.accountStatus === 'active' && !session.user.id?.startsWith('temp-')) redirect(callbackUrl)
+  // Compte relu en base : un jeton périmé (compte supprimé ou suspendu) ne redirige pas
+  if (await getActiveUser()) redirect(callbackUrl)
 
   const notice =
     params.registered === 'true' && params.pending === 'true'

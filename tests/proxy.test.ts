@@ -72,16 +72,11 @@ describe('Proxy : accès aux pages', () => {
     expect(redirectedTo(await visit('/'))).toBeNull()
   })
 
-  it('un membre connecté qui ouvre l’inscription ou la connexion revient à son espace', async () => {
-    session = { user: { id: 'u1', role: 'member', accountStatus: 'active' } }
-    expect(redirectedTo(await visit('/inscription'))).toBe('/accueil')
-    expect(redirectedTo(await visit('/connexion'))).toBe('/accueil')
-    expect(redirectedTo(await visit('/connexion?callbackUrl=%2Fannuaire'))).toBe('/annuaire')
-    // Pas de redirection vers un autre site
-    expect(redirectedTo(await visit('/connexion?callbackUrl=%2F%2Fevil.example'))).toBe('/accueil')
-    expect(redirectedTo(await visit('/connexion?callbackUrl=%2F%5Cevil.example'))).toBe('/accueil')
-    session = null
+  it('ne redirige pas l’inscription ni la connexion (fait par les pages, compte relu en base)', async () => {
+    // Un jeton périmé paraît actif au proxy : rediriger ici bouclerait avec les pages membres
+    session = { user: { id: 'supprime', role: 'member', accountStatus: 'active' } }
     expect(redirectedTo(await visit('/inscription'))).toBeNull()
+    expect(redirectedTo(await visit('/connexion?callbackUrl=%2Fannuaire'))).toBeNull()
   })
 
   it('les routes d’API ne sont pas redirigées : elles contrôlent elles-mêmes l’accès', async () => {
