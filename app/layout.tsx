@@ -86,7 +86,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
-      <body className={isAdmin ? 'pb-20' : undefined}>
+      <body className={isAdmin ? 'has-admin-bar pb-20' : undefined}>
         <SessionProvider>
           <ConfirmProvider>
             <WebVitalsTracker />

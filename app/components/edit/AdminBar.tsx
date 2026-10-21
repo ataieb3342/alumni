@@ -51,9 +51,11 @@ export function AdminBar() {
       <div
         role="region"
         aria-label="Barre d'administration"
-        className="fixed inset-x-0 bottom-3 z-[60] flex justify-center px-3 print:hidden"
+        // Le conteneur fait toute la largeur pour centrer la barre : il laisse passer
+        // les clics, sinon il recouvre les boutons « Enregistrer » des formulaires
+        className="pointer-events-none fixed inset-x-0 bottom-3 z-[60] flex justify-center px-3 print:hidden"
       >
-        <div className="flex max-w-full items-center gap-1.5 overflow-x-auto rounded-full border border-white/10 bg-wash py-1.5 pr-1.5 pl-2 text-on-wash shadow-[var(--shadow-lg)] scrollbar-none">
+        <div className="pointer-events-auto flex max-w-full items-center gap-1.5 overflow-x-auto rounded-full border border-white/10 bg-wash py-1.5 pr-1.5 pl-2 text-on-wash shadow-[var(--shadow-lg)] scrollbar-none">
           <Link
             href="/admin"
             className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-on-wash-soft hover:bg-white/10 hover:text-on-wash"

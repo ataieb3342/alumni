@@ -359,7 +359,7 @@ export function ProfileForm({ user }: { user: ProfileData }) {
         </Section>
       )}
 
-      <div className={cn('sticky bottom-3 z-30 flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-lg)] border p-3 shadow-[var(--shadow-lg)] backdrop-blur transition-colors', dirty ? 'border-ink bg-wash text-on-wash' : 'border-line bg-paper-raised/95 text-ink')}>
+      <div className={cn('sticky bottom-3 z-30 [.has-admin-bar_&]:bottom-20 flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-lg)] border p-3 shadow-[var(--shadow-lg)] backdrop-blur transition-colors', dirty ? 'border-ink bg-wash text-on-wash' : 'border-line bg-paper-raised/95 text-ink')}>
         <p className="pl-2 text-sm font-semibold" aria-live="polite">
           {dirty ? 'Modifications non enregistrées' : (
             <span className="inline-flex items-center gap-1.5 text-success">

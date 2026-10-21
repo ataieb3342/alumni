@@ -191,7 +191,7 @@ export function AnnouncementForm({ initial }: { initial?: AnnouncementFormInitia
         </Field>
       </fieldset>
 
-      <div className="sticky bottom-3 z-30 flex flex-col-reverse gap-3 rounded-[var(--radius-lg)] border border-line bg-paper-raised/95 p-3 shadow-[var(--shadow-lg)] backdrop-blur sm:flex-row sm:items-center sm:justify-end">
+      <div className="sticky bottom-3 z-30 [.has-admin-bar_&]:bottom-20 flex flex-col-reverse gap-3 rounded-[var(--radius-lg)] border border-line bg-paper-raised/95 p-3 shadow-[var(--shadow-lg)] backdrop-blur sm:flex-row sm:items-center sm:justify-end">
         <Button variant="ghost" onClick={() => router.push(editing ? '/annonces/mes-annonces' : '/annonces')}>
           Annuler
         </Button>

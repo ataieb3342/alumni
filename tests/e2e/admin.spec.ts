@@ -25,6 +25,24 @@ async function asVisitor<T>(browser: Browser, path: string, read: (page: Page) =
 
 const visitorTitle = (browser: Browser) => asVisitor(browser, '/a-propos', (page) => page.getByRole('heading', { level: 1 }).innerText())
 
+test('un administrateur enregistre son profil malgré la barre d’administration', async ({ page }) => {
+  await page.goto('/profil')
+  await expect(adminBar(page)).toBeVisible()
+  await page.setViewportSize({ width: 1100, height: 900 })
+  await page.getByRole('textbox', { name: 'Ville actuelle', exact: true }).fill('Dijon')
+  // Milieu de page : la barre d'enregistrement est collée en bas de l'écran, là où
+  // s'affiche la barre d'administration. Clic à l'écran, sans défilement.
+  const save = page.getByRole('button', { name: 'Enregistrer', exact: true }).last()
+  const box = await save.boundingBox()
+  expect(box).not.toBeNull()
+  await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2)
+  await expect(page.getByText('Profil mis à jour')).toBeVisible()
+  // Le lien voisin n'est pas masqué non plus
+  const link = await page.getByRole('link', { name: /Voir mon profil public/ }).boundingBox()
+  const bar = await adminBar(page).locator('> div').boundingBox()
+  expect(link!.y + link!.height).toBeLessThanOrEqual(bar!.y)
+})
+
 test.describe('Administration sur place', () => {
   test('modifier un texte : brouillon invisible des visiteurs, publication, puis restauration', async ({ page, browser }) => {
     const original = await visitorTitle(browser)
