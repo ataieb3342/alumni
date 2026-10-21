@@ -197,6 +197,25 @@ cascade…) sont listés dans [DECISIONS.md](DECISIONS.md) § 8 et § 9.
 
 ## 7. Mise en production
 
+**État au 21/10/2026 (feu vert donné) :**
+- ✅ Base **Neon** `alumni-db` (offre gratuite, Francfort `eu-central-1`),
+  reliée **uniquement** à l'environnement *Production* : une prévisualisation
+  ne peut pas écrire dedans.
+- ✅ Stockage **Vercel Blob** `alumni-media` (public, Francfort), relié à
+  *Production*.
+- ✅ Tables créées, export Sanity du jour importé, vérification entièrement
+  au vert ([docs/migration-report-production.json](docs/migration-report-production.json)) :
+  100 comptes, 62 hash identiques, 1 676 journaux, 69 images sur Blob.
+- ✅ Build de production testé en local sur la vraie base et le vrai
+  stockage : `/api/health` « healthy », images servies par Blob.
+- ✅ Fonctions Vercel déplacées à Francfort (`vercel.json`), à côté de la
+  base.
+- Ensuite : fusion de la PR, vérification en production, puis invitation de
+  l'administrateur du Studio (`tools/admin/invite.ts`).
+
+Les étapes détaillées ci-dessous restent valables pour une nouvelle
+installation ou pour relancer l'import.
+
 La fusion dans `main` déclenche un déploiement de production. Elle doit
 donc **suivre** les étapes 1 à 5. Rien n'est supprimé côté Sanity : en cas
 de problème, il suffit d'annuler la fusion (étape 8).
